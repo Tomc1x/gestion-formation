@@ -1,17 +1,34 @@
 version: '3.8'
 
 services:
+  # --- BASE DE DONNÉES POSTGRESQL ---
   db:
     image: postgres:15-alpine
     container_name: formation-db
     environment:
-      POSTGRES_DB: gestion_formation
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "5432:5432"
+      - "${DB_PORT}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - formation-network
+
+  # --- SERVEUR DE CAPTURE D'EMAILS (MAILHOG) ---
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: formation-mailhog
+    ports:
+      - "1025:1025" # Port SMTP pour que Spring Boot envoie les mails
+      - "8025:8025" # Interface Web pour voir les mails reçus
+    networks:
+      - formation-network
+
+networks:
+  formation-network:
+    driver: bridge
 
 volumes:
   postgres_data:
