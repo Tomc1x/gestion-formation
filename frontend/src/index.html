@@ -5,7 +5,12 @@
   <title>Frontend</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/x-icon">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    setInterval(() => {
+      if (window.lucide) { window.lucide.createIcons(); }
+    }, 300);
+  </script>
 </head>
 <body>
   <app-root></app-root>

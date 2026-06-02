@@ -1,0 +1,32 @@
+@if (type === 'pill') {
+  <span class="pill" [ngClass]="statut">
+    <span class="dot"></span>
+    @switch (statut) {
+      @case ('active') {
+        <span>Active</span>
+      }
+      @case ('upcoming') {
+        <span>À venir</span>
+      }
+      @case ('ended') {
+        <span>Terminée</span>
+      }
+    }
+  </span>
+}
+
+@if (type === 'badge') {
+  <span class="badge" [ngClass]="[role.toLowerCase(), size === 'sm' ? 'sm' : 'md']">
+    {{ roleLabel }}
+  </span>
+}
+
+@if (type === 'avatar') {
+  <span class="avatar"
+        [ngClass]="role.toLowerCase()"
+        [style.width.px]="size"
+        [style.height.px]="size"
+        [style.font-size.px]="+size * 0.38">
+    {{ initials }}
+  </span>
+}

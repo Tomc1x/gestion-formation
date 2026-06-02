@@ -1,0 +1,100 @@
+@use 'styles/variables' as *;
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(20, 40, 63, 0.42);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 56px 20px;
+  overflow-y: auto;
+  animation: fadeIn .2s ease;
+}
+
+.modal-card {
+  max-width: 100%;
+  background-color: $bg-surface;
+  border-radius: $border-radius-lg;
+  box-shadow: $box-shadow-m;
+  overflow: hidden;
+  animation: scaleIn .25s cubic-bezier(.2,.8,.3,1) both;
+
+  .modal-header {
+    padding: 22px 26px;
+    border-bottom: 1px solid $border-color;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+
+    .header-identity {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex: 1;
+    }
+
+    .modal-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 11px;
+      background-color: $blue-100;
+      color: $primary-color;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: none;
+      i { width: 21px; height: 21px; }
+    }
+
+    h2 {
+      font-size: 19px;
+      font-weight: 700;
+      color: $text-title;
+      margin: 0;
+    }
+
+    .modal-subtitle {
+      margin: 3px 0 0;
+      font-size: 13.5px;
+      color: $text-main;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: $text-muted;
+      padding: 6px;
+      border-radius: $border-radius-sm;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.2s;
+
+      i { width: 18px; height: 18px; }
+      &:hover {
+        background-color: $blue-050;
+        color: $primary-color;
+      }
+    }
+  }
+
+  .modal-body {
+    padding: 26px;
+  }
+}
+
+// Animations clés
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}

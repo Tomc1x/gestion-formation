@@ -1,0 +1,65 @@
+@use 'styles/variables' as *;
+
+// 1. Status Pill Styles
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: $border-radius-sm;
+  font-size: 13px;
+  font-weight: 500;
+
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+
+  &.active {
+    color: $success-color;
+    background-color: $success-bg;
+    .dot { background-color: $success-color; }
+  }
+  &.upcoming {
+    color: $blue-700;
+    background-color: $blue-100;
+    .dot { background-color: $blue-700; }
+  }
+  &.ended {
+    color: $text-muted;
+    background-color: $border-light;
+    .dot { background-color: $text-muted; }
+  }
+}
+
+// 2. Role Badge Styles
+.badge {
+  display: inline-block;
+  border-radius: $border-radius-sm;
+  font-weight: 600;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+
+  &.md { padding: 3px 10px; font-size: 11.5px; }
+  &.sm { padding: 2px 8px; font-size: 10.5px; }
+
+  &.eleve { color: $blue-800; background-color: $blue-050; }
+  &.formateur { color: #7C3AED; background-color: #EDE9FE; }
+  &.ref { color: $warning-color; background-color: $warning-bg; }
+  &.admin { color: $danger-color; background-color: $danger-bg; }
+}
+
+// 3. Avatar Styles
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-weight: 600;
+
+  &.eleve { color: $blue-800; background-color: $blue-100; }
+  &.formateur { color: #7C3AED; background-color: #EDE9FE; }
+  &.ref { color: $warning-color; background-color: $warning-bg; }
+  &.admin { color: $danger-color; background-color: $danger-bg; }
+}

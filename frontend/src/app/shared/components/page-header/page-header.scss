@@ -1,0 +1,308 @@
+@use 'styles/variables' as *;
+
+.breadcrumb-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: $text-muted;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+
+  .breadcrumb-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .separator {
+      width: 14px;
+      height: 14px;
+      color: #C0C9D4;
+    }
+
+    span {
+      font-weight: 500;
+      &.clickable { cursor: pointer; }
+      &.active {
+        color: $text-title;
+        font-weight: 600;
+        cursor: default;
+      }
+    }
+  }
+}
+
+.header-main {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+
+  h1 {
+    font-size: 26px;
+    font-weight: 700;
+    color: $text-title;
+    margin: 0;
+  }
+
+  .subtitle {
+    margin: 6px 0 0;
+    color: $text-main;
+    font-size: 14.5px;
+    max-width: 620px;
+  }
+
+  .actions-wrapper {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+}
+
+.topbar {
+  height: var(--topbar-h);
+  background: #fff;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 28px;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+}
+
+.search-box {
+  width: 300px;
+  max-width: 32vw;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.role-switcher-wrap,
+.user-wrap {
+  position: relative;
+}
+
+.ghost-btn,
+.icon-btn,
+.user-btn,
+.menu-item,
+.menu-link {
+  font-family: var(--font-body), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.ghost-btn,
+.icon-btn,
+.user-btn,
+.menu-item,
+.menu-link {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.role-switcher-btn,
+.user-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 8px;
+}
+
+.role-switcher-btn {
+  border: 1px dashed var(--line);
+  background: #fff;
+}
+
+.role-switcher-btn span {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.notif-dot {
+  position: absolute;
+  top: 8px;
+  right: 9px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--red);
+  border: 2px solid #fff;
+}
+
+.separator {
+  width: 1px;
+  height: 32px;
+  background: var(--line);
+}
+
+.user-btn {
+  padding: 5px 8px 5px 5px;
+  border-radius: 10px;
+}
+
+.user-info {
+  text-align: left;
+  line-height: 1.2;
+}
+
+.user-name {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.user-role {
+  margin-top: 2px;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+}
+
+.card {
+  position: absolute;
+  z-index: 50;
+  box-shadow: var(--e3);
+  background: #fff;
+  border-radius: 12px;
+}
+
+.anim-in {
+  animation: popIn 0.14s ease-out;
+}
+
+.role-menu {
+  right: 0;
+  top: calc(100% + 8px);
+  width: 230px;
+  padding: 6px;
+}
+
+.user-menu {
+  right: 0;
+  top: calc(100% + 8px);
+  width: 250px;
+  overflow: hidden;
+}
+
+.menu-title {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--ink-3);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  padding: 8px 10px 6px;
+}
+
+.menu-item,
+.menu-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 10px;
+  border-radius: 8px;
+  text-align: left;
+}
+
+.menu-item {
+  background: transparent;
+}
+
+.menu-item.active {
+  background: var(--blue-050);
+}
+
+.menu-item:not(.active):hover,
+.menu-link:hover {
+  background: var(--grey-card);
+}
+
+.menu-label {
+  font-size: 13px;
+  color: var(--ink-2);
+  flex: 1;
+}
+
+.check-icon {
+  color: var(--blue-700);
+}
+
+.user-card-head {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  gap: 11px;
+  align-items: center;
+}
+
+.user-meta {
+  min-width: 0;
+}
+
+.user-name-lg {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.user-email {
+  font-size: 12px;
+  color: var(--ink-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.menu-actions {
+  padding: 6px;
+}
+
+.divider-line {
+  height: 1px;
+  background: var(--line);
+  margin: 6px 8px;
+}
+
+.menu-link {
+  font-size: 13.5px;
+  color: var(--ink-2);
+  background: transparent;
+}
+
+.menu-link.danger {
+  color: var(--red);
+  font-weight: 600;
+}
+
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
