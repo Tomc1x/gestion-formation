@@ -1,0 +1,84 @@
+<div class="login">
+  <!-- ===== Panneau gauche (marque) ===== -->
+  <div class="frame left">
+    <div class="decoration-circle-1" aria-hidden="true"></div>
+    <div class="decoration-circle-2" aria-hidden="true"></div>
+
+    <!-- Logo -->
+    <div class="logoframe">
+      <div class="logo" aria-hidden="true">
+        <svg lucideGraduationCap></svg>
+      </div>
+      <div class="logotext">
+        <p class="logotext-title">GestionFormation</p>
+        <p class="logotext-subtitle">Plateforme pédagogique</p>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta">
+      <h1>Pilotez vos parcours<br />de formation.</h1>
+      <p class="cta-desc">Une plateforme pédagogique unifiée.</p>
+    </div>
+
+    <!-- Pied de page -->
+    <p class="left-footer">© 2026 GestionFormation · Centre de Formation Professionnelle</p>
+  </div>
+
+  <!-- ===== Panneau droit (formulaire) ===== -->
+  <div class="frame right">
+    <div class="form-wrapper">
+      <h2>Connexion</h2>
+      <p class="subtitle">Accédez à votre espace selon votre profil.</p>
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="login-form" novalidate>
+        <!-- Identifiant -->
+        <div class="field">
+          <label for="username" class="label1">Identifiant</label>
+          <div class="input-icon">
+            <svg class="icon" lucideUser aria-hidden="true"></svg>
+            <input
+              id="username"
+              type="text"
+              class="input"
+              formControlName="username"
+              placeholder="prenom.nom"
+              autocomplete="username"
+            />
+          </div>
+        </div>
+
+        <!-- Mot de passe -->
+        <div class="field">
+          <label for="password" class="label1">Mot de passe</label>
+          <div class="input-icon">
+            <svg class="icon" lucideLock aria-hidden="true"></svg>
+            <input
+              id="password"
+              type="password"
+              class="input"
+              formControlName="password"
+              placeholder="••••••••"
+              autocomplete="current-password"
+            />
+          </div>
+        </div>
+
+        <!-- Rester connecté / Mot de passe oublié -->
+        <div class="form-row">
+          <label class="remember-me" for="rememberMe">
+            <input type="checkbox" id="rememberMe" formControlName="rememberMe" />
+            Rester connecté
+          </label>
+          <a href="#" class="forgot-password">Mot de passe oublié ?</a>
+        </div>
+
+        <!-- Bouton -->
+        <button type="submit" class="btn btn-primary btn-submit">
+          Se connecter
+          <svg lucideArrowRight aria-hidden="true"></svg>
+        </button>
+      </form>
+    </div>
+  </div>
+</div>

@@ -1,10 +1,10 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
-  selector: 'app-stat-card',
+  selector: 'app-button',
   imports: [],
-  templateUrl: './stat-card.html',
-  styleUrl: './stat-card.scss',
+  templateUrl: './button.html',
+  styleUrl: './button.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class StatCardComponent {}
+export class ButtonComponent {}
