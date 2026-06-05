@@ -1,5 +1,4 @@
-<nav class="sidebar">
-  <!-- Logo -->
+<div class="sidebar">
   <div class="logoframe">
     <div class="logo" aria-hidden="true">
       <svg lucideGraduationCap></svg>
@@ -9,4 +8,26 @@
       <p class="logotext-subtitle">Plateforme pédagogique</p>
     </div>
   </div>
-</nav>
+  <nav class="nav">
+    <div class="nav-title">Navigation</div>
+    @for (route of routes; track route.path) {
+      <button class="nav-item" [routerLink]="route.path" routerLinkActive="active">
+        <span class="nav-item-icon">
+          <svg [lucideIcon]="route.icon"></svg>
+        </span>
+        <span class="nav-item-text">{{ route.label }}</span>
+      </button>
+    }
+  </nav>
+  <div class="report-button-frame">
+    <button class="report-button">
+      <span class="report-button-icon">
+        <svg lucideLifeBuoy></svg>
+      </span>
+      <div class="report-button-right">
+        <span class="report-button-title">Besoin d'aide ?</span>
+        <span class="report-button-text">Centre d'assistance</span>
+      </div>
+    </button>
+  </div>
+</div>
