@@ -20,5 +20,6 @@ stack_spec_hash: ~
 active_work_items:
   - WI-20260602-APIAUT-001 (DONE)
   - WI-20260602-APIAUT-002 (DONE)
+  - WI-20260605-WRAPPE-001 (DONE)
 
 blocking_questions: ~

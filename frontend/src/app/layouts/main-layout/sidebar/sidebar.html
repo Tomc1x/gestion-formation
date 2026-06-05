@@ -1,4 +1,11 @@
-<div class="sidebar">
+<div
+  class="sidebar-backdrop"
+  [class.visible]="sidebarService.isOpen()"
+  aria-hidden="true"
+  (click)="sidebarService.close()">
+</div>
+
+<div class="sidebar" [class.open]="sidebarService.isOpen()">
   <div class="logoframe">
     <div class="logo" aria-hidden="true">
       <svg lucideGraduationCap></svg>
@@ -11,7 +18,7 @@
   <nav class="nav">
     <div class="nav-title">Navigation</div>
     @for (route of routes; track route.path) {
-      <button class="nav-item" [routerLink]="route.path" routerLinkActive="active">
+      <button class="nav-item" [routerLink]="route.path" routerLinkActive="active" (click)="sidebarService.close()">
         <span class="nav-item-icon">
           <svg [lucideIcon]="route.icon"></svg>
         </span>
