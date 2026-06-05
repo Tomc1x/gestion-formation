@@ -3,15 +3,11 @@
   grid-template-columns: 1.05fr 0.95fr;
   min-height: 100vh;
 
-  // ---- Cadre générique ----
   .frame {
     width: 100%;
     height: 100%;
   }
 
-  // ============================
-  // Panneau gauche (marque)
-  // ============================
   .frame.left {
     background: linear-gradient(150deg, var(--blue-900), var(--blue-800) 55%, var(--blue-700));
     color: #fff;
@@ -23,7 +19,7 @@
     overflow: hidden;
   }
 
-  // Cercles décoratifs
+
   .decoration-circle-1,
   .decoration-circle-2 {
     position: absolute;
@@ -46,7 +42,6 @@
     top: -20px;
   }
 
-  // Logo
   .logoframe {
     display: flex;
     align-items: center;
@@ -93,7 +88,7 @@
     }
   }
 
-  // CTA (accroche + stats)
+
   .cta {
     position: relative;
     z-index: 1;
@@ -138,7 +133,6 @@
     }
   }
 
-  // Pied de page gauche
   .left-footer {
     position: relative;
     z-index: 1;
@@ -146,11 +140,9 @@
     color: rgba(255, 255, 255, 0.55);
   }
 
-  // ============================
-  // Panneau droit (formulaire)
-  // ============================
   .frame.right {
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     padding: 40px;
@@ -168,13 +160,11 @@
     font-size: 14.5px;
   }
 
-  // Formulaire
   .login-form {
     display: flex;
     flex-direction: column;
     gap: 18px;
 
-    // Override SVG lucide dans les champs
     .field .input-icon {
       svg.icon {
         width: 18px;
@@ -222,7 +212,6 @@
     }
   }
 
-  // Bouton de soumission
   .btn-submit {
     width: 100%;
     height: 46px;
@@ -236,4 +225,49 @@
     }
   }
 
+}
+
+@media (max-width: 900px) {
+  .login {
+    grid-template-columns: 1fr;
+    .frame.left {
+      display: none;
+    }
+    .logoframe {
+      margin-bottom: 50px;
+      .logotext {
+      line-height: 1.1;
+
+      .logotext-title {
+        font-family: var(--font-head);
+        font-weight: 700;
+        font-size: 17px;
+        color: var(--ink);
+        letter-spacing: -0.01em;
+      }
+
+      .logotext-subtitle {
+        font-size: 10.5px;
+        color: var(--ink);
+        font-weight: 500;
+        letter-spacing: 0.02em;
+        margin-top: 1px;
+      }
+    }
+      .logo {
+        background: var(--blue-800);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-width: medium;
+        border-style: none;
+        border-color: currentcolor;
+        border-image: initial;
+        svg {
+          width: 24px;
+          height: 24px;
+        }
+      }
+    }
+  }
 }
