@@ -31,3 +31,4 @@ public class DataInitializer implements CommandLineRunner {
         }
     }
 }
+//Test
