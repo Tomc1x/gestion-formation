@@ -18,5 +18,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Build & Test
-        run: ./gradlew test
+        run: |
+          chmod +x gradlew
+          ./gradlew test
         working-directory: backend
