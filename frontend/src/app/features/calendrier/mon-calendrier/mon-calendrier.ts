@@ -1,10 +1,10 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
-  selector: 'app-stat-card',
+  selector: 'app-mon-calendrier',
   imports: [],
-  templateUrl: './stat-card.html',
-  styleUrl: './stat-card.scss',
+  templateUrl: './mon-calendrier.html',
+  styleUrl: './mon-calendrier.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class StatCardComponent {}
+export class MonCalendrierComponent {}

@@ -3,6 +3,8 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/gestion-formation.iml" filepath="$PROJECT_DIR$/.idea/gestion-formation.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/gestionformation.main.iml" filepath="$PROJECT_DIR$/.idea/modules/gestionformation.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/gestionformation.test.iml" filepath="$PROJECT_DIR$/.idea/modules/gestionformation.test.iml" />
     </modules>
   </component>
 </project>
