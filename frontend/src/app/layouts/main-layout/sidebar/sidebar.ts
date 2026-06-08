@@ -24,5 +24,6 @@ export class SidebarComponent {
     { path: '/app/dashboard', label: 'Tableau de bord', icon: LucideGraduationCap },
     { path: '/app/promotions', label: 'Promotions', icon: LucideUsers },
     { path: '/app/calendrier', label: 'Calendrier', icon: LucideCalendar },
+    { path:'/app/admin/utilisateurs', label: 'Utilisateurs', icon: LucideUsers },
   ];
 }

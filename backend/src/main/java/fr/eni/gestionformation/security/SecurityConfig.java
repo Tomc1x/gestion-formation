@@ -39,6 +39,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/cursus/**").hasRole("REFERENTE_ADMINISTRATIVE")
                 .requestMatchers(HttpMethod.GET, "/api/cours/**").authenticated()
                 .requestMatchers("/api/cours/**").hasRole("REFERENTE_ADMINISTRATIVE")
+                .requestMatchers("/api/admin/**").hasRole("ADMINISTRATEUR")
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session
