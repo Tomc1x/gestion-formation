@@ -4,6 +4,7 @@ import fr.eni.gestionformation.service.UserDetailsServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -30,8 +31,14 @@ public class SecurityConfig {
         http
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/login").permitAll()
                 .requestMatchers("/api/auth/register").hasAnyRole("ADMINISTRATEUR", "REFERENTE_ADMINISTRATIVE")
+                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers(HttpMethod.GET,"/api/filiere/**").permitAll()
+                .requestMatchers("/api/filiere/**").hasRole("REFERENTE_ADMINISTRATIVE")
+                .requestMatchers(HttpMethod.GET, "/api/cursus/**").authenticated()
+                .requestMatchers("/api/cursus/**").hasRole("REFERENTE_ADMINISTRATIVE")
+                .requestMatchers(HttpMethod.GET, "/api/cours/**").authenticated()
+                .requestMatchers("/api/cours/**").hasRole("REFERENTE_ADMINISTRATIVE")
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session
