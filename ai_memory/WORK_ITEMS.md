@@ -63,6 +63,20 @@
     - sidebar.scss : bug media query corrigé + drawer fixed + transition translateX
     - Proposed Rules acceptées : PIT-001 (Lucide imports[]), PIT-002 (SCSS @media nesting)
 
+## WI-20260608-BACKEN-001
+- Date: 2026-06-08
+- Title: Filiere — corrections post-revue (ControllerAdvice + REST + visibilité repo)
+- Status: DONE
+- TOA: manager
+- Executor: developer
+- attempt_count: 1
+- Notes: |
+    - FiliereNotFoundException + FiliereAlreadyExistsException créées dans exception/
+    - GlobalExceptionHandler @RestControllerAdvice (404 + 409)
+    - FiliereService mis à jour avec les exceptions personnalisées
+    - FiliereRepository et URLs Controller déjà corrigés par l'utilisateur
+    - Tests : BUILD SUCCESSFUL 8/8
+
 ## WI-20260603-FRONTE-001
 - Date: 2026-06-03
 - Title: Restructuration frontend Angular — arborescence + routing auth/app
