@@ -23,6 +23,6 @@ export class SidebarComponent {
   protected readonly routes: { path: string; label: string; icon: LucideIconInput }[] = [
     { path: '/app/dashboard', label: 'Tableau de bord', icon: LucideGraduationCap },
     { path: '/app/promotions', label: 'Promotions', icon: LucideUsers },
-    { path: '/app/Calendrier', label: 'Calendrier', icon: LucideCalendar },
+    { path: '/app/calendrier', label: 'Calendrier', icon: LucideCalendar },
   ];
 }

@@ -63,6 +63,21 @@
     - sidebar.scss : bug media query corrigé + drawer fixed + transition translateX
     - Proposed Rules acceptées : PIT-001 (Lucide imports[]), PIT-002 (SCSS @media nesting)
 
+## WI-20260608-FRONTE-002
+- Date: 2026-06-08
+- Title: MonCalendrierComponent — vues mois et semaine
+- Status: DONE
+- TOA: manager
+- Executor: developer
+- attempt_count: 1
+- Notes: |
+    - Signals : view, referenceDate, events (toSignal), computed monthGrid/weekDays/eventsByDay/navTitle
+    - Chargement réactif via combineLatest + switchMap
+    - Navigation prev/next par mois ou semaine selon la vue
+    - Bleu #1D4ED8 pour promotion, vert #16A34A pour cours à l'unité
+    - ARIA complet (grid/row/gridcell)
+    - Build : PASS
+
 ## WI-20260608-BACKEN-003
 - Date: 2026-06-08
 - Title: CoursService — validation rôle FORMATEUR dans assignFormateurs

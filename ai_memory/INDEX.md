@@ -1,5 +1,6 @@
 # INDEX
 
+WI-20260608-FRONTE-002 | MonCalendrierComponent — vues mois et semaine | DONE | developer | ai_memory/2026-06-08__ROLE-developer__WI-20260608-FRONTE-002.md
 WI-20260608-BACKEN-003 | CoursService — validation rôle FORMATEUR dans assignFormateurs | DONE | manager | —
 WI-20260608-BACKEN-002 | Cursus + Cours — entités, repos, services, controllers, sécurité | DONE | developer | ai_memory/2026-06-08__ROLE-developer__WI-20260608-BACKEN-002.md
 WI-20260608-BACKEN-001 | Filiere — corrections post-revue (ControllerAdvice + REST + visibilité repo) | DONE | developer | ai_memory/2026-06-08__ROLE-developer__WI-20260608-BACKEN-001.md

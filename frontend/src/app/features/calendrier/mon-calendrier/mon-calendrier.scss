@@ -1,0 +1,302 @@
+// Color tokens
+$color-promo: #1D4ED8;
+$color-promo-bg: #EFF6FF;
+$color-promo-border: #BFDBFE;
+$color-unit: #16A34A;
+$color-unit-bg: #F0FDF4;
+$color-unit-border: #BBF7D0;
+$color-out-bg: #F9FAFB;
+$color-border: #E5E7EB;
+$color-text: #111827;
+$color-text-muted: #6B7280;
+$color-header-bg: #F3F4F6;
+$color-toggle-active: #1D4ED8;
+$color-toggle-active-text: #fff;
+
+.calendrier {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: #fff;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.08);
+}
+
+// --- Toolbar ---
+.calendrier__toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.calendrier__view-toggle {
+  display: flex;
+  border: 1px solid $color-border;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.toggle-btn {
+  padding: 0.375rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  background: #fff;
+  border: none;
+  cursor: pointer;
+  color: $color-text-muted;
+  transition: background 0.15s, color 0.15s;
+
+  &:focus-visible {
+    outline: 2px solid $color-toggle-active;
+    outline-offset: -2px;
+  }
+
+  &--active {
+    background: $color-toggle-active;
+    color: $color-toggle-active-text;
+  }
+}
+
+.calendrier__nav {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+  justify-content: center;
+}
+
+.nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.375rem;
+  border: 1px solid $color-border;
+  background: #fff;
+  cursor: pointer;
+  color: $color-text-muted;
+  transition: background 0.15s, color 0.15s;
+
+  &:hover {
+    background: $color-header-bg;
+    color: $color-text;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $color-toggle-active;
+    outline-offset: 2px;
+  }
+}
+
+.calendrier__title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: $color-text;
+  margin: 0;
+  text-transform: capitalize;
+  min-width: 14rem;
+  text-align: center;
+}
+
+.calendrier__legend {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-left: auto;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  color: $color-text-muted;
+}
+
+.legend-dot {
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+
+  &--promo {
+    background: $color-promo;
+  }
+
+  &--unit {
+    background: $color-unit;
+  }
+}
+
+// --- Grid shared ---
+.calendrier__grid {
+  border: 1px solid $color-border;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.grid-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  background: $color-header-bg;
+  border-bottom: 1px solid $color-border;
+}
+
+.grid-header__cell {
+  padding: 0.5rem 0.25rem;
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: $color-text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+// --- Month view ---
+.calendrier__grid--month {
+  .grid-week {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    border-bottom: 1px solid $color-border;
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  .grid-cell {
+    min-height: 5.5rem;
+    padding: 0.375rem;
+    border-right: 1px solid $color-border;
+    background: #fff;
+    vertical-align: top;
+
+    &:last-child {
+      border-right: none;
+    }
+
+    &--out {
+      background: $color-out-bg;
+      opacity: 0.6;
+    }
+  }
+
+  .grid-cell__number {
+    display: block;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: $color-text-muted;
+    margin-bottom: 0.25rem;
+  }
+}
+
+// --- Week view ---
+.calendrier__grid--week {
+  .week-body {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+  }
+
+  .grid-cell--week {
+    min-height: 12rem;
+    padding: 0.5rem;
+    border-right: 1px solid $color-border;
+    background: #fff;
+
+    &:last-child {
+      border-right: none;
+    }
+  }
+}
+
+.grid-cell__events {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.grid-cell__empty {
+  display: block;
+  height: 1px;
+}
+
+// --- Event chip (month view) ---
+.event-chip {
+  display: flex;
+  flex-direction: column;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  border-left: 3px solid;
+  font-size: 0.6875rem;
+  cursor: default;
+  overflow: hidden;
+
+  &--promo {
+    background: $color-promo-bg;
+    border-color: $color-promo;
+    color: $color-promo;
+  }
+
+  &--unit {
+    background: $color-unit-bg;
+    border-color: $color-unit;
+    color: $color-unit;
+  }
+}
+
+.event-chip__time {
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.event-chip__name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: $color-text;
+  font-size: 0.6875rem;
+  line-height: 1.3;
+}
+
+// --- Event card (week view) ---
+.event-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: 0.375rem 0.5rem;
+  border-radius: 0.375rem;
+  border-left: 3px solid;
+  cursor: default;
+
+  &--promo {
+    background: $color-promo-bg;
+    border-color: $color-promo;
+  }
+
+  &--unit {
+    background: $color-unit-bg;
+    border-color: $color-unit;
+  }
+}
+
+.event-card__time {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: $color-text-muted;
+}
+
+.event-card__name {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: $color-text;
+  line-height: 1.3;
+}
+
+.event-card__promo {
+  font-size: 0.6875rem;
+  color: $color-promo;
+  font-weight: 500;
+}
