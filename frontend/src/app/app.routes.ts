@@ -16,6 +16,17 @@ export const routes: Routes = [
     ]
   },
   {
+    path: 'register',
+    component: AuthLayoutComponent,
+    children: [
+      {
+        title: 'Créer votre compte',
+        path: '',
+        loadComponent: () => import('./features/auth/register/register').then(m => m.RegisterComponent)
+      }
+    ]
+  },
+  {
     path: 'app',
     component: MainLayoutComponent,
     canActivate: [authGuard],
@@ -40,6 +51,11 @@ export const routes: Routes = [
         title: 'Calendrier',
         path: 'calendrier',
         loadComponent: () => import('./features/calendrier/mon-calendrier/mon-calendrier').then(m => m.MonCalendrierComponent)
+      },
+      {
+        title: 'Utilisateurs',
+        path: 'admin/utilisateurs',
+        loadComponent: () => import('./features/administration/utilisateurs/utilisateurs').then(m => m.UtilisateursComponent)
       }
     ]
   },

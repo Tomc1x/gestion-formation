@@ -1,0 +1,467 @@
+<!-- Backdrop menu 3 points -->
+@if (openMenuUid() !== null) {
+  <div class="backdrop" aria-hidden="true" (click)="closeMenu()"></div>
+}
+
+<div class="page">
+  <div class="page__header">
+    <div>
+      <h1 class="page__title">Gestion des utilisateurs</h1>
+      <p class="page__subtitle">Comptes de la plateforme, rôles et statuts d'accès.</p>
+    </div>
+    <button class="btn-primary" type="button" (click)="openCreateModal()">
+      <svg lucideUserPlus class="btn-icon" aria-hidden="true"></svg>
+      Créer un utilisateur
+    </button>
+  </div>
+
+  <div class="toolbar-card">
+    <div class="search-box" role="search">
+      <svg lucideSearch class="search-box__icon" aria-hidden="true"></svg>
+      <input
+        class="search-box__input"
+        type="search"
+        placeholder="Rechercher un utilisateur..."
+        aria-label="Rechercher un utilisateur"
+        [ngModel]="searchQuery()"
+        (ngModelChange)="searchQuery.set($event)"
+      />
+    </div>
+    <div class="role-select-wrapper">
+      <select
+        class="role-select"
+        aria-label="Filtrer par rôle"
+        [ngModel]="selectedRole()"
+        (ngModelChange)="selectedRole.set($event)"
+      >
+        @for (f of roleFilters; track f.value) {
+          <option [value]="f.value">{{ f.label }}</option>
+        }
+      </select>
+      <svg lucideChevronDown class="role-select__chevron" aria-hidden="true"></svg>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <p class="state-msg" aria-live="polite">Chargement…</p>
+  } @else if (loadError()) {
+    <p class="state-msg state-msg--error" role="alert">{{ loadError() }}</p>
+  } @else {
+    <div class="table-card">
+      <table class="users-table" aria-label="Liste des utilisateurs">
+        <thead>
+          <tr>
+            <th scope="col">Utilisateur</th>
+            <th scope="col">E-mail</th>
+            <th scope="col">Rôle</th>
+            <th scope="col">Statut</th>
+            <th scope="col"><span class="sr-only">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (filteredUsers().length === 0) {
+            <tr><td colspan="5" class="empty-row">Aucun utilisateur trouvé.</td></tr>
+          }
+          @for (user of filteredUsers(); track user.uid) {
+            <tr>
+              <td class="cell-user">
+                <app-avatar [firstName]="user.firstName" [lastName]="user.lastName" size="md" />
+                <span class="cell-user__name">{{ fullName(user) }}</span>
+              </td>
+              <td class="cell-email">{{ user.email }}</td>
+              <td><app-role-badge [role]="toFrontendRole(user.role)" size="sm" /></td>
+              <td class="cell-status">
+                <button
+                  class="toggle"
+                  [class.toggle--on]="user.enabled"
+                  type="button"
+                  role="switch"
+                  [attr.aria-checked]="user.enabled"
+                  [attr.aria-label]="(user.enabled ? 'Désactiver ' : 'Activer ') + fullName(user)"
+                  (click)="toggleEnabled(user)"
+                >
+                  <span class="toggle__thumb" aria-hidden="true"></span>
+                </button>
+                <span class="cell-status__label" [class.cell-status__label--off]="!user.enabled">
+                  {{ user.enabled ? 'Actif' : 'Désactivé' }}
+                </span>
+              </td>
+              <td class="cell-actions">
+                <div class="menu-anchor">
+                  <button
+                    class="icon-btn"
+                    type="button"
+                    [attr.aria-label]="'Actions pour ' + fullName(user)"
+                    [attr.aria-expanded]="openMenuUid() === user.uid"
+                    aria-haspopup="menu"
+                    (click)="toggleMenu(user.uid)"
+                  >
+                    <svg lucideMoreVertical aria-hidden="true"></svg>
+                  </button>
+
+                  @if (openMenuUid() === user.uid) {
+                    <div class="dropdown-menu" role="menu">
+                      <button class="dropdown-item" type="button" role="menuitem" (click)="openEditModal(user)">
+                        <svg lucidePencil aria-hidden="true"></svg>
+                        Modifier le profil
+                      </button>
+                      <button class="dropdown-item" type="button" role="menuitem" (click)="openChangeRoleModal(user)">
+                        <svg lucideShieldCheck aria-hidden="true"></svg>
+                        Changer le rôle
+                      </button>
+                      <button class="dropdown-item" type="button" role="menuitem" (click)="openResetPasswordModal(user)">
+                        <svg lucideKeyRound aria-hidden="true"></svg>
+                        Réinitialiser le mot de passe
+                      </button>
+                      <div class="dropdown-divider" role="separator"></div>
+                      <button class="dropdown-item dropdown-item--danger" type="button" role="menuitem" (click)="openDeleteModal(user)">
+                        <svg lucideTrash2 aria-hidden="true"></svg>
+                        Supprimer
+                      </button>
+                    </div>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+
+@if (showCreateModal()) {
+  <div class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-create-title" (click)="closeCreateModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal__header">
+        <h2 class="modal__title" id="modal-create-title">Ajouter un utilisateur</h2>
+        <button class="modal__close" type="button" aria-label="Fermer" (click)="closeCreateModal()">
+          <svg lucideX aria-hidden="true"></svg>
+        </button>
+      </div>
+
+      <!-- Onglets -->
+      <div class="modal-tabs" role="tablist">
+        <button
+          class="modal-tab"
+          [class.modal-tab--active]="createModalTab() === 'direct'"
+          role="tab"
+          [attr.aria-selected]="createModalTab() === 'direct'"
+          type="button"
+          (click)="switchCreateTab('direct')"
+        >
+          <svg lucideUserCog aria-hidden="true"></svg>
+          Création directe
+        </button>
+        <button
+          class="modal-tab"
+          [class.modal-tab--active]="createModalTab() === 'invite'"
+          role="tab"
+          [attr.aria-selected]="createModalTab() === 'invite'"
+          type="button"
+          (click)="switchCreateTab('invite')"
+        >
+          <svg lucideMail aria-hidden="true"></svg>
+          Invitation par e-mail
+        </button>
+      </div>
+
+      <!-- Onglet : Création directe -->
+      @if (createModalTab() === 'direct') {
+        <form class="modal__body" [formGroup]="createForm" (ngSubmit)="submitCreate()">
+          <div class="form-row">
+            <div class="form-field">
+              <label for="c-firstName">Prénom</label>
+              <input id="c-firstName" type="text" formControlName="firstName" placeholder="Prénom" autocomplete="given-name" />
+              @if (createForm.controls.firstName.invalid && createForm.controls.firstName.touched) {
+                <span class="field-error">Champ requis</span>
+              }
+            </div>
+            <div class="form-field">
+              <label for="c-lastName">Nom</label>
+              <input id="c-lastName" type="text" formControlName="lastName" placeholder="Nom" autocomplete="family-name" />
+              @if (createForm.controls.lastName.invalid && createForm.controls.lastName.touched) {
+                <span class="field-error">Champ requis</span>
+              }
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label for="c-email">E-mail</label>
+            <input id="c-email" type="email" formControlName="email" placeholder="adresse@exemple.fr" autocomplete="email" />
+            @if (createForm.controls.email.invalid && createForm.controls.email.touched) {
+              <span class="field-error">E-mail invalide</span>
+            }
+          </div>
+
+          <div class="form-field">
+            <label for="c-password">Mot de passe</label>
+            <input id="c-password" type="password" formControlName="password" placeholder="6 caractères minimum" autocomplete="new-password" />
+            @if (createForm.controls.password.invalid && createForm.controls.password.touched) {
+              <span class="field-error">6 caractères minimum</span>
+            }
+          </div>
+
+          <div class="form-field">
+            <label for="c-role">Rôle</label>
+            <select id="c-role" formControlName="role">
+              <option value="" disabled>Sélectionner un rôle</option>
+              @for (opt of roleOptions; track opt.value) {
+                <option [value]="opt.value">{{ opt.label }}</option>
+              }
+            </select>
+            @if (createForm.controls.role.invalid && createForm.controls.role.touched) {
+              <span class="field-error">Champ requis</span>
+            }
+          </div>
+
+          @if (formError()) {
+            <p class="form-api-error" role="alert">{{ formError() }}</p>
+          }
+
+          <div class="modal__footer">
+            <button class="btn-secondary" type="button" (click)="closeCreateModal()">Annuler</button>
+            <button class="btn-primary" type="submit" [disabled]="submitting()">
+              {{ submitting() ? 'Création…' : 'Créer le compte' }}
+            </button>
+          </div>
+        </form>
+      }
+
+      <!-- Onglet : Invitation -->
+      @if (createModalTab() === 'invite') {
+        <div class="modal__body">
+          @if (inviteSent()) {
+            <div class="invite-success">
+              <svg lucideCheckCircle class="invite-success__icon" aria-hidden="true"></svg>
+              <div>
+                <p class="invite-success__title">Invitation envoyée !</p>
+                <p class="invite-success__desc">Un e-mail a été envoyé à <strong>{{ inviteSent() }}</strong> avec un lien valable 24h pour créer son compte.</p>
+              </div>
+            </div>
+            @if (inviteLink()) {
+              <div class="invite-link-block">
+                <p class="invite-link-block__label">Lien d'inscription (à copier si l'e-mail n'arrive pas) :</p>
+                <a [href]="inviteLink()" target="_blank" class="invite-link-block__url">{{ inviteLink() }}</a>
+              </div>
+            }
+            <div class="modal__footer">
+              <button class="btn-secondary" type="button" (click)="closeCreateModal()">Fermer</button>
+              <button class="btn-primary" type="button" (click)="inviteSent.set(null); inviteLink.set(null); inviteForm.reset()">
+                Envoyer une autre invitation
+              </button>
+            </div>
+          } @else {
+            <form [formGroup]="inviteForm" (ngSubmit)="submitInvite()">
+              <p class="modal__desc" style="margin-bottom: 0.5rem">
+                L'utilisateur recevra un e-mail contenant un lien pour s'inscrire avec l'adresse fournie. Le lien expire après <strong>24 heures</strong>.
+              </p>
+
+              <div class="form-field">
+                <label for="i-email">Adresse e-mail</label>
+                <input id="i-email" type="email" formControlName="email" placeholder="adresse@exemple.fr" autocomplete="email" />
+                @if (inviteForm.controls.email.invalid && inviteForm.controls.email.touched) {
+                  <span class="field-error">E-mail invalide</span>
+                }
+              </div>
+
+              <div class="form-field" style="margin-top: 0.75rem">
+                <label for="i-role">Rôle attribué à l'inscription</label>
+                <select id="i-role" formControlName="role">
+                  <option value="" disabled>Sélectionner un rôle</option>
+                  @for (opt of roleOptions; track opt.value) {
+                    <option [value]="opt.value">{{ opt.label }}</option>
+                  }
+                </select>
+                @if (inviteForm.controls.role.invalid && inviteForm.controls.role.touched) {
+                  <span class="field-error">Champ requis</span>
+                }
+              </div>
+
+              @if (formError()) {
+                <p class="form-api-error" style="margin-top: 0.75rem" role="alert">{{ formError() }}</p>
+              }
+
+              <div class="modal__footer">
+                <button class="btn-secondary" type="button" (click)="closeCreateModal()">Annuler</button>
+                <button class="btn-primary" type="submit" [disabled]="submitting()">
+                  <svg lucideMail aria-hidden="true"></svg>
+                  {{ submitting() ? 'Envoi…' : 'Envoyer l\'invitation' }}
+                </button>
+              </div>
+            </form>
+          }
+        </div>
+      }
+    </div>
+  </div>
+}
+
+@if (editingUser()) {
+  <div class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-edit-title" (click)="closeEditModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal__header">
+        <h2 class="modal__title" id="modal-edit-title">Modifier le profil</h2>
+        <button class="modal__close" type="button" aria-label="Fermer" (click)="closeEditModal()">
+          <svg lucideX aria-hidden="true"></svg>
+        </button>
+      </div>
+
+      <form class="modal__body" [formGroup]="editProfileForm" (ngSubmit)="submitEdit()">
+        <div class="form-row">
+          <div class="form-field">
+            <label for="e-firstName">Prénom</label>
+            <input id="e-firstName" type="text" formControlName="firstName" autocomplete="given-name" />
+            @if (editProfileForm.controls.firstName.invalid && editProfileForm.controls.firstName.touched) {
+              <span class="field-error">Champ requis</span>
+            }
+          </div>
+          <div class="form-field">
+            <label for="e-lastName">Nom</label>
+            <input id="e-lastName" type="text" formControlName="lastName" autocomplete="family-name" />
+            @if (editProfileForm.controls.lastName.invalid && editProfileForm.controls.lastName.touched) {
+              <span class="field-error">Champ requis</span>
+            }
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label for="e-email">E-mail</label>
+          <input id="e-email" type="email" formControlName="email" autocomplete="email" />
+          @if (editProfileForm.controls.email.invalid && editProfileForm.controls.email.touched) {
+            <span class="field-error">E-mail invalide</span>
+          }
+        </div>
+
+        @if (formError()) {
+          <p class="form-api-error" role="alert">{{ formError() }}</p>
+        }
+
+        <div class="modal__footer">
+          <button class="btn-secondary" type="button" (click)="closeEditModal()">Annuler</button>
+          <button class="btn-primary" type="submit" [disabled]="submitting()">
+            {{ submitting() ? 'Enregistrement…' : 'Enregistrer' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<!-- Modal : Changer le rôle                                                   -->
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+@if (changingRoleUser()) {
+  <div class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-role-title" (click)="closeChangeRoleModal()">
+    <div class="modal modal--sm" (click)="$event.stopPropagation()">
+      <div class="modal__header">
+        <h2 class="modal__title" id="modal-role-title">Changer le rôle</h2>
+        <button class="modal__close" type="button" aria-label="Fermer" (click)="closeChangeRoleModal()">
+          <svg lucideX aria-hidden="true"></svg>
+        </button>
+      </div>
+
+      <form class="modal__body" [formGroup]="changeRoleForm" (ngSubmit)="submitChangeRole()">
+        <p class="modal__desc">Rôle actuel de <strong>{{ fullName(changingRoleUser()!) }}</strong></p>
+
+        <div class="form-field">
+          <label for="r-role">Nouveau rôle</label>
+          <select id="r-role" formControlName="role">
+            @for (opt of roleOptions; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+        </div>
+
+        @if (formError()) {
+          <p class="form-api-error" role="alert">{{ formError() }}</p>
+        }
+
+        <div class="modal__footer">
+          <button class="btn-secondary" type="button" (click)="closeChangeRoleModal()">Annuler</button>
+          <button class="btn-primary" type="submit" [disabled]="submitting()">
+            {{ submitting() ? 'Modification…' : 'Modifier' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<!-- Modal : Réinitialiser le mot de passe                                     -->
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<!-- Modal : Confirmer la suppression                                          -->
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+@if (deletingUser()) {
+  <div class="modal-overlay" role="alertdialog" aria-modal="true" aria-labelledby="modal-delete-title" aria-describedby="modal-delete-desc" (click)="closeDeleteModal()">
+    <div class="modal modal--sm" (click)="$event.stopPropagation()">
+      <div class="modal__header">
+        <h2 class="modal__title" id="modal-delete-title">Supprimer l'utilisateur</h2>
+        <button class="modal__close" type="button" aria-label="Fermer" (click)="closeDeleteModal()">
+          <svg lucideX aria-hidden="true"></svg>
+        </button>
+      </div>
+
+      <div class="modal__body">
+        <div class="delete-warning">
+          <svg lucideTrash2 class="delete-warning__icon" aria-hidden="true"></svg>
+          <p id="modal-delete-desc" class="delete-warning__text">
+            Vous êtes sur le point de supprimer le compte de
+            <strong>{{ fullName(deletingUser()!) }}</strong>.
+            Cette action est <strong>irréversible</strong> — toutes les données associées seront perdues.
+          </p>
+        </div>
+
+        @if (formError()) {
+          <p class="form-api-error" role="alert">{{ formError() }}</p>
+        }
+
+        <div class="modal__footer">
+          <button class="btn-secondary" type="button" (click)="closeDeleteModal()">Annuler</button>
+          <button class="btn-danger" type="button" [disabled]="submitting()" (click)="confirmDelete()">
+            <svg lucideTrash2 aria-hidden="true"></svg>
+            {{ submitting() ? 'Suppression…' : 'Supprimer définitivement' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+@if (resettingPasswordUser()) {
+  <div class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-pwd-title" (click)="closeResetPasswordModal()">
+    <div class="modal modal--sm" (click)="$event.stopPropagation()">
+      <div class="modal__header">
+        <h2 class="modal__title" id="modal-pwd-title">Réinitialiser le mot de passe</h2>
+        <button class="modal__close" type="button" aria-label="Fermer" (click)="closeResetPasswordModal()">
+          <svg lucideX aria-hidden="true"></svg>
+        </button>
+      </div>
+
+      <form class="modal__body" [formGroup]="resetPasswordForm" (ngSubmit)="submitResetPassword()">
+        <p class="modal__desc">Définir un nouveau mot de passe pour <strong>{{ fullName(resettingPasswordUser()!) }}</strong></p>
+
+        <div class="form-field">
+          <label for="p-password">Nouveau mot de passe</label>
+          <input id="p-password" type="password" formControlName="newPassword" placeholder="6 caractères minimum" autocomplete="new-password" />
+          @if (resetPasswordForm.controls.newPassword.invalid && resetPasswordForm.controls.newPassword.touched) {
+            <span class="field-error">6 caractères minimum</span>
+          }
+        </div>
+
+        @if (formError()) {
+          <p class="form-api-error" role="alert">{{ formError() }}</p>
+        }
+
+        <div class="modal__footer">
+          <button class="btn-secondary" type="button" (click)="closeResetPasswordModal()">Annuler</button>
+          <button class="btn-primary" type="submit" [disabled]="submitting()">
+            {{ submitting() ? 'Réinitialisation…' : 'Réinitialiser' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

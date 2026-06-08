@@ -1,5 +1,20 @@
 # WORK ITEMS
 
+## WI-20260608-FRONTE-003
+- Date: 2026-06-08
+- Title: Écran gestion utilisateurs — Screen 10
+- Status: DONE
+- TOA: manager
+- Executor: developer
+- attempt_count: 1
+- Notes: |
+    - core/models/user.model.ts : BackendRole + UserAdmin interface + BACKEND_TO_FRONTEND_ROLE + ROLE_FILTER_LABELS
+    - core/services/user-admin.service.ts : getAll(), enable(uid), disable(uid) → /api/admin/users
+    - shared/components/avatar/ : initiales calculées, couleur déterministe par hash du nom
+    - features/administration/utilisateurs/ : table recherche + filtre rôle + toggle actif/inactif
+    - Route lazy /app/admin/utilisateurs ajoutée dans app.routes.ts
+    - Build : PASS (chunk utilisateurs 34.88 kB)
+
 ## WI-20260602-APIAUT-001
 - Date: 2026-06-02
 - Title: Gitignore + init structure ai_memory
@@ -77,6 +92,48 @@
     - Bleu #1D4ED8 pour promotion, vert #16A34A pour cours à l'unité
     - ARIA complet (grid/row/gridcell)
     - Build : PASS
+
+## WI-20260608-BACKEN-006
+- Date: 2026-06-08
+- Title: Postman — collection + environnement + scripts JWT
+- Status: DONE
+- TOA: manager
+- Executor: developer
+- attempt_count: 1
+- Notes: |
+    - docs/postman/gestion-formation.collection.json (v2.1) — 6 dossiers, 27 requêtes
+    - docs/postman/gestion-formation.environment.json — baseUrl, token, userId, filiereId, cursusId, coursId
+    - Scripts auto : login → token, create user → userId, create filiere/cursus/cours → ids
+
+## WI-20260608-BACKEN-005
+- Date: 2026-06-08
+- Title: Système d'invitation — InvitationToken + JavaMailSender + endpoints
+- Status: DONE
+- TOA: manager
+- Executor: developer
+- attempt_count: 1
+- Notes: |
+    - InvitationToken : token UUID, email, role, expirationDate (now+24h), used
+    - InvitationService : sendInvitation (invalide ancien token + envoie mail) + registerWithToken
+    - POST /api/admin/invite (ADMIN) + POST /api/auth/register-invitation (public)
+    - InvalidInvitationTokenException → 400
+    - app.invitation.base-url configurable dans properties
+    - Tests : BUILD SUCCESSFUL
+
+## WI-20260608-BACKEN-004
+- Date: 2026-06-08
+- Title: API Admin utilisateurs — CRUD + enabled + sécurité
+- Status: DONE
+- TOA: manager
+- Executor: developer
+- attempt_count: 1
+- Notes: |
+    - User.enabled + isEnabled() surchargé
+    - UserAdminService : findAll, findById, createUser, enable/disable, changePassword, deleteUser, changeRole
+    - UserAdminController : 8 endpoints sur /api/admin/users
+    - UserNotFoundException (404) + UserAlreadyExistsException (409)
+    - SecurityConfig : /api/admin/** → ADMINISTRATEUR
+    - Tests : BUILD SUCCESSFUL
 
 ## WI-20260608-BACKEN-003
 - Date: 2026-06-08
