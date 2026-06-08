@@ -35,6 +35,34 @@
     - login.html : deux colonnes (marque gauche / formulaire droit), @for pour stats et demoAccounts, ARIA complet
     - login.scss : styles complets — panneau gauche gradient, cercles déco, logo, CTA + stats, panneau droit, formulaire, comptes démo avec état actif
 
+## WI-20260605-WRAPPE-002
+- Date: 2026-06-05
+- Title: Header Angular — port du Topbar React (sans démo switcher)
+- Status: DONE
+- TOA: manager
+- Executor: developer
+- attempt_count: 1
+- Notes: |
+    - auth.constants.ts : types Role/RoleMeta/UserProfile + ROLE_META + USER_FOR_ROLE (4 rôles)
+    - AuthService : currentRole signal, setRole(), currentUser+currentRoleMeta computed, logout reset role
+    - AvatarComponent : shared/components/avatar/ — initiales calculées, taille/couleurs via input()
+    - RoleBadgeComponent : shared/components/role-badge/ — badge coloré, sizes sm/md
+    - HeaderComponent : template complet (search, bell+dot, séparateur, user menu dropdown, hamburger mobile)
+
+## WI-20260605-WRAPPE-001
+- Date: 2026-06-05
+- Title: Sidebar mobile — drawer hamburger ≤ 900px
+- Status: DONE
+- TOA: manager
+- Executor: developer
+- attempt_count: 1
+- Notes: |
+    - SidebarService (signal isOpen, toggle, close) — providedIn root
+    - SidebarComponent : [class.open] binding, backdrop fade, close on nav-item click
+    - HeaderComponent : bouton hamburger LucideMenu, aria-expanded, visible ≤ 900px
+    - sidebar.scss : bug media query corrigé + drawer fixed + transition translateX
+    - Proposed Rules acceptées : PIT-001 (Lucide imports[]), PIT-002 (SCSS @media nesting)
+
 ## WI-20260603-FRONTE-001
 - Date: 2026-06-03
 - Title: Restructuration frontend Angular — arborescence + routing auth/app

@@ -22,18 +22,22 @@ export const routes: Routes = [
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       {
+        title: 'Tableau de bord',
         path: 'dashboard',
         loadComponent: () => import('./features/dashboard/dashboard').then(m => m.DashboardComponent)
       },
       {
+        title: 'Promotions',
         path: 'promotions',
         loadComponent: () => import('./features/promotions/promotions-list/promotions-list').then(m => m.PromotionsListComponent)
       },
       {
+        title: 'Promotion Detail',
         path: 'promotions/:id',
         loadComponent: () => import('./features/promotions/promotion-detail/promotion-detail').then(m => m.PromotionDetailComponent)
       },
       {
+        title: 'Calendrier',
         path: 'calendrier',
         loadComponent: () => import('./features/calendrier/mon-calendrier/mon-calendrier').then(m => m.MonCalendrierComponent)
       }

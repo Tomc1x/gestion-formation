@@ -39,6 +39,8 @@
   --sidebar-w: #{$sidebar-w};
   --topbar-h:  #{$topbar-h};
 
+  --sidebar-w-collapsed: #{$sidebar-w-collapsed};
+
   // Border radius
   --r-sm: #{$r-sm};
   --r:    #{$r};
@@ -229,3 +231,6 @@ p,label,span {
 
 }
 
+svg{
+  display: block;
+}
