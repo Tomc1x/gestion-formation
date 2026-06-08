@@ -1,4 +1,5 @@
-import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import {
@@ -22,10 +23,12 @@ export class LoginComponent {
   private readonly fb = inject(FormBuilder);
 
   readonly form = this.fb.nonNullable.group({
-    username: ['', Validators.required],
+    email: ['', Validators.required],
     password: ['', Validators.required],
     rememberMe: [false],
   });
+
+  readonly errorMessage = signal<string | null>(null);
 
   readonly stats = [
     { value: '4', label: 'Filières' },
@@ -38,9 +41,19 @@ export class LoginComponent {
       this.form.markAllAsTouched();
       return;
     }
-    const { username, password } = this.form.getRawValue();
-    this.auth.login({ username, password }).subscribe(() => {
-      this.router.navigate(['/app']);
+    this.errorMessage.set(null);
+    const { email, password } = this.form.getRawValue();
+    this.auth.login({ email, password }).subscribe({
+      next: () => this.router.navigate(['/app']),
+      error: (err: HttpErrorResponse) => {
+        if (err.status === 401) {
+          this.errorMessage.set('Identifiants incorrects, veuillez réessayer.');
+        } else if (err.status === 429) {
+          this.errorMessage.set('Trop de tentatives. Veuillez patienter avant de réessayer.');
+        } else {
+          this.errorMessage.set('Une erreur est survenue. Veuillez réessayer.');
+        }
+      },
     });
   }
 }

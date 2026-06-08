@@ -36,18 +36,24 @@
       <h2>Connexion</h2>
       <p class="subtitle">Accédez à votre espace selon votre profil.</p>
 
+      @if (errorMessage()) {
+        <div class="error-alert" role="alert" aria-live="assertive">
+          {{ errorMessage() }}
+        </div>
+      }
+
       <form [formGroup]="form" (ngSubmit)="onSubmit()" class="login-form" novalidate>
         <div class="field">
-          <label for="username" class="label1">Identifiant</label>
+          <label for="email" class="label1">Identifiant</label>
           <div class="input-icon">
             <svg class="icon" lucideUser aria-hidden="true"></svg>
             <input
-              id="username"
-              type="text"
+              id="email"
+              type="email"
               class="input"
-              formControlName="username"
-              placeholder="prenom.nom"
-              autocomplete="username"
+              formControlName="email"
+              placeholder="adresse@email.com"
+              autocomplete="email"
             />
           </div>
         </div>
