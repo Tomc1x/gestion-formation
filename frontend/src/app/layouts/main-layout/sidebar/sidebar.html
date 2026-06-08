@@ -1,0 +1,40 @@
+<div
+  class="sidebar-backdrop"
+  [class.visible]="sidebarService.isOpen()"
+  aria-hidden="true"
+  (click)="sidebarService.close()">
+</div>
+
+<div class="sidebar" [class.open]="sidebarService.isOpen()">
+  <div class="logoframe">
+    <div class="logo" aria-hidden="true">
+      <svg lucideGraduationCap></svg>
+    </div>
+    <div class="logotext">
+      <p class="logotext-title">GestionFormation</p>
+      <p class="logotext-subtitle">Plateforme pédagogique</p>
+    </div>
+  </div>
+  <nav class="nav">
+    <div class="nav-title">Navigation</div>
+    @for (route of routes; track route.path) {
+      <button class="nav-item" [routerLink]="route.path" routerLinkActive="active" (click)="sidebarService.close()">
+        <span class="nav-item-icon">
+          <svg [lucideIcon]="route.icon"></svg>
+        </span>
+        <span class="nav-item-text">{{ route.label }}</span>
+      </button>
+    }
+  </nav>
+  <div class="report-button-frame">
+    <button class="report-button">
+      <span class="report-button-icon">
+        <svg lucideLifeBuoy></svg>
+      </span>
+      <div class="report-button-right">
+        <span class="report-button-title">Besoin d'aide ?</span>
+        <span class="report-button-text">Centre d'assistance</span>
+      </div>
+    </button>
+  </div>
+</div>

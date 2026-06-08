@@ -1,0 +1,83 @@
+<header class="header">
+  <button
+    class="hamburger-btn"
+    type="button"
+    aria-label="Ouvrir la navigation"
+    [attr.aria-expanded]="sidebarService.isOpen()"
+    (click)="sidebarService.toggle()"
+  >
+    <svg lucideMenu></svg>
+  </button>
+
+  <div class="search-wrapper">
+    <svg lucideSearch class="search-icon" aria-hidden="true"></svg>
+    <input
+      class="search-input"
+      type="search"
+      placeholder="Recherche globale…"
+      aria-label="Recherche globale"
+    />
+  </div>
+
+  <div class="spacer"></div>
+
+  <div class="icon-btn-wrapper">
+    <button class="icon-btn" type="button" aria-label="Notifications">
+      <svg lucideBell></svg>
+      <span class="notif-dot" aria-hidden="true"></span>
+    </button>
+  </div>
+
+  <div class="divider" aria-hidden="true"></div>
+
+  <div class="user-menu-wrapper">
+    <button
+      class="user-btn"
+      type="button"
+      [attr.aria-expanded]="menuOpen()"
+      aria-haspopup="true"
+      aria-label="Menu utilisateur"
+      (click)="menuOpen.set(!menuOpen())"
+    >
+      <div class="user-info">
+        <span class="user-name">{{ currentUser()?.firstName }} {{ currentUser()?.lastName }}</span>
+        <app-role-badge [role]="currentRole()" size="sm" />
+      </div>
+      <svg lucideChevronDown class="chevron-icon" aria-hidden="true"></svg>
+    </button>
+
+    @if (menuOpen()) {
+      <div class="backdrop" aria-hidden="true" (click)="menuOpen.set(false)"></div>
+      <div class="dropdown card" role="menu" aria-label="Menu utilisateur">
+        <div class="dropdown-header">
+          <div class="dropdown-user-info">
+            <span class="dropdown-user-name"
+              >{{ currentUser()?.firstName }} {{ currentUser()?.lastName }}</span
+            >
+            <span class="dropdown-user-email">{{ currentUser()?.email }}</span>
+          </div>
+        </div>
+        <div class="dropdown-body">
+          <button class="dropdown-item" type="button" role="menuitem">
+            <svg lucideUser aria-hidden="true"></svg>
+            Mon profil
+          </button>
+          <button class="dropdown-item" type="button" role="menuitem">
+            <svg lucideSettings aria-hidden="true"></svg>
+            Paramètres
+          </button>
+          <div class="dropdown-divider" role="separator"></div>
+          <button
+            class="dropdown-item dropdown-item--danger"
+            type="button"
+            role="menuitem"
+            (click)="logout()"
+          >
+            <svg lucideLogOut aria-hidden="true"></svg>
+            Se déconnecter
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+</header>

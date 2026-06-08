@@ -1,0 +1,83 @@
+
+$blue-900: #14283F;
+$blue-800: #1E3A5F;
+$blue-700: #294E7E;
+$blue-600: #36649E;
+$blue-100: #E3ECF6;
+$blue-050: #F1F6FB;
+
+$green:    #1E9E6A;
+$green-bg: #E4F5EE;
+$red:      #DC2626;
+$red-bg:   #FDECEC;
+$amber:    #D97706;
+$amber-bg: #FDF3E5;
+
+$ink:       #1C2530;
+$ink-2:     #475467;
+$ink-3:     #6B7785;
+$line:      #E4E8EE;
+$line-2:    #EEF1F5;
+$card:      #FFFFFF;
+$bg:        #F4F6F9;
+$grey-card: #F8FAFC;
+
+// --- BORDER RADIUS (ARRONDIS) ---
+$r-sm: 6px;
+$r:    10px;
+$r-lg: 14px;
+$r-xl: 20px;
+
+// --- ELEVATIONS (BOX SHADOWS) ---
+$e1: 0 1px 2px rgba(20, 40, 63, 0.06), 0 1px 3px rgba(20, 40, 63, 0.05);
+$e2: 0 2px 6px rgba(20, 40, 63, 0.07), 0 4px 14px rgba(20, 40, 63, 0.06);
+$e3: 0 10px 30px rgba(20, 40, 63, 0.12), 0 4px 10px rgba(20, 40, 63, 0.08);
+
+// --- LAYOUT SIZES (DIMENSIONS) ---
+$sidebar-w: 264px;
+$topbar-h:  64px;
+
+$sidebar-w-collapsed: 80px;
+
+
+// --- TYPOGRAPHY ---
+$font-head: "Sora", system-ui, sans-serif;
+$font-body: "Poppins", system-ui, sans-serif;
+
+
+// --- PALETTE DE COULEURS PRINCIPALE ---
+$primary-color:   $blue-800;
+$primary-hover:   $blue-700;
+$secondary-color: $ink-2;
+$accent-color:    $blue-600;
+
+// --- STATUTS ---
+$success-color:    $green;
+$success-bg:       $green-bg;
+$warning-color:    $amber;
+$warning-bg:       $amber-bg;
+$danger-color:     $red;
+$danger-bg:        $red-bg;
+
+// --- COULEURS DE FOND ET SURFACES (STYLE ÉPURÉ) ---
+$bg-app:        $bg;
+$bg-surface:    $card;
+$bg-nested:     $grey-card;
+$border-color:  $line;
+$border-light:  $line-2;
+
+// --- COULEURS DE TEXTE ---
+$text-title: $ink;
+$text-main:  $ink-2;
+$text-muted: $ink-3;
+
+// --- PROPRIÉTÉS DE MISE EN PAGE RÉUTILISABLES ---
+$sidebar-width: $sidebar-w;
+$header-height: $topbar-h;
+$border-radius: $r;
+$border-radius-sm: $r-sm;
+$border-radius-lg: $r-lg;
+
+// --- OMBRES ---
+$box-shadow:   $e1;
+$box-shadow-m: $e2;

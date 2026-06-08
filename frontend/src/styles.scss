@@ -1,0 +1,236 @@
+/* You can add global styles to this file, and also import other style files */
+@use 'styles/variables' as *;
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Sora:wght@400;500;600;700&display=swap');
+
+:root {
+  // Typographies
+  --font-body: 'Poppins', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-head: 'Sora', 'Poppins', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  // Palette bleue
+  --blue-900: #{$blue-900};
+  --blue-800: #{$blue-800};
+  --blue-700: #{$blue-700};
+  --blue-600: #{$blue-600};
+  --blue-100: #{$blue-100};
+  --blue-050: #{$blue-050};
+
+  // Statuts
+  --green:     #{$green};
+  --green-bg:  #{$green-bg};
+  --red:       #{$red};
+  --red-bg:    #{$red-bg};
+  --amber:     #{$amber};
+  --amber-bg:  #{$amber-bg};
+
+  // Texte
+  --ink:   #{$ink};
+  --ink-2: #{$ink-2};
+  --ink-3: #{$ink-3};
+
+  // Surfaces et bordures
+  --line:      #{$line};
+  --line-2:    #{$line-2};
+  --card:      #{$card};
+  --bg:        #{$bg};
+  --grey-card: #{$grey-card};
+
+  // Layout
+  --sidebar-w: #{$sidebar-w};
+  --topbar-h:  #{$topbar-h};
+
+  --sidebar-w-collapsed: #{$sidebar-w-collapsed};
+
+  // Border radius
+  --r-sm: #{$r-sm};
+  --r:    #{$r};
+  --r-lg: #{$r-lg};
+  --r-xl: #{$r-xl};
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--bg);
+  color: var(--ink);
+}
+
+// --- STYLES DES BOUTONS GLOBAUX ---
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: $font-body;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 18px;
+  border-radius: $border-radius;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &.btn-sm { padding: 6px 12px; font-size: 12.5px; }
+
+  &.btn-primary {
+    background-color: $primary-color;
+    color: #fff;
+    &:hover { background-color: $primary-hover; }
+  }
+
+  &.btn-ghost {
+    background: transparent;
+    color: $text-main;
+    &:hover { background-color: $blue-050; color: $primary-color; }
+  }
+}
+
+// --- COMMUTATEUR (SWITCH) ---
+.switch {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  background-color: $text-muted;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &::after {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background-color: white;
+    top: 3px;
+    left: 3px;
+    transition: transform 0.2s;
+  }
+
+  &.on {
+    background-color: $success-color;
+    &::after { transform: translateX(20px); }
+  }
+}
+
+// --- ENTRÉE DE RECHERCHE ---
+.input-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  i {
+    position: absolute;
+    left: 12px;
+    color: $text-muted;
+    width: 16px;
+    height: 16px;
+  }
+
+  .input {
+    width: 100%;
+    padding: 10px 12px 10px 38px;
+    font-family: $font-body;
+    font-size: 14px;
+    border: 1px solid $border-color;
+    border-radius: $border-radius;
+    color: $text-title;
+    background-color: $card;
+    outline: none;
+    transition: border-color 0.15s;
+
+    &:focus {
+      border-color: $primary-color;
+      box-shadow: 0 0 0 3px rgba($primary-color, 0.1);
+    }
+  }
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-head);
+  margin: 0;
+}
+
+h1{
+  font-size: 38px;
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+}
+h2{
+  font-size: 26px;
+  font-weight: 700;
+}
+
+p,label,span {
+  font-family: var(--font-body);
+  margin: 0;
+}
+
+.p1{
+  font-size: 15.5px;
+}
+.p2{
+  font-size: 14.5px;
+}
+.label1{
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.label2{
+  font-size: 12.5px;
+  font-weight: 500;
+}
+.label3{
+  font-size: 12.5px;
+}
+
+.input{
+  height: 44px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  padding: 0 14px;
+  font-size: 14.5px;
+  color: var(--ink);
+  background: #fff;
+  transition: border-color .15s, box-shadow .15s;
+  width: 100%;
+}
+
+.field{
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+
+  .input-icon{
+    position: relative;
+
+    .icon{
+      position: absolute;
+      left: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--ink-3);
+      font-size: 18px;
+      pointer-events: none;
+    }
+
+    .input{
+      padding-left: 40px;
+    }
+  }
+
+
+
+}
+
+svg{
+  display: block;
+}
