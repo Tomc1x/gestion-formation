@@ -35,6 +35,10 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers(HttpMethod.GET,"/api/filiere/**").permitAll()
                 .requestMatchers("/api/filiere/**").hasRole("REFERENTE_ADMINISTRATIVE")
+                .requestMatchers(HttpMethod.GET, "/api/cursus/**").authenticated()
+                .requestMatchers("/api/cursus/**").hasRole("REFERENTE_ADMINISTRATIVE")
+                .requestMatchers(HttpMethod.GET, "/api/cours/**").authenticated()
+                .requestMatchers("/api/cours/**").hasRole("REFERENTE_ADMINISTRATIVE")
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session

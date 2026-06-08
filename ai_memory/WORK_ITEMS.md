@@ -63,6 +63,35 @@
     - sidebar.scss : bug media query corrigé + drawer fixed + transition translateX
     - Proposed Rules acceptées : PIT-001 (Lucide imports[]), PIT-002 (SCSS @media nesting)
 
+## WI-20260608-BACKEN-003
+- Date: 2026-06-08
+- Title: CoursService — validation rôle FORMATEUR dans assignFormateurs
+- Status: DONE
+- TOA: manager
+- Executor: manager (inline)
+- attempt_count: 1
+- Notes: |
+    - Ajout vérification Role.FORMATEUR sur chaque User avant assignation
+    - IllegalArgumentException avec id fautif si rôle incorrect
+    - Tests : BUILD SUCCESSFUL
+
+## WI-20260608-BACKEN-002
+- Date: 2026-06-08
+- Title: Cursus + Cours — entités, repos, services, controllers, sécurité
+- Status: DONE
+- TOA: manager
+- Executor: developer
+- attempt_count: 1
+- Notes: |
+    - Cursus (ManyToOne filiere nullable, OneToMany cours) + Cours (ManyToOne cursus, ManyToMany formateurs)
+    - Table jointure cours_formateurs
+    - CursusService : deleteById(id, cascade) — cascade supprime les cours, sinon met cursus à null
+    - CoursService : assignFormateurs(coursId, List<Long>)
+    - GlobalExceptionHandler étendu : CursusNotFoundException + CoursNotFoundException → 404
+    - SecurityConfig : GET authenticated, write REFERENTE_ADMINISTRATIVE pour /api/cursus/** et /api/cours/**
+    - @Builder.Default sur toutes les listes pour éviter NPE avec Lombok @Builder
+    - Tests : BUILD SUCCESSFUL
+
 ## WI-20260608-BACKEN-001
 - Date: 2026-06-08
 - Title: Filiere — corrections post-revue (ControllerAdvice + REST + visibilité repo)

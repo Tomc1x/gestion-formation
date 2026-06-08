@@ -11,9 +11,9 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = "cursus")
-@EqualsAndHashCode(exclude = "cursus")
-public class Filiere {
+@ToString(exclude = "cours")
+@EqualsAndHashCode(exclude = "cours")
+public class Cursus {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,8 +22,12 @@ public class Filiere {
     @Column(unique = true)
     private String name;
 
+    @ManyToOne
+    @JoinColumn(name = "filiere_id")
+    private Filiere filiere;
+
     @Builder.Default
-    @OneToMany(mappedBy = "filiere")
-    private List<Cursus> cursus = new ArrayList<>();
+    @OneToMany(mappedBy = "cursus")
+    private List<Cours> cours = new ArrayList<>();
 
 }
