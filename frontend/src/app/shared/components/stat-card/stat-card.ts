@@ -1,18 +1,10 @@
-import { Component, Input } from '@angular/core';
-import { NgClass } from '@angular/common';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'app-stat-card',
-  standalone: true,
-  imports: [NgClass],
+  imports: [],
   templateUrl: './stat-card.html',
-  styleUrl: './stat-card.scss'
+  styleUrl: './stat-card.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class StatCardComponent {
-  @Input() icon: string = 'box';
-  @Input() label: string = '';
-  @Input() value: string | number = 0;
-  @Input() delta?: string;
-  @Input() tone: 'blue' | 'green' | 'purple' | 'amber' = 'blue';
-  @Input() clickable: boolean = false;
-}
+export class StatCardComponent {}

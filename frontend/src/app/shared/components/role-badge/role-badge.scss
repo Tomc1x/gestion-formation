@@ -1,0 +1,16 @@
+.role-badge {
+  display: inline-block;
+  border-radius: 5px;
+  padding: 2px 7px;
+  font-weight: 600;
+  white-space: nowrap;
+  line-height: 1.4;
+
+  &--sm {
+    font-size: 10px;
+  }
+
+  &--md {
+    font-size: 12px;
+  }
+}

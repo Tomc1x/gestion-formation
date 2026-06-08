@@ -1,18 +1,1 @@
-<div class="stat-card" [ngClass]="[tone, clickable ? 'clickable' : '']">
-  <div class="card-top">
-    <span class="icon-wrapper">
-      <i [attr.data-lucide]="icon"></i>
-    </span>
-    @if (delta) {
-      <span class="delta-badge">
-        <i data-lucide="trending-up"></i>
-        {{ delta }}
-      </span>
-    }
-  </div>
-
-  <div class="card-bottom">
-    <div class="value">{{ value }}</div>
-    <div class="label">{{ label }}</div>
-  </div>
-</div>
+<div class="stat-card"><!-- stat-card --></div>
