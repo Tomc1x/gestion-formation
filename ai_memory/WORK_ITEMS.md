@@ -194,3 +194,100 @@
     - app.routes.ts : routing complet avec lazy loading et authGuard
     - app.config.ts : provideHttpClient + authInterceptor enregistré
     - AuthService : mock login via localStorage, signal isAuthenticated
+
+## WI-20260610-BACKEN-001
+- Date: 2026-06-10
+- Title: Adapter pattern pour la gestion utilisateurs (front) — BaseUserAdminAdapter / Http / Mock
+- Status: DONE
+- TOA: manager
+- Executor: developer
+- attempt_count: 0
+- Notes: |
+    - Réplique le pattern calendrier (BaseCalendarAdapter / MockCalendarAdapter).
+    - Créer frontend/src/app/core/adapters/user-admin.adapter.ts (BaseUserAdminAdapter, abstrait, 9 méthodes de UserAdminService).
+    - Créer user-admin-http.adapter.ts (HttpUserAdminAdapter, fusionne les appels HTTP de UserAdminService).
+    - Créer user-admin-mock.ts (MockUserAdminAdapter, CRUD en mémoire).
+    - app.config.ts : provide BaseUserAdminAdapter -> HttpUserAdminAdapter.
+    - utilisateurs.ts injecte BaseUserAdminAdapter au lieu de UserAdminService.
+    - Supprimer UserAdminService.
+
+## WI-20260610-BACKEN-002
+- Date: 2026-06-10
+- Title: Frontend — intégration design system "GestionFormation" (index.html Claude Design)
+- Status: OPEN
+- TOA: manager
+- Executor: developer
+- attempt_count: 0
+- Notes: |
+    - Source: bundle Claude Design (projet-full-stack/project/index.html, screenshots, screens-*.jsx).
+    - Tokens CSS (couleurs --blue-*, --green/--red/--amber, fonts Poppins/Sora, radius, ombres e1/e2/e3).
+    - Composants: .btn (primary/ghost/outline/green/sm/icon), .card, .field/.input, .pill/.badge/.dot,
+      table.tbl, .tabs/.tab, .avatar, .switch, skeleton .skel, animations fadeUp/scaleIn.
+    - Intégrer dans frontend/src/styles.scss (ou partials importés) + variables SCSS/CSS custom properties.
+    - Indépendant des WI backend — peut démarrer en parallèle.
+
+## WI-20260610-BACKEN-003
+- Date: 2026-06-10
+- Title: Backend — refonte modèle Cours/Cursus (catalogue global + table de liaison ordonnée CursusCours)
+- Status: OPEN
+- TOA: manager
+- Executor: developer
+- attempt_count: 0
+- Notes: |
+    - Décision validée: catalogue global. Cours n'a plus de cursus_id direct (ManyToOne supprimé).
+    - Nouvelle entité CursusCours (cursus_id, cours_id, ordre) - table de liaison ordonnée.
+    - Met à jour CoursRepository/CursusRepository, CoursService/CursusService, DTOs (CoursResponse,
+      CursusResponse: liste ordonnée de cours), controllers, exceptions.
+    - Risque: casse l'API existante consommée par le front actuel (pages Cursus/Cours déjà livrées
+      en WI-20260608-BACKEN-002/003) -> coordination avec WI-006/WI-007.
+    - DDL: vérifier ddl-auto Hibernate vs migration Flyway (pas de dossier db/migration peuplé).
+
+## WI-20260610-BACKEN-004
+- Date: 2026-06-10
+- Title: Backend — prérequis Cours ManyToMany auto-référencé + validation anti-cycle
+- Status: OPEN
+- TOA: manager
+- Executor: developer
+- attempt_count: 0
+- Notes: |
+    - Décision validée: Cours.prerequis: Set<Cours> (ManyToMany auto-référencé, table cours_prerequis).
+    - Validation à l'écriture: refuser l'ajout d'un prérequis créant un cycle (DFS/BFS sur le graphe).
+    - Dépend de WI-20260610-BACKEN-003 (même entité Cours).
+
+## WI-20260610-BACKEN-005
+- Date: 2026-06-10
+- Title: Backend — CoursResponse récursif (prérequis imbriqués jusqu'à la racine)
+- Status: OPEN
+- TOA: manager
+- Executor: developer
+- attempt_count: 0
+- Notes: |
+    - Décision validée: récursion complète (CoursResponse.prerequis: List<CoursResponse>),
+      terminaison garantie par l'anti-cycle de WI-20260610-BACKEN-004.
+    - Dépend de WI-20260610-BACKEN-004.
+
+## WI-20260610-BACKEN-006
+- Date: 2026-06-10
+- Title: Frontend — page Catalogue de cours (CRUD + gestion prérequis, adapter pattern)
+- Status: OPEN
+- TOA: manager
+- Executor: developer
+- attempt_count: 0
+- Notes: |
+    - Adapter pattern (cf. WI-20260610-BACKEN-001 / CONV-001 ai_rules/conventions.md).
+    - Table CRUD cours, modale édition avec checkboxes prérequis (anti-cycle UI), badges
+      "prérequis de" / "dépend de".
+    - Dépend de WI-20260610-BACKEN-005 (API) et WI-20260610-BACKEN-002 (design system).
+
+## WI-20260610-BACKEN-007
+- Date: 2026-06-10
+- Title: Frontend — page Cursus (création cursus + filière, liste ordonnée, alertes ordre pédagogique)
+- Status: OPEN
+- TOA: manager
+- Executor: developer
+- attempt_count: 0
+- Notes: |
+    - Modale "Nouvelle filière" (nom + couleur), modale "Nouveau cursus" (nom, filière, constructeur
+      de liste ordonnée avec réordonnancement, alertes prérequis manquant/mal placé).
+    - Dépend de WI-20260610-BACKEN-003, 005, 002, 006.
+    - Nécessite verifier après intégration finale (changement de contrat API cross-module).

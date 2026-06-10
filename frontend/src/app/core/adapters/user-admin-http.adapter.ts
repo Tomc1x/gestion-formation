@@ -1,6 +1,6 @@
-import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Injectable, inject } from "@angular/core";
+import { HttpClient } from "@angular/common/http";
+import { Observable } from "rxjs";
 import {
   UserAdmin,
   CreateUserRequest,
@@ -8,10 +8,11 @@ import {
   ChangeRoleRequest,
   ChangePasswordRequest,
   InviteRequest,
-} from '../models/user.model';
+} from "../models/user.model";
+import { BaseUserAdminAdapter } from "./user-admin.adapter";
 
 @Injectable({ providedIn: 'root' })
-export class UserAdminService {
+export class HttpUserAdminAdapter extends BaseUserAdminAdapter {
   private readonly http = inject(HttpClient);
   private readonly API = '/api/admin/users';
 

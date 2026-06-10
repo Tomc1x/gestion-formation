@@ -7,3 +7,4 @@ Deprecated entries are prefixed with `# DEPRECATED`.
 |----------|---------|------------------------------------------------------|----------------------------------|------------|
 | PITFALL  | PIT-001 | Lucide Angular: imports[] vs data usage              | pitfalls.md#pit-001              | 2026-06-05 |
 | PITFALL  | PIT-002 | Angular SCSS: root-level selectors inside @media     | pitfalls.md#pit-002              | 2026-06-05 |
+| CONVENTION | CONV-001 | Adapter pattern for feature data access (frontend) | conventions.md#conv-001        | 2026-06-10 |

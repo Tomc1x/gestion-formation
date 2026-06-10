@@ -1,3 +1,10 @@
+WI-20260610-BACKEN-002 | Frontend design system GestionFormation (index.html) | OPEN | developer | —
+WI-20260610-BACKEN-003 | Backend refonte modele Cours/Cursus (catalogue + CursusCours) | OPEN | developer | —
+WI-20260610-BACKEN-004 | Backend prerequis ManyToMany + anti-cycle | OPEN | developer | —
+WI-20260610-BACKEN-005 | Backend CoursResponse recursif | OPEN | developer | —
+WI-20260610-BACKEN-006 | Frontend page Catalogue de cours (CRUD + prerequis) | OPEN | developer | —
+WI-20260610-BACKEN-007 | Frontend page Cursus (creation cursus/filiere, ordre pedagogique) | OPEN | developer | —
+WI-20260610-BACKEN-001 | Adapter pattern gestion utilisateurs (front) | DONE | developer, rules-curator | ai_memory/2026-06-10__ROLE-developer__WI-20260610-BACKEN-001.md
 # INDEX
 
 WI-20260608-FRONTE-003 | Écran gestion utilisateurs — table + recherche + toggle actif/inactif | DONE | developer | ai_memory/2026-06-08__ROLE-developer__WI-20260608-FRONTE-003.md
