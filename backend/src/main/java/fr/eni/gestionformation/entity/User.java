@@ -25,6 +25,7 @@ public class User implements UserDetails {
 
     @Getter @Setter
     private String firstName;
+
     @Getter @Setter
     private String lastName;
 

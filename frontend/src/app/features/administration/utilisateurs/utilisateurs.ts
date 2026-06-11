@@ -21,7 +21,7 @@ import {
   LucideUserCog,
   LucideCheckCircle, LucideEllipsisVertical, LucideCircleCheckBig,
 } from '@lucide/angular';
-import { UserAdminService } from '../../../core/services/user-admin.service';
+import { BaseUserAdminAdapter } from '../../../core/adapters/user-admin.adapter';
 import {
   UserAdmin,
   BackendRole,
@@ -60,13 +60,11 @@ import type { Role } from '../../../core/services/auth.constants';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UtilisateursComponent implements OnInit {
-  private readonly userAdminService = inject(UserAdminService);
+  private readonly userAdminService = inject(BaseUserAdminAdapter);
 
-  // ── Constantes ──────────────────────────────────────────────────────────────
   protected readonly roleFilters = ROLE_FILTER_LABELS;
   protected readonly roleOptions = BACKEND_ROLE_OPTIONS;
 
-  // ── État liste ──────────────────────────────────────────────────────────────
   protected readonly users = signal<UserAdmin[]>([]);
   protected readonly searchQuery = signal('');
   protected readonly selectedRole = signal<BackendRole | 'all'>('all');
@@ -84,7 +82,6 @@ export class UtilisateursComponent implements OnInit {
     });
   });
 
-  // ── Modal : Créer ───────────────────────────────────────────────────────────
   protected readonly showCreateModal = signal(false);
   protected readonly createModalTab = signal<'direct' | 'invite'>('direct');
   protected readonly inviteSent = signal<string | null>(null);
@@ -103,7 +100,6 @@ export class UtilisateursComponent implements OnInit {
     role:      new FormControl<BackendRole | ''>('', { nonNullable: true, validators: Validators.required }),
   });
 
-  // ── Modal : Modifier profil ─────────────────────────────────────────────────
   protected readonly editingUser = signal<UserAdmin | null>(null);
 
   protected readonly editProfileForm = new FormGroup({
@@ -112,28 +108,23 @@ export class UtilisateursComponent implements OnInit {
     email:     new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.email] }),
   });
 
-  // ── Modal : Changer le rôle ─────────────────────────────────────────────────
   protected readonly changingRoleUser = signal<UserAdmin | null>(null);
 
   protected readonly changeRoleForm = new FormGroup({
     role: new FormControl<BackendRole | ''>('', { nonNullable: true, validators: Validators.required }),
   });
 
-  // ── Modal : Réinitialiser mot de passe ──────────────────────────────────────
   protected readonly resettingPasswordUser = signal<UserAdmin | null>(null);
 
-  // ── Modal : Confirmer suppression ──────────────────────────────────────────
   protected readonly deletingUser = signal<UserAdmin | null>(null);
 
   protected readonly resetPasswordForm = new FormGroup({
     newPassword: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.minLength(6)] }),
   });
 
-  // ── État soumission ─────────────────────────────────────────────────────────
   protected readonly submitting = signal(false);
   protected readonly formError = signal<string | null>(null);
 
-  // ── Helpers ─────────────────────────────────────────────────────────────────
   protected toFrontendRole(role: BackendRole): Role {
     return BACKEND_TO_FRONTEND_ROLE[role] as Role;
   }
@@ -142,7 +133,6 @@ export class UtilisateursComponent implements OnInit {
     return `${user.firstName} ${user.lastName}`;
   }
 
-  // ── Chargement ──────────────────────────────────────────────────────────────
   ngOnInit(): void {
     this.loadUsers();
   }
@@ -161,7 +151,6 @@ export class UtilisateursComponent implements OnInit {
     });
   }
 
-  // ── Toggle actif / inactif ──────────────────────────────────────────────────
   protected toggleEnabled(user: UserAdmin): void {
     const call$ = user.enabled
       ? this.userAdminService.disable(user.uid)
@@ -172,7 +161,6 @@ export class UtilisateursComponent implements OnInit {
     });
   }
 
-  // ── Menu 3 points ───────────────────────────────────────────────────────────
   protected toggleMenu(uid: number): void {
     this.openMenuUid.update(c => (c === uid ? null : uid));
   }
@@ -181,7 +169,6 @@ export class UtilisateursComponent implements OnInit {
     this.openMenuUid.set(null);
   }
 
-  // ── Créer un utilisateur ────────────────────────────────────────────────────
   protected openCreateModal(): void {
     this.createForm.reset();
     this.inviteForm.reset();
@@ -253,7 +240,6 @@ export class UtilisateursComponent implements OnInit {
     });
   }
 
-  // ── Modifier le profil ──────────────────────────────────────────────────────
   protected openEditModal(user: UserAdmin): void {
     this.closeMenu();
     this.editProfileForm.setValue({
@@ -289,7 +275,6 @@ export class UtilisateursComponent implements OnInit {
     });
   }
 
-  // ── Changer le rôle ─────────────────────────────────────────────────────────
   protected openChangeRoleModal(user: UserAdmin): void {
     this.closeMenu();
     this.changeRoleForm.setValue({ role: user.role });

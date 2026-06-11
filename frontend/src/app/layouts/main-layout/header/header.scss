@@ -1,3 +1,7 @@
+%focus-ring {
+  @extend %focus-ring;
+}
+
 .header {
   height: var(--topbar-h);
   background: #fff;
@@ -35,10 +39,7 @@
     color: var(--blue-800);
   }
 
-  &:focus-visible {
-    outline: 2px solid var(--blue-800);
-    outline-offset: 2px;
-  }
+  @extend %focus-ring;
 }
 
 .search-wrapper {
@@ -66,7 +67,7 @@
     border: 1px solid transparent;
     border-radius: 8px;
     padding: 0 12px 0 40px;
-    font-family: var(--font-body);
+    font-family: var(--font-body), sans-serif;
     font-size: 13.5px;
     color: var(--ink);
     outline: none;
@@ -116,10 +117,7 @@
     border-color: var(--blue-100);
   }
 
-  &:focus-visible {
-    outline: 2px solid var(--blue-800);
-    outline-offset: 2px;
-  }
+  @extend %focus-ring;
 
   .notif-dot {
     position: absolute;
@@ -159,10 +157,7 @@
     background: var(--grey-card);
   }
 
-  &:focus-visible {
-    outline: 2px solid var(--blue-800);
-    outline-offset: 2px;
-  }
+  @extend %focus-ring;
 
   .chevron-icon {
     width: 15px;
@@ -258,7 +253,7 @@
   border: none;
   background: transparent;
   font-size: 13.5px;
-  font-family: var(--font-body);
+  font-family: var(--font-body), sans-serif;
   color: var(--ink-2);
   cursor: pointer;
   transition: background 0.15s;
@@ -274,10 +269,7 @@
     background: var(--grey-card);
   }
 
-  &:focus-visible {
-    outline: 2px solid var(--blue-800);
-    outline-offset: 2px;
-  }
+  @extend %focus-ring;
 
   &--danger {
     color: var(--red);

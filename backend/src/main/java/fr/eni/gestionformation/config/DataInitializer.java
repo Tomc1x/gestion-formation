@@ -18,16 +18,16 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(@NonNull String @NonNull ... args) {
-        if (userRepository.findByEmail("admin@admin.fr").isEmpty()) {
+        if (userRepository.findByEmail("admin@admin.com").isEmpty()) {
             User admin = User.builder()
                     .firstName("Admin")
                     .lastName("ADMINISTRATEUR")
-                    .email("admin@admin.fr")
+                    .email("admin@admin.com")
                     .password(passwordEncoder.encode("Admin123"))
                     .role(Role.ADMINISTRATEUR)
                     .build();
             userRepository.save(admin);
-            System.out.println("Utilisateur admin créé : admin@admin.fr / Admin123");
+            System.out.println("Utilisateur admin créé : admin@admin.com / Admin123");
         }
     }
 }

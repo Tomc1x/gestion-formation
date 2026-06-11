@@ -27,6 +27,7 @@ export class AuthService {
   private http = inject(HttpClient);
 
   login(credentials: { email: string; password: string }): Observable<boolean> {
+    this.logout();
     return this.http.post<AuthResponse>('/api/auth/login', credentials).pipe(
       tap(response => {
         if (response.token != null) {

@@ -46,6 +46,11 @@
   --r:    #{$r};
   --r-lg: #{$r-lg};
   --r-xl: #{$r-xl};
+
+  // Ombres (élévations)
+  --e1: #{$e1};
+  --e2: #{$e2};
+  --e3: #{$e3};
 }
 
 *, *::before, *::after {
@@ -55,7 +60,7 @@
 }
 
 body {
-  font-family: var(--font-body);
+  font-family: var(--font-body), sans-serif;
   background-color: var(--bg);
   color: var(--ink);
 }
@@ -87,6 +92,33 @@ body {
     background: transparent;
     color: $text-main;
     &:hover { background-color: $blue-050; color: $primary-color; }
+  }
+
+  &.btn-outline {
+    background: $card;
+    color: $primary-color;
+    border-color: $line;
+    box-shadow: var(--e1);
+    &:hover { border-color: $blue-600; background-color: $blue-050; }
+  }
+
+  &.btn-green {
+    background-color: $success-color;
+    color: #fff;
+    box-shadow: var(--e1);
+    &:hover { filter: brightness(1.05); box-shadow: var(--e2); }
+  }
+
+  &.btn-icon {
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  &:disabled {
+    opacity: .5;
+    cursor: not-allowed;
   }
 }
 
@@ -153,7 +185,7 @@ body {
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-head);
+  font-family: var(--font-head), sans-serif;
   margin: 0;
 }
 
@@ -169,7 +201,7 @@ h2{
 }
 
 p,label,span {
-  font-family: var(--font-body);
+  font-family: var(--font-body), sans-serif;
   margin: 0;
 }
 
@@ -201,6 +233,14 @@ p,label,span {
   background: #fff;
   transition: border-color .15s, box-shadow .15s;
   width: 100%;
+
+  &::placeholder { color: #9AA5B1; }
+
+  &:focus {
+    outline: none;
+    border-color: var(--blue-700);
+    box-shadow: 0 0 0 3px var(--blue-100);
+  }
 }
 
 .field{
@@ -233,4 +273,174 @@ p,label,span {
 
 svg{
   display: block;
+}
+
+// --- LUCIDE ICONS ---
+.lic {
+  display: inline-flex;
+
+  svg {
+    width: 1em;
+    height: 1em;
+    stroke-width: 2;
+  }
+}
+
+// --- SCROLLBARS ---
+::-webkit-scrollbar {
+  width: 11px;
+  height: 11px;
+}
+::-webkit-scrollbar-thumb {
+  background: #D2D9E2;
+  border-radius: 20px;
+  border: 3px solid var(--bg);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #BAC4D1;
+}
+
+// --- CARDS ---
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--e1);
+}
+
+// --- PILLS & BADGES ---
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .01em;
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 9px;
+  border-radius: var(--r-sm);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+// --- TABLES ---
+.table-wrap {
+  overflow-x: auto;
+}
+
+table.tbl {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 720px;
+
+  th {
+    text-align: left;
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--ink-3);
+    font-weight: 600;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--line);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 15px 18px;
+    border-bottom: 1px solid var(--line-2);
+    font-size: 14px;
+    color: var(--ink);
+  }
+
+  tbody tr {
+    transition: background .12s;
+
+    &:hover { background: var(--blue-050); }
+
+    &:last-child td { border-bottom: none; }
+  }
+}
+
+// --- TABS ---
+.tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--line);
+}
+
+.tab {
+  position: relative;
+  padding: 13px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-3);
+  background: none;
+  border: none;
+  transition: color .15s;
+  cursor: pointer;
+  font-family: var(--font-body), sans-serif;
+
+  &:hover { color: var(--blue-800); }
+
+  &.active {
+    color: var(--blue-800);
+
+    &::after {
+      content: "";
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: -1px;
+      height: 3px;
+      background: var(--blue-800);
+      border-radius: 3px 3px 0 0;
+    }
+  }
+}
+
+// --- ANIMATIONS ---
+@keyframes fadeUp {
+  from { transform: translateY(10px); }
+  to { transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(.96) translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .anim-up { animation: fadeUp .35s ease forwards; }
+  .anim-in { animation: fadeIn .3s ease forwards; }
+}
+
+// --- SKELETON LOADER ---
+.skel {
+  background: linear-gradient(90deg, #EEF1F5 25%, #F6F8FB 37%, #EEF1F5 63%);
+  background-size: 400% 100%;
+  animation: sh 1.4s ease infinite;
+}
+
+@keyframes sh {
+  0% { background-position: 100% 0; }
+  100% { background-position: 0 0; }
 }

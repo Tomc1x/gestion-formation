@@ -10,7 +10,6 @@ import java.util.List;
 public class CoursResponse {
     private Long id;
     private String name;
-    private Long cursusId;
-    private String cursusName;
     private List<FormateurInfo> formateurs;
+    private List<CoursResponse> prerequis;
 }

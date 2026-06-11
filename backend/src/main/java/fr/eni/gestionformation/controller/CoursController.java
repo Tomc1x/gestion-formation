@@ -4,14 +4,14 @@ import fr.eni.gestionformation.dto.CoursRequest;
 import fr.eni.gestionformation.dto.CoursResponse;
 import fr.eni.gestionformation.dto.FormateurInfo;
 import fr.eni.gestionformation.entity.Cours;
-import fr.eni.gestionformation.entity.Cursus;
 import fr.eni.gestionformation.service.CoursService;
-import fr.eni.gestionformation.service.CursusService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/cours")
@@ -19,7 +19,6 @@ import java.util.List;
 public class CoursController {
 
     private final CoursService coursService;
-    private final CursusService cursusService;
 
     @GetMapping
     public ResponseEntity<List<CoursResponse>> getAll() {
@@ -33,27 +32,19 @@ public class CoursController {
         return ResponseEntity.ok(toResponse(coursService.findById(id)));
     }
 
-    @GetMapping("/cursus/{cursusId}")
-    public ResponseEntity<List<CoursResponse>> getByCursus(@PathVariable Long cursusId) {
-        return ResponseEntity.ok(coursService.findByCursusId(cursusId).stream()
-                .map(this::toResponse)
-                .toList());
-    }
-
     @PostMapping
     public ResponseEntity<CoursResponse> create(@RequestBody CoursRequest request) {
         Cours cours = new Cours();
         cours.setName(request.getName());
-        if (request.getCursusId() != null) {
-            Cursus cursus = cursusService.findById(request.getCursusId());
-            cours.setCursus(cursus);
-        }
+        Cours saved = coursService.save(cours);
+
         if (request.getFormateurIds() != null && !request.getFormateurIds().isEmpty()) {
-            Cours saved = coursService.save(cours);
-            Cours withFormateurs = coursService.assignFormateurs(saved.getId(), request.getFormateurIds());
-            return ResponseEntity.ok(toResponse(withFormateurs));
+            saved = coursService.assignFormateurs(saved.getId(), request.getFormateurIds());
         }
-        return ResponseEntity.ok(toResponse(coursService.save(cours)));
+        if (request.getPrerequisIds() != null) {
+            saved = coursService.setPrerequis(saved.getId(), request.getPrerequisIds());
+        }
+        return ResponseEntity.ok(toResponse(saved));
     }
 
     @DeleteMapping("/{id}")
@@ -68,14 +59,39 @@ public class CoursController {
         return ResponseEntity.ok(toResponse(coursService.assignFormateurs(id, formateurIds)));
     }
 
+    @PutMapping("/{id}/prerequis")
+    public ResponseEntity<CoursResponse> setPrerequis(@PathVariable Long id,
+                                                       @RequestBody List<Long> prerequisIds) {
+        return ResponseEntity.ok(toResponse(coursService.setPrerequis(id, prerequisIds)));
+    }
+
     private CoursResponse toResponse(Cours cours) {
-        Long cursusId = cours.getCursus() != null ? cours.getCursus().getId() : null;
-        String cursusName = cours.getCursus() != null ? cours.getCursus().getName() : null;
+        return toResponse(cours, new HashSet<>());
+    }
+
+    private CoursResponse toResponse(Cours cours, Set<Long> visited) {
         List<FormateurInfo> formateurs = cours.getFormateurs() != null
                 ? cours.getFormateurs().stream()
                     .map(u -> new FormateurInfo(u.getUid(), u.getFirstName(), u.getLastName()))
                     .toList()
                 : List.of();
-        return new CoursResponse(cours.getId(), cours.getName(), cursusId, cursusName, formateurs);
+
+        visited.add(cours.getId());
+
+        List<CoursResponse> prerequis = cours.getPrerequis() != null
+                ? cours.getPrerequis().stream()
+                    .map(p -> visited.contains(p.getId())
+                            ? new CoursResponse(p.getId(), p.getName(),
+                                p.getFormateurs() != null
+                                        ? p.getFormateurs().stream()
+                                            .map(u -> new FormateurInfo(u.getUid(), u.getFirstName(), u.getLastName()))
+                                            .toList()
+                                        : List.of(),
+                                List.of())
+                            : toResponse(p, visited))
+                    .toList()
+                : List.of();
+
+        return new CoursResponse(cours.getId(), cours.getName(), formateurs, prerequis);
     }
 }
