@@ -17,6 +17,14 @@ export class HttpCursusAdapter extends BaseCursusAdapter {
     return this.http.post<Cursus>(this.API, req);
   }
 
+  update(cursusId: number, req: CreateCursusRequest): Observable<Cursus> {
+    return this.http.put<Cursus>(`${this.API}/${cursusId}`, req);
+  }
+
+  delete(cursusId: number): Observable<void> {
+    return this.http.delete<void>(`${this.API}/${cursusId}`);
+  }
+
   addCours(cursusId: number, coursId: number, ordre?: number): Observable<Cursus> {
     return this.http.post<Cursus>(`${this.API}/${cursusId}/cours`, { coursId, ordre });
   }

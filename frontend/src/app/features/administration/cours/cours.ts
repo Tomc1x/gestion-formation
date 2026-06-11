@@ -6,7 +6,7 @@ import {
   computed,
   OnInit,
 } from '@angular/core';
-import { ReactiveFormsModule, FormGroup, FormControl, Validators, FormArray } from '@angular/forms';
+import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
 import {
   LucideBookOpen,
   LucidePlus,
@@ -19,6 +19,9 @@ import { BaseCoursAdapter } from '../../../core/adapters/cours.adapter';
 import { BaseUserAdminAdapter } from '../../../core/adapters/user-admin.adapter';
 import { Cours, CreateCoursRequest, FormateurInfo } from '../../../core/models/cours.model';
 import { UserAdmin } from '../../../core/models/user.model';
+import { EntitySelectorComponent, SelectableEntity } from '../../../shared/components/entity-selector/entity-selector';
+
+const MAX_BADGES_VISIBLE = 3;
 
 @Component({
   selector: 'app-cours',
@@ -30,6 +33,7 @@ import { UserAdmin } from '../../../core/models/user.model';
     LucideTrash2,
     LucideX,
     LucideUsers,
+    EntitySelectorComponent,
   ],
   templateUrl: './cours.html',
   styleUrl: './cours.scss',
@@ -64,23 +68,51 @@ export class CoursComponent implements OnInit {
     return this.requiredByMap().get(coursId) ?? [];
   }
 
+  // ── Tableau : troncature des badges ──────────────────────────────────────────
+  protected visibleBadges<T>(list: T[]): T[] {
+    return list.slice(0, MAX_BADGES_VISIBLE);
+  }
+
+  protected hiddenBadges<T>(list: T[]): T[] {
+    return list.slice(MAX_BADGES_VISIBLE);
+  }
+
+  protected hiddenCount<T>(list: T[]): number {
+    return Math.max(0, list.length - MAX_BADGES_VISIBLE);
+  }
+
+  // ── Sélecteurs d'entités (formateurs / prérequis) ────────────────────────────
+  protected readonly formateurItems = computed<SelectableEntity[]>(() =>
+    this.formateurs().map(f => ({ id: f.id, label: this.fullName(f) }))
+  );
+
+  protected coursItemsExcluding(excludeId: number | null): SelectableEntity[] {
+    return this.coursList()
+      .filter(c => c.id !== excludeId)
+      .map(c => ({ id: c.id, label: c.name }));
+  }
+
   // ── Création ──────────────────────────────────────────────────────────────────
   protected readonly showCreateModal = signal(false);
 
   protected readonly createForm = new FormGroup({
     name: new FormControl('', { nonNullable: true, validators: Validators.required }),
-    formateurIds: new FormArray<FormControl<boolean>>([]),
-    prerequisIds: new FormArray<FormControl<boolean>>([]),
+    dureeJours: new FormControl<number | null>(null),
   });
+
+  protected readonly selectedFormateurIdsCreate = signal<Set<number>>(new Set());
+  protected readonly selectedPrerequisIdsCreate = signal<Set<number>>(new Set());
 
   // ── Modification ─────────────────────────────────────────────────────────────
   protected readonly editingCours = signal<Cours | null>(null);
 
   protected readonly editForm = new FormGroup({
     name: new FormControl('', { nonNullable: true, validators: Validators.required }),
-    formateurIds: new FormArray<FormControl<boolean>>([]),
-    prerequisIds: new FormArray<FormControl<boolean>>([]),
+    dureeJours: new FormControl<number | null>(null),
   });
+
+  protected readonly selectedFormateurIdsEdit = signal<Set<number>>(new Set());
+  protected readonly selectedPrerequisIdsEdit = signal<Set<number>>(new Set());
 
   /** Pour la modale d'édition : ids de cours désactivés (créeraient un cycle) */
   protected readonly disabledPrerequisIds = signal<Set<number>>(new Set());
@@ -126,16 +158,19 @@ export class CoursComponent implements OnInit {
   protected openCreateModal(): void {
     this.formError.set(null);
     this.createForm.controls.name.setValue('');
-
-    const formateurArray = this.createForm.controls.formateurIds;
-    formateurArray.clear();
-    this.formateurs().forEach(() => formateurArray.push(new FormControl(false, { nonNullable: true })));
-
-    const prereqArray = this.createForm.controls.prerequisIds;
-    prereqArray.clear();
-    this.coursList().forEach(() => prereqArray.push(new FormControl(false, { nonNullable: true })));
+    this.createForm.controls.dureeJours.setValue(null);
+    this.selectedFormateurIdsCreate.set(new Set());
+    this.selectedPrerequisIdsCreate.set(new Set());
 
     this.showCreateModal.set(true);
+  }
+
+  protected onFormateurSelectionChangeCreate(ids: Set<number>): void {
+    this.selectedFormateurIdsCreate.set(ids);
+  }
+
+  protected onPrerequisSelectionChangeCreate(ids: Set<number>): void {
+    this.selectedPrerequisIdsCreate.set(ids);
   }
 
   protected closeCreateModal(): void {
@@ -146,14 +181,10 @@ export class CoursComponent implements OnInit {
     if (this.createForm.invalid || this.submitting()) return;
 
     const v = this.createForm.getRawValue();
-    const formateurIds = this.formateurs()
-      .filter((_, i) => v.formateurIds[i])
-      .map(f => f.id);
-    const prerequisIds = this.coursList()
-      .filter((_, i) => v.prerequisIds[i])
-      .map(c => c.id);
+    const formateurIds = [...this.selectedFormateurIdsCreate()];
+    const prerequisIds = [...this.selectedPrerequisIdsCreate()];
 
-    const req: CreateCoursRequest = { name: v.name, formateurIds, prerequisIds };
+    const req: CreateCoursRequest = { name: v.name, dureeJours: v.dureeJours, formateurIds, prerequisIds };
 
     this.submitting.set(true);
     this.formError.set(null);
@@ -175,13 +206,11 @@ export class CoursComponent implements OnInit {
   protected openEditModal(cours: Cours): void {
     this.formError.set(null);
     this.editForm.controls.name.setValue(cours.name);
+    this.editForm.controls.dureeJours.setValue(cours.dureeJours);
 
-    const formateurArray = this.editForm.controls.formateurIds;
-    formateurArray.clear();
-    const formateurIds = new Set(cours.formateurs.map(f => f.id));
-    this.formateurs().forEach(f => formateurArray.push(new FormControl(formateurIds.has(f.id), { nonNullable: true })));
+    this.selectedFormateurIdsEdit.set(new Set(cours.formateurs.map(f => f.id)));
+    this.selectedPrerequisIdsEdit.set(new Set(cours.prerequis.map(p => p.id)));
 
-    const prereqIds = new Set(cours.prerequis.map(p => p.id));
     const otherCours = this.coursList().filter(c => c.id !== cours.id);
 
     // Un cours C ne peut pas devenir prérequis de `cours` si `cours` est déjà
@@ -194,11 +223,15 @@ export class CoursComponent implements OnInit {
     }
     this.disabledPrerequisIds.set(disabled);
 
-    const prereqArray = this.editForm.controls.prerequisIds;
-    prereqArray.clear();
-    otherCours.forEach(c => prereqArray.push(new FormControl(prereqIds.has(c.id), { nonNullable: true })));
-
     this.editingCours.set(cours);
+  }
+
+  protected onFormateurSelectionChangeEdit(ids: Set<number>): void {
+    this.selectedFormateurIdsEdit.set(ids);
+  }
+
+  protected onPrerequisSelectionChangeEdit(ids: Set<number>): void {
+    this.selectedPrerequisIdsEdit.set(ids);
   }
 
   protected closeEditModal(): void {
@@ -229,35 +262,40 @@ export class CoursComponent implements OnInit {
     if (!cours || this.editForm.invalid || this.submitting()) return;
 
     const v = this.editForm.getRawValue();
-    const formateurIds = this.formateurs()
-      .filter((_, i) => v.formateurIds[i])
-      .map(f => f.id);
-    const otherCours = this.editOtherCours();
-    const prerequisIds = otherCours
-      .filter((_, i) => v.prerequisIds[i])
-      .map(c => c.id);
+    const formateurIds = [...this.selectedFormateurIdsEdit()];
+    const prerequisIds = [...this.selectedPrerequisIdsEdit()];
 
     this.submitting.set(true);
     this.formError.set(null);
 
-    this.coursAdapter.setFormateurs(cours.id, formateurIds).subscribe({
-      next: updatedAfterFormateurs => {
-        this.replaceCours(updatedAfterFormateurs);
+    this.coursAdapter.update(cours.id, { name: v.name, dureeJours: v.dureeJours }).subscribe({
+      next: updatedAfterNomDuree => {
+        this.replaceCours(updatedAfterNomDuree);
 
-        this.coursAdapter.setPrerequis(cours.id, prerequisIds).subscribe({
-          next: updated => {
-            this.replaceCours(updated);
-            this.submitting.set(false);
-            this.closeEditModal();
+        this.coursAdapter.setFormateurs(cours.id, formateurIds).subscribe({
+          next: updatedAfterFormateurs => {
+            this.replaceCours(updatedAfterFormateurs);
+
+            this.coursAdapter.setPrerequis(cours.id, prerequisIds).subscribe({
+              next: updated => {
+                this.replaceCours(updated);
+                this.submitting.set(false);
+                this.closeEditModal();
+              },
+              error: err => {
+                this.formError.set(this.extractError(err, 'Une erreur est survenue lors de la mise à jour des prérequis.'));
+                this.submitting.set(false);
+              },
+            });
           },
-          error: err => {
-            this.formError.set(this.extractError(err, 'Une erreur est survenue lors de la mise à jour des prérequis.'));
+          error: () => {
+            this.formError.set('Une erreur est survenue lors de la mise à jour des formateurs.');
             this.submitting.set(false);
           },
         });
       },
       error: () => {
-        this.formError.set('Une erreur est survenue lors de la mise à jour des formateurs.');
+        this.formError.set('Une erreur est survenue lors de la mise à jour du cours.');
         this.submitting.set(false);
       },
     });

@@ -27,11 +27,12 @@ export class SidebarComponent {
 
   protected readonly routes: { path: string; label: string; icon: LucideIconInput; roles?: Role[] }[] = [
     { path: '/app/dashboard', label: 'Tableau de bord', icon: LucideGraduationCap },
-    { path: '/app/promotions', label: 'Promotions', icon: LucideUsers },
+    { path: '/app/promotions', label: 'Promotions', icon: LucideUsers, roles: ['ELEVE', 'FORMATEUR'] },
     { path: '/app/calendrier', label: 'Calendrier', icon: LucideCalendar },
     { path:'/app/admin/utilisateurs', label: 'Utilisateurs', icon: LucideUsers, roles: ['ADMIN'] },
     { path:'/app/admin/cours', label: 'Catalogue de cours', icon: LucideBookOpen, roles: ['REF'] },
     { path:'/app/admin/cursus', label: 'Cursus', icon: LucideListTree, roles: ['REF'] },
+    { path:'/app/admin/promotions', label: 'Promotions', icon: LucideUsers, roles: ['REF'] },
   ];
 
   protected readonly visibleRoutes = computed(() =>

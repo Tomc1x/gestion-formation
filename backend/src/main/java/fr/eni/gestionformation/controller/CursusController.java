@@ -56,6 +56,13 @@ public class CursusController {
         return ResponseEntity.ok(toResponse(saved));
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<CursusResponse> update(@PathVariable Long id, @RequestBody CursusRequest request) {
+        Filiere filiere = request.getFiliereId() != null ? filiereService.findById(request.getFiliereId()) : null;
+        Cursus updated = cursusService.update(id, request.getName(), request.getFiliereId(), filiere);
+        return ResponseEntity.ok(toResponse(updated));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         cursusService.deleteById(id);

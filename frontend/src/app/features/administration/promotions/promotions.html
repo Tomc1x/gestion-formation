@@ -1,0 +1,246 @@
+<div class="page anim-up">
+  <div class="page__header">
+    <div>
+      <h1>Promotions</h1>
+      <p class="p1 page__subtitle">Gestion des promotions, de leur cursus et de leurs élèves.</p>
+    </div>
+    <button class="btn btn-primary" type="button" (click)="openCreateModal()">
+      <svg lucidePlus class="lic" aria-hidden="true"></svg>
+      Nouvelle promotion
+    </button>
+  </div>
+
+  <div class="card filter-bar">
+    <div class="field filter-bar__search">
+      <svg lucideSearch class="lic filter-bar__search-icon" aria-hidden="true"></svg>
+      <label for="p-search" class="sr-only">Rechercher une promotion ou un cursus</label>
+      <input
+        id="p-search"
+        name="p-search"
+        class="input"
+        type="search"
+        placeholder="Rechercher une promotion ou un cursus…"
+        [value]="searchQuery()"
+        (input)="searchQuery.set($any($event.target).value)"
+      />
+    </div>
+
+    <div class="filter-bar__spacer"></div>
+
+    <div class="field filter-bar__select">
+      <svg lucideGitBranch class="lic" aria-hidden="true"></svg>
+      <label for="p-filiere" class="sr-only">Filtrer par filière</label>
+      <select id="p-filiere" class="input" [value]="filiereFilter()" (change)="filiereFilter.set($any($event.target).value)">
+        <option value="all">Toutes les filières</option>
+        @for (f of filieres(); track f.id) {
+          <option [value]="f.id">{{ f.name }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="field filter-bar__select">
+      <svg lucideCalendar class="lic" aria-hidden="true"></svg>
+      <label for="p-year" class="sr-only">Filtrer par année</label>
+      <select id="p-year" class="input" [value]="yearFilter()" (change)="yearFilter.set($any($event.target).value)">
+        <option value="all">Toutes les années</option>
+        @for (y of availableYears(); track y) {
+          <option [value]="y">{{ y }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="card skel page__skel" aria-hidden="true"></div>
+  } @else if (loadError()) {
+    <p class="state-msg state-msg--error" role="alert">{{ loadError() }}</p>
+  } @else if (filteredCards().length === 0) {
+    <div class="card empty-state">
+      <svg lucideLayers class="lic empty-state__icon" aria-hidden="true"></svg>
+      <p class="p1 empty-state__title">Aucune promotion trouvée</p>
+      <p class="p2 muted">Aucune promotion ne correspond à vos filtres. Modifiez la recherche ou créez-en une nouvelle.</p>
+      <button class="btn btn-primary" type="button" (click)="openCreateModal()">
+        <svg lucidePlus class="lic" aria-hidden="true"></svg>
+        Nouvelle promotion
+      </button>
+    </div>
+  } @else {
+    <div class="promo-grid">
+      @for (card of filteredCards(); track card.promotion.id) {
+        <div
+          class="card promo-card"
+          role="button"
+          tabindex="0"
+          [attr.aria-label]="'Voir la promotion ' + card.promotion.name"
+          (click)="openPromotion(card.promotion)"
+          (keydown.enter)="openPromotion(card.promotion)"
+          (keydown.space)="$event.preventDefault(); openPromotion(card.promotion)"
+        >
+          <div class="promo-card__band" [style.background]="card.filiereColor"></div>
+          <div class="promo-card__body">
+            <div class="promo-card__header">
+              <div>
+                @if (card.filiere) {
+                  <span class="promo-card__filiere" [style.color]="card.filiereColor">{{ card.filiere.name }}</span>
+                }
+                <h3 class="promo-card__title">{{ card.promotion.name }}</h3>
+              </div>
+              <span class="status-pill" [class.status-pill--upcoming]="card.statut === 'a-venir'" [class.status-pill--ongoing]="card.statut === 'en-cours'" [class.status-pill--done]="card.statut === 'terminee'">
+                {{ statutLabel(card.statut) }}
+              </span>
+            </div>
+
+            @if (card.cursus) {
+              <div class="promo-card__cursus">
+                <svg lucideBookOpenCheck class="lic" aria-hidden="true"></svg>
+                {{ card.cursus.name }}
+              </div>
+            }
+
+            <div class="promo-card__period">
+              <svg lucideCalendarRange class="lic" aria-hidden="true"></svg>
+              {{ fmtRange(card.promotion.dateDebut, card.dateFin) }}
+            </div>
+
+            <div class="promo-card__footer">
+              <span class="badge badge-stagiaires">
+                <svg lucideUsers class="lic" aria-hidden="true"></svg>
+                {{ card.promotion.eleves.length }} stagiaires
+              </span>
+              <div class="promo-card__footer-actions">
+                <button class="btn btn-ghost btn-icon" type="button" [attr.aria-label]="'Supprimer ' + card.promotion.name" (click)="$event.stopPropagation(); openDeleteModal(card.promotion)">
+                  <svg lucideTrash2 class="lic" aria-hidden="true"></svg>
+                </button>
+                <span class="promo-card__details">
+                  Détails
+                  <svg lucideArrowRight class="lic" aria-hidden="true"></svg>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<!-- Modale : Nouvelle promotion                                                 -->
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+@if (showCreateModal()) {
+  <div class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-create-title" (click)="closeCreateModal()">
+    <div class="card modal anim-in" (click)="$event.stopPropagation()">
+      <div class="modal__header">
+        <h2 id="modal-create-title">Nouvelle promotion</h2>
+        <button class="btn btn-ghost btn-icon" type="button" aria-label="Fermer" (click)="closeCreateModal()">
+          <svg lucideX class="lic" aria-hidden="true"></svg>
+        </button>
+      </div>
+
+      <form class="modal__body" [formGroup]="createForm" (ngSubmit)="submitCreate()">
+        <div class="field">
+          <label for="p-name">Nom de la promotion</label>
+          <input id="p-name" class="input" type="text" formControlName="name" placeholder="Ex : Promo Front-End 2026" />
+          @if (createForm.controls.name.invalid && createForm.controls.name.touched) {
+            <span class="field-error">Champ requis</span>
+          }
+        </div>
+
+        <div class="field">
+          <label for="p-cursus">Cursus</label>
+          <select id="p-cursus" class="input" formControlName="cursusId">
+            <option [value]="null" disabled>Sélectionner un cursus</option>
+            @for (c of cursusList(); track c.id) {
+              <option [value]="c.id">{{ c.name }}</option>
+            }
+          </select>
+          @if (createForm.controls.cursusId.invalid && createForm.controls.cursusId.touched) {
+            <span class="field-error">Champ requis</span>
+          }
+        </div>
+
+        <div class="field">
+          <label for="p-date-debut">Date de début</label>
+          <input id="p-date-debut" class="input" type="date" formControlName="dateDebut" />
+          @if (createForm.controls.dateDebut.invalid && createForm.controls.dateDebut.touched) {
+            <span class="field-error">Champ requis</span>
+          }
+        </div>
+
+        <div class="field">
+          <label class="checkbox-item">
+            <input type="checkbox" formControlName="rythmeActif" />
+            Rythme alternance
+          </label>
+        </div>
+
+        @if (createForm.controls.rythmeActif.value) {
+          <div class="form-row">
+            <div class="field">
+              <label for="p-semaines-centre">Semaines en centre</label>
+              <input id="p-semaines-centre" class="input" type="number" min="0" formControlName="semainesCentre" />
+            </div>
+            <div class="field">
+              <label for="p-semaines-entreprise">Semaines en entreprise</label>
+              <input id="p-semaines-entreprise" class="input" type="number" min="0" formControlName="semainesEntreprise" />
+            </div>
+          </div>
+        }
+
+        @if (formError()) {
+          <p class="form-api-error" role="alert">{{ formError() }}</p>
+        }
+
+        <div class="modal__footer">
+          <button class="btn btn-outline" type="button" (click)="closeCreateModal()">Annuler</button>
+          <button class="btn btn-primary" type="submit" [disabled]="submitting()">
+            {{ submitting() ? 'Création…' : 'Créer la promotion' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<!-- Modale : Supprimer une promotion                                            -->
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+@if (deletingPromotion()) {
+  <div class="modal-overlay" role="alertdialog" aria-modal="true" aria-labelledby="modal-delete-title" (click)="closeDeleteModal()">
+    <div class="card modal modal--sm anim-in" (click)="$event.stopPropagation()">
+      <div class="modal__header">
+        <h2 id="modal-delete-title">Supprimer la promotion</h2>
+        <button class="btn btn-ghost btn-icon" type="button" aria-label="Fermer" (click)="closeDeleteModal()">
+          <svg lucideX class="lic" aria-hidden="true"></svg>
+        </button>
+      </div>
+
+      <div class="modal__body">
+        <p class="p1">
+          Vous êtes sur le point de supprimer la promotion
+          <strong>{{ deletingPromotion()!.name }}</strong>.
+          Cette action est <strong>irréversible</strong>. Les élèves de cette promotion seront désaffectés.
+        </p>
+
+        @if (deletingPromotion()!.eleves.length > 0 || deletingPromotion()!.planning.length > 0) {
+          <p class="p1 modal__delete-impact">
+            Cette promotion compte
+            <strong>{{ deletingPromotion()!.eleves.length }}</strong> élève(s)
+            et <strong>{{ deletingPromotion()!.planning.length }}</strong> session(s) planifiée(s).
+          </p>
+        }
+
+        @if (formError()) {
+          <p class="form-api-error" role="alert">{{ formError() }}</p>
+        }
+
+        <div class="modal__footer">
+          <button class="btn btn-outline" type="button" (click)="closeDeleteModal()">Annuler</button>
+          <button class="btn btn-primary modal__delete-btn" type="button" [disabled]="submitting()" (click)="confirmDelete()">
+            {{ submitting() ? 'Suppression…' : 'Supprimer définitivement' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

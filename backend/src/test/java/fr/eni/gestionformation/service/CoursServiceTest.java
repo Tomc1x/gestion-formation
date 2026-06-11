@@ -40,6 +40,18 @@ class CoursServiceTest {
     CoursService coursService;
 
     @Test
+    void updateNomEtDuree_modifieNomEtDuree() {
+        Cours cours = Cours.builder().id(1L).name("Ancien nom").dureeJours(2).build();
+        when(coursRepository.findById(1L)).thenReturn(Optional.of(cours));
+        when(coursRepository.save(any(Cours.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Cours result = coursService.updateNomEtDuree(1L, "Nouveau nom", 5);
+
+        assertThat(result.getName()).isEqualTo("Nouveau nom");
+        assertThat(result.getDureeJours()).isEqualTo(5);
+    }
+
+    @Test
     void setPrerequis_selfPrerequisite_throwsCycleDetected() {
         Cours coursA = Cours.builder().id(1L).name("A").build();
         when(coursRepository.findById(1L)).thenReturn(Optional.of(coursA));

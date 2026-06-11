@@ -18,6 +18,12 @@ interface MockCursus {
   cours: { coursId: number; ordre: number }[];
 }
 
+const MOCK_FILIERES = [
+  { id: 1, name: 'Développement Web' },
+  { id: 2, name: 'Infrastructure & Réseaux' },
+  { id: 3, name: 'Data & IA' },
+];
+
 const FORMATEUR_CLAIRE: FormateurInfo = { id: 3, firstName: 'Claire', lastName: 'Lefevre' };
 
 const MOCK_COURS: MockCoursRef[] = [
@@ -81,6 +87,29 @@ export class MockCursusAdapter extends BaseCursusAdapter {
     };
     MOCK_DATA = [...MOCK_DATA, created];
     return of(this.toResponse(created));
+  }
+
+  update(cursusId: number, req: CreateCursusRequest): Observable<Cursus> {
+    const cursus = this.findCursus(cursusId);
+    const dup = MOCK_DATA.find(c => c.id !== cursusId && c.name === req.name);
+    if (dup) {
+      return throwError(() => ({ status: 422, error: `Un cursus avec le nom '${req.name}' existe déjà.` }));
+    }
+    const filiereName = MOCK_FILIERES.find(f => f.id === req.filiereId)?.name ?? null;
+    const updated: MockCursus = {
+      ...cursus,
+      name: req.name,
+      filiereId: req.filiereId ?? null,
+      filiereName,
+    };
+    this.replace(updated);
+    return of(this.toResponse(updated));
+  }
+
+  delete(cursusId: number): Observable<void> {
+    this.findCursus(cursusId);
+    MOCK_DATA = MOCK_DATA.filter(c => c.id !== cursusId);
+    return of(undefined);
   }
 
   addCours(cursusId: number, coursId: number, ordre?: number): Observable<Cursus> {

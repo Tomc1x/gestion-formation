@@ -7,6 +7,7 @@ import java.util.List;
 @Data
 public class CoursRequest {
     private String name;
+    private Integer dureeJours;
     private List<Long> formateurIds;
     private List<Long> prerequisIds;
 }

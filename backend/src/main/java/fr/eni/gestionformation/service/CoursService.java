@@ -40,6 +40,16 @@ public class CoursService {
     }
 
     @Transactional
+    public Cours updateNomEtDuree(Long id, String name, Integer dureeJours) {
+        Cours cours = findById(id);
+        if (name != null) {
+            cours.setName(name);
+        }
+        cours.setDureeJours(dureeJours);
+        return coursRepository.save(cours);
+    }
+
+    @Transactional
     public void deleteById(Long id) {
         findById(id);
         // Un cours du catalogue est independant : sa suppression retire aussi

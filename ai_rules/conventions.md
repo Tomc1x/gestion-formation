@@ -56,3 +56,54 @@ Verified: 2026-06-10
 **How to apply:** Before adding a new design variable, check whether its SCSS equivalent already exists in `_variables.scss`. If not, create both the SCSS variable and the `:root` custom property mapping in the same change. Components should consume tokens via `var(--token-name)`.
 
 **Counter-indications:** None — applies to all new global design tokens. Does not apply to component-local, non-reusable values.
+
+---
+
+### CONV-004 — EntitySelectorComponent for entity multi-selection (search + pagination)
+
+Scope: frontend/src/app/shared/components/entity-selector/*, any form/UI selecting from a potentially long list of entities (eleves, formateurs, prerequis, cours)
+Origin: WI-20260611-FULLST-001, WI-20260611-FULLST-006
+Added: 2026-06-11
+Verified: 2026-06-11
+
+**Rule / Decision / Pitfall:** Any new UI for selecting one or more entities from a list that can exceed ~15 items must use `EntitySelectorComponent` (text search, accent-insensitive, + pagination), never an exhaustive checkbox-list. The component's contract is `SelectableEntity = { id: number; label: string; sublabel?: string }`; mode `'add'` emits `add: output<number>()` per row action (immediate API call), mode `'multi-select'` emits `selectionChange: output<Set<number>>()` on toggle (deferred to parent form submit). It also supports a `disabledIds` input.
+
+**Why:** Exhaustive checkbox-lists were identified as a recurring anti-pattern on promotions (FULLST-001) and the cours catalogue (FULLST-006) — unfilterable and illegible at scale. The component was implemented in FULLST-001 and reused/confirmed in FULLST-006.
+
+**How to apply:** Map domain entities to `SelectableEntity[]` (business-domain filtering — cursus, disponibilite, role — happens in the calling component before passing `items`, the selector itself only does text search + pagination). Choose `mode: 'add'` vs `'multi-select'` based on whether the action triggers an immediate API call or is submitted with the parent form. Pass `disabledIds` to exclude already-selected/ineligible entities.
+
+**Counter-indications:** Short, fixed lists (<~15 items) where an exhaustive checkbox-list remains readable do not need this component.
+
+---
+
+### CONV-005 — Badge-list truncation in admin tables via native `<details>/<summary>`
+
+Scope: frontend/src/app/features/administration/**/*.html (table columns showing lists of related entities: formateurs, prerequis, eleves, etc.)
+Origin: WI-20260611-FULLST-006
+Added: 2026-06-11
+Verified: 2026-06-11
+
+**Rule / Decision / Pitfall:** Any table column displaying a list of related entities must cap visible badges at 3 + a "+X autres" badge that opens a native `<details><summary>+X autres</summary>...</details>` listing the rest, instead of rendering the full list in `.badge-list`.
+
+**Why:** Unbounded badge lists overflow/stack and make the table unreadable as soon as an entity has more than a few relations (observed on the cours catalogue, FULLST-006). `<details>/<summary>` is accessible and requires no JS tooltip dependency.
+
+**How to apply:** Extract a shared utility `visibleBadges(list, max=3)` / `hiddenCount(list, max=3)`; consider `frontend/src/app/shared/utils/badge-list.ts` if reused by a 3rd screen. Wrap the overflow in `<details><summary>+X autres</summary>...</details>`.
+
+**Counter-indications:** None identified — applies to any admin table column with a potentially long related-entity list.
+
+---
+
+### CONV-006 — CoursPlanifie naming for the planning pivot entity (formerly PromotionCours)
+
+Scope: backend/src/main/java/fr/eni/gestionformation/{entity,repository,dto,service,controller,exception} (course planning)
+Origin: WI-20260611-FULLST-008
+Added: 2026-06-11
+Verified: 2026-06-11
+
+**Rule / Decision / Pitfall:** The entity formerly named `PromotionCours` is now `CoursPlanifie` (status enum `CoursPlanifieStatut`, repository `CoursPlanifieRepository`, DTO `CoursPlanifieResponse`, exception `CoursPlanifieNotFoundException`). Any new code touching course planning must use this naming.
+
+**Why:** Decouples "a planned course session" from "belonging to a promotion" to support cours-a-l'unite (see DEC-003).
+
+**How to apply:** `grep -r "PromotionCours" backend/src` must return 0 results. New code referencing the planning pivot entity must use `CoursPlanifie*` names.
+
+**Counter-indications:** None — superseded naming should not reappear in new code.

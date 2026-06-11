@@ -17,6 +17,10 @@ export class HttpCoursAdapter extends BaseCoursAdapter {
     return this.http.post<Cours>(this.API, req);
   }
 
+  update(id: number, req: CreateCoursRequest): Observable<Cours> {
+    return this.http.put<Cours>(`${this.API}/${id}`, req);
+  }
+
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.API}/${id}`);
   }

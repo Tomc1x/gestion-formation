@@ -16,6 +16,7 @@ import {
   LucideTrash2,
   LucideUsers,
   LucidePencil,
+  LucideGripVertical,
 } from '@lucide/angular';
 import { BaseCursusAdapter } from '../../../core/adapters/cursus.adapter';
 import { BaseFiliereAdapter } from '../../../core/adapters/filiere.adapter';
@@ -48,6 +49,7 @@ const FILIERE_COLORS = [
     LucideTrash2,
     LucideUsers,
     LucidePencil,
+    LucideGripVertical,
   ],
   templateUrl: './cursus.html',
   styleUrl: './cursus.scss',
@@ -68,26 +70,13 @@ export class CursusComponent implements OnInit {
   protected readonly formError = signal<string | null>(null);
 
   // ── Regroupement par filière ─────────────────────────────────────────────────
-  protected readonly groupedByFiliere = computed<{ filiere: Filiere | null; cursus: Cursus[] }[]>(() => {
-    const groups = new Map<number | null, Cursus[]>();
-    for (const cursus of this.cursusList()) {
-      const list = groups.get(cursus.filiereId) ?? [];
-      list.push(cursus);
-      groups.set(cursus.filiereId, list);
-    }
-    const result: { filiere: Filiere | null; cursus: Cursus[] }[] = [];
-    for (const filiere of this.filieres()) {
-      const cursus = groups.get(filiere.id) ?? [];
-      if (cursus.length > 0) {
-        result.push({ filiere, cursus });
-      }
-    }
-    const sansFiliere = groups.get(null) ?? [];
-    if (sansFiliere.length > 0) {
-      result.push({ filiere: null, cursus: sansFiliere });
-    }
-    return result;
-  });
+  protected readonly cursusSansFiliere = computed<Cursus[]>(() =>
+    this.cursusList().filter(c => c.filiereId === null)
+  );
+
+  protected cursusForFiliere(filiereId: number): Cursus[] {
+    return this.cursusList().filter(c => c.filiereId === filiereId);
+  }
 
   protected filiereColor(filiereId: number): string {
     return FILIERE_COLORS[filiereId % FILIERE_COLORS.length];
@@ -95,6 +84,16 @@ export class CursusComponent implements OnInit {
 
   protected cursusCount(filiereId: number): number {
     return this.cursusList().filter(c => c.filiereId === filiereId).length;
+  }
+
+  /** Index dans FILIERE_COLORS qui sera attribué à la prochaine filière créée (basé sur son futur id). */
+  protected nextFiliereColorIndex(): number {
+    const maxId = this.filieres().reduce((max, f) => Math.max(max, f.id), 0);
+    return (maxId + 1) % FILIERE_COLORS.length;
+  }
+
+  protected nextFiliereColor(): string {
+    return FILIERE_COLORS[this.nextFiliereColorIndex()];
   }
 
   ngOnInit(): void {
@@ -127,6 +126,56 @@ export class CursusComponent implements OnInit {
 
   protected fullName(p: { firstName: string; lastName: string }): string {
     return `${p.firstName} ${p.lastName}`;
+  }
+
+  // ── Réordonnancement des cours d'un cursus (drag&drop + boutons monter/descendre) ──
+  protected readonly draggedCours = signal<{ cursusId: number; coursId: number } | null>(null);
+
+  protected onDragStart(cursusId: number, coursId: number): void {
+    this.draggedCours.set({ cursusId, coursId });
+  }
+
+  protected onDragEnd(): void {
+    this.draggedCours.set(null);
+  }
+
+  protected onDropOnCours(cursus: Cursus, targetCoursId: number): void {
+    const dragged = this.draggedCours();
+    if (!dragged || dragged.cursusId !== cursus.id || dragged.coursId === targetCoursId) return;
+
+    const ids = cursus.cours.map(c => c.id);
+    const fromIndex = ids.indexOf(dragged.coursId);
+    const toIndex = ids.indexOf(targetCoursId);
+    if (fromIndex === -1 || toIndex === -1) return;
+
+    const reordered = [...ids];
+    reordered.splice(fromIndex, 1);
+    reordered.splice(toIndex, 0, dragged.coursId);
+    this.draggedCours.set(null);
+    this.persistReorder(cursus.id, reordered);
+  }
+
+  /** Alternative clavier au drag&drop : déplace un cours vers le haut/bas dans son cursus. */
+  protected moveCoursInCursus(cursus: Cursus, coursId: number, direction: -1 | 1): void {
+    const ids = cursus.cours.map(c => c.id);
+    const index = ids.indexOf(coursId);
+    const target = index + direction;
+    if (index === -1 || target < 0 || target >= ids.length) return;
+
+    const reordered = [...ids];
+    [reordered[index], reordered[target]] = [reordered[target], reordered[index]];
+    this.persistReorder(cursus.id, reordered);
+  }
+
+  private persistReorder(cursusId: number, coursIds: number[]): void {
+    this.cursusAdapter.reorder(cursusId, coursIds).subscribe({
+      next: updated => {
+        this.cursusList.update(list => list.map(c => (c.id === updated.id ? updated : c)));
+      },
+      error: () => {
+        this.formError.set('Une erreur est survenue lors du réordonnancement du cursus.');
+      },
+    });
   }
 
   // ── Modale : Nouvelle filière ─────────────────────────────────────────────────
@@ -445,6 +494,122 @@ export class CursusComponent implements OnInit {
         // Le cursus existe déjà côté serveur : on le reflète tel quel dans la liste.
         this.cursusList.update(list => [...list, last]);
         this.closeCursusModal();
+      },
+    });
+  }
+
+  // ── Modale : Modifier un cursus ───────────────────────────────────────────────
+  protected readonly editingCursus = signal<Cursus | null>(null);
+
+  protected readonly editCursusForm = new FormGroup({
+    name: new FormControl('', { nonNullable: true, validators: Validators.required }),
+    filiereId: new FormControl<number | null>(null, { validators: Validators.required }),
+  });
+
+  protected openEditCursusModal(cursus: Cursus): void {
+    this.formError.set(null);
+    this.editCursusForm.reset({ name: cursus.name, filiereId: cursus.filiereId });
+    this.editingCursus.set(cursus);
+  }
+
+  protected closeEditCursusModal(): void {
+    this.editingCursus.set(null);
+  }
+
+  protected submitEditCursus(): void {
+    const cursus = this.editingCursus();
+    if (!cursus || this.editCursusForm.invalid || this.submitting()) return;
+
+    const v = this.editCursusForm.getRawValue();
+    const req: CreateCursusRequest = { name: v.name, filiereId: v.filiereId! };
+
+    this.submitting.set(true);
+    this.formError.set(null);
+
+    this.cursusAdapter.update(cursus.id, req).subscribe({
+      next: updated => {
+        this.cursusList.update(list => list.map(c => (c.id === updated.id ? updated : c)));
+        this.submitting.set(false);
+        this.closeEditCursusModal();
+      },
+      error: err => {
+        this.formError.set(this.extractError(err, 'Une erreur est survenue lors de la modification du cursus.'));
+        this.submitting.set(false);
+      },
+    });
+  }
+
+  // ── Modale : Supprimer un cursus ──────────────────────────────────────────────
+  protected readonly deletingCursus = signal<Cursus | null>(null);
+
+  protected openDeleteCursusModal(cursus: Cursus): void {
+    this.formError.set(null);
+    this.deletingCursus.set(cursus);
+  }
+
+  protected closeDeleteCursusModal(): void {
+    this.deletingCursus.set(null);
+  }
+
+  protected confirmDeleteCursus(): void {
+    const cursus = this.deletingCursus();
+    if (!cursus || this.submitting()) return;
+
+    this.submitting.set(true);
+    this.formError.set(null);
+
+    this.cursusAdapter.delete(cursus.id).subscribe({
+      next: () => {
+        this.cursusList.update(list => list.filter(c => c.id !== cursus.id));
+        this.submitting.set(false);
+        this.closeDeleteCursusModal();
+      },
+      error: err => {
+        this.formError.set(this.extractError(err, 'Impossible de supprimer ce cursus.'));
+        this.submitting.set(false);
+      },
+    });
+  }
+
+  // ── Ajouter / retirer un cours sur une carte cursus existante ────────────────
+  protected availableCoursForCursus(cursus: Cursus): Cours[] {
+    const ids = new Set(cursus.cours.map(c => c.id));
+    return this.catalogue().filter(c => !ids.has(c.id));
+  }
+
+  protected readonly addingCoursToCursus = signal<Cursus | null>(null);
+
+  protected openAddCoursModal(cursus: Cursus): void {
+    this.formError.set(null);
+    this.addingCoursToCursus.set(cursus);
+  }
+
+  protected closeAddCoursModal(): void {
+    this.addingCoursToCursus.set(null);
+  }
+
+  protected addCoursToCursus(cursus: Cursus, coursId: number): void {
+    if (!coursId) return;
+    this.cursusAdapter.addCours(cursus.id, coursId).subscribe({
+      next: updated => {
+        this.cursusList.update(list => list.map(c => (c.id === updated.id ? updated : c)));
+        if (this.addingCoursToCursus()?.id === updated.id) {
+          this.addingCoursToCursus.set(updated);
+        }
+      },
+      error: () => {
+        this.formError.set('Une erreur est survenue lors de l\'ajout du cours au cursus.');
+      },
+    });
+  }
+
+  protected removeCoursFromCursus(cursus: Cursus, coursId: number): void {
+    this.cursusAdapter.removeCours(cursus.id, coursId).subscribe({
+      next: updated => {
+        this.cursusList.update(list => list.map(c => (c.id === updated.id ? updated : c)));
+      },
+      error: () => {
+        this.formError.set('Une erreur est survenue lors du retrait du cours.');
       },
     });
   }

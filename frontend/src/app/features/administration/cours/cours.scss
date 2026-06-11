@@ -50,6 +50,42 @@
   gap: 0.375rem;
 }
 
+.table-wrap {
+  overflow: visible;
+}
+
+.badge-more {
+  position: relative;
+
+  &__summary {
+    cursor: pointer;
+    list-style: none;
+
+    &::-webkit-details-marker { display: none; }
+  }
+
+  .popover {
+    display: none;
+    position: absolute;
+    top: calc(100% + 0.375rem);
+    left: 0;
+    z-index: 10;
+    min-width: 160px;
+    max-width: 280px;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    padding: 0.625rem;
+    background: var(--surface, #fff);
+    border: 1px solid var(--line);
+    border-radius: var(--r-sm);
+    box-shadow: var(--shadow-e2);
+  }
+
+  &[open] .popover {
+    display: flex;
+  }
+}
+
 .pill-formateur {
   background: var(--blue-050);
   color: var(--blue-800);
@@ -63,6 +99,11 @@
 .badge-required-by {
   background: #F3E8FF;
   color: #7E22CE;
+}
+
+.badge-duree {
+  background: var(--blue-050);
+  color: var(--blue-800);
 }
 
 .empty-row {
