@@ -107,3 +107,20 @@ Verified: 2026-06-11
 **How to apply:** `grep -r "PromotionCours" backend/src` must return 0 results. New code referencing the planning pivot entity must use `CoursPlanifie*` names.
 
 **Counter-indications:** None — superseded naming should not reappear in new code.
+
+---
+
+### CONV-007 — Manual cascade-delete pattern for required `@ManyToOne` FKs without JPA cascade
+
+Scope: backend/src/main/java/fr/eni/gestionformation/service/*.java (any `deleteById` whose entity is the target of a non-cascading `optional=false`/`nullable=false` FK)
+Origin: WI-20260611-FULLST-024, ai_memory/2026-06-11__ROLE-developer__WI-20260611-FULLST-024.md
+Added: 2026-06-11
+Verified: 2026-06-11
+
+**Rule / Decision / Pitfall:** Before deleting an entity X that other entities Y reference via a required `@ManyToOne` (no `cascade`/`orphanRemoval`), find all Y rows referencing X via a `findByXId(...)` repository method and delete the deepest-dependent rows first (e.g. `InscriptionCours` before `CoursPlanifie` before `Cours`/`Promotion`), all within the same `@Transactional` service method, before the final `repository.delete(x)`.
+
+**Why:** `InscriptionCours.coursPlanifie` and `CoursPlanifie.cours`/`.promotion` are all `optional=false`/`nullable=false` with no cascade, so naive deletion of `Cours`/`Promotion`/`CoursPlanifie` throws a raw `DataIntegrityViolationException` (FK violation), which this project's filter chain surfaces as an unhelpful empty-body 403 (see PIT-020).
+
+**How to apply:** See `PromotionService.deleteInscriptionsForPlanning` and `CoursService.deleteById` (steps 2-3) for the reference implementation. Order matters: InscriptionCours -> CoursPlanifie -> parent (Cours/Promotion).
+
+**Counter-indications:** Does not apply to cross-aggregate reference-nulling (e.g. `Cursus` deletion nulling `Promotion.cursus`) — that case is covered by DEC-002's sibling-service-call pattern, not by deep deletion chains.

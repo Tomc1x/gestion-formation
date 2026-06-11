@@ -12,6 +12,8 @@ import fr.eni.gestionformation.service.InscriptionCoursService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -47,7 +49,10 @@ public class InscriptionCoursController {
     }
 
     @GetMapping("/api/eleves/{id}/planning")
-    public ResponseEntity<List<PlanningEleveResponse>> getPlanningEleve(@PathVariable Long id) {
+    public ResponseEntity<List<PlanningEleveResponse>> getPlanningEleve(@PathVariable Long id, Authentication authentication) {
+        if (!(authentication.getPrincipal() instanceof User currentUser) || !currentUser.getUid().equals(id)) {
+            throw new AccessDeniedException("Accès non autorisé au planning de cet élève");
+        }
         Map<CoursPlanifie, OrigineInscription> planning = inscriptionCoursService.getPlanningEleve(id);
         List<PlanningEleveResponse> reponse = planning.entrySet().stream()
                 .map(entry -> {

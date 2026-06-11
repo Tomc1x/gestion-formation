@@ -1,5 +1,19 @@
 # WORK ITEMS
 
+## WI-20260611-FULLST-026
+- Date: 2026-06-11
+- Title: Tests unitaires/integration backend basiques pour services/controllers manquants
+- Status: OPEN
+- TOA: manager
+- Executor: developer
+- attempt_count: 0
+- Notes: |
+    - Cibles: UserAdminService/Controller, InvitationService/Controller, FiliereController,
+      CursusController, InscriptionCoursController, PromotionController (tests fonctionnels basiques).
+    - Style: s'inspirer des tests existants (Mockito pour services, MockMvc pour controllers).
+    - Quelques cas nominaux + 1 cas d'erreur par element, pas de couverture exhaustive.
+    - Verification: ./gradlew test
+
 ## WI-20260608-FRONTE-003
 - Date: 2026-06-08
 - Title: Écran gestion utilisateurs — Screen 10
@@ -1697,3 +1711,146 @@ promotion). Repro :
   fichier, soit factoriser via des classes partagees existantes, soit
   ajuster le budget dans `angular.json` pour ce composant -- a trier par
   rules-curator si recurrent.
+
+## WI-20260611-FULLST-023
+- Date: 2026-06-11
+- Title: Restriction des routes/acces par role (API + app.routes.ts + sidebar)
+- Status: DONE
+- TOA: manager
+- Executor: developer
+- attempt_count: 1
+- Scope:
+    Matrice cible (validee par l'utilisateur) :
+    - ADMINISTRATEUR (ADMIN) : Dashboard, Utilisateurs (/app/admin/utilisateurs)
+    - FORMATEUR : Calendrier (/app/calendrier) + visibilite des inscrits sur ses cours planifies (deja couvert par /api/cours-planifies/*/inscrits)
+    - ELEVE : Calendrier (/app/calendrier) uniquement
+    - REFERENTE_ADMINISTRATIVE (REF) : Catalogue de cours, Cursus et filiere, Promotions (admin/*)
+
+    1) Backend SecurityConfig.java :
+       - GET /api/filiere/** : permitAll -> hasAnyRole(ADMINISTRATEUR, REFERENTE_ADMINISTRATIVE)
+       - GET /api/cursus/** : authenticated() -> hasAnyRole(ADMINISTRATEUR, REFERENTE_ADMINISTRATIVE)
+       - GET /api/cours/** : authenticated() -> hasAnyRole(ADMINISTRATEUR, REFERENTE_ADMINISTRATIVE)
+       - GET /api/promotions/** : authenticated() -> hasAnyRole(ADMINISTRATEUR, REFERENTE_ADMINISTRATIVE)
+       - GET /api/admin/users : hasAnyRole(ADMINISTRATEUR, REFERENTE_ADMINISTRATIVE) -> hasRole(ADMINISTRATEUR)
+
+    2) Backend - correction IDOR sur GET /api/eleves/{id}/planning (InscriptionCoursController) :
+       - Verification id du path == id utilisateur authentifie (sinon AccessDeniedException -> 403). Pattern : Authentication.getPrincipal() castable en User -> getUid().
+
+    3) Frontend app.routes.ts :
+       - /app/dashboard : pas de guard (route de repli)
+       - /app/calendrier : roleGuard(['FORMATEUR','ELEVE'])
+       - /app/promotions et /app/promotions/:id (top-level) : roleGuard(['REF'])
+
+    4) Frontend sidebar.ts :
+       - /app/dashboard : roles: ['ADMIN']
+       - /app/calendrier : roles: ['FORMATEUR','ELEVE']
+       - Suppression de l'entree top-level "/app/promotions" (roles ELEVE/FORMATEUR)
+
+- Verification :
+    - backend : ./gradlew compileJava -> succes
+    - frontend : npx ng build -> "Application bundle generation complete." PASS (warnings SCSS preexistants non lies)
+    - Verification chrome-devtools 4 roles non effectuee (optionnelle)
+- Decisions utilisateur (Socratic Gate) :
+    - Route de repli roleGuard : conserver /app/dashboard accessible a tous (pas de defaultRouteForRole)
+    - GET cursus/cours/promotions restreints REF/ADMIN ; FORMATEUR garde uniquement /api/cours-planifies/*/inscrits
+    - GET /api/filiere/** : retire de permitAll, aligne sur cursus/cours (REF/ADMIN)
+    - IDOR /api/eleves/{id}/planning : corrige dans ce WI
+- Proposed Rules: ACCEPTE par rules-curator -> ai_rules/pitfalls.md PIT-019
+    (pattern Authentication.getPrincipal() instanceof User pour verifier la propriete d'une ressource)
+- Memoire: ai_memory/2026-06-11__ROLE-developer__WI-20260611-FULLST-023.md
+
+## WI-20260611-FULLST-024
+- Date: 2026-06-11
+- Title: Suppression robuste - cours planifie (icone poubelle), promotion avec eleves/sessions, cours du catalogue
+- Status: OPEN
+- TOA: manager
+- Executor: developer
+- attempt_count: 0
+- Contexte: |
+    Bug connu (cf REPO_STATE known_issues) : DELETE /api/promotions/{id} echoue (403/erreur)
+    pour une promotion ayant des eleves/sessions planifiees. Cause probable : InscriptionCours
+    a une FK obligatoire (nullable=false) vers CoursPlanifie sans cascade ; la suppression de
+    CoursPlanifie (ou de Cours) echoue par violation de contrainte FK tant que des
+    InscriptionCours y referencent.
+    Idem pour DELETE /api/cours/{id} : CoursPlanifie.cours est nullable=false, donc tout
+    cours deja planifie au moins une fois ne peut pas etre supprime du catalogue.
+- Scope:
+    1) Backend PromotionService.deleteById(id) :
+       - Avant de supprimer les CoursPlanifie de la promotion, supprimer tous les
+         InscriptionCours qui les referencent (InscriptionCoursRepository.findByCoursPlanifieId
+         ou nouvelle methode findByCoursPlanifieIdIn).
+    2) Backend - nouvel endpoint DELETE /api/promotions/{id}/planning/{coursPlanifieId} :
+       - PromotionController + PromotionService.deletePlanning(promotionId, coursPlanifieId) :
+         supprime les InscriptionCours rattachees a ce CoursPlanifie puis le CoursPlanifie
+         lui-meme. Verifier que le CoursPlanifie appartient bien a la promotion (sinon 404).
+       - Regle de securite : meme regle que les autres mutations /api/promotions/** ->
+         hasRole(REFERENTE_ADMINISTRATIVE) (deja couvert par le matcher existant
+         "/api/promotions/**").
+    3) Backend CoursService.deleteById(id) :
+       - Avant coursRepository.deleteById(id), trouver tous les CoursPlanifie dont
+         cours.id == id (CoursPlanifieRepository - ajouter findByCoursId si absent),
+         supprimer les InscriptionCours qui les referencent puis ces CoursPlanifie.
+       - Verifier aussi la gestion des prerequis ManyToMany (cours_prerequis) : s'assurer
+         que les references au cours supprime sont nettoyees des deux cotes (prerequis et
+         cours-dependants) avant suppression, pour eviter une violation de contrainte sur
+         la table de jointure.
+    4) Frontend - icone poubelle "retirer un cours planifie" :
+       - Dans frontend/src/app/features/promotions/promotion-detail/ (liste "Cours
+         planifies"), ajouter un bouton/icone (lucide trash) par ligne de planning, avec
+         confirmation (reutiliser le pattern de modal de confirmation existant dans ce
+         module si present), appelant le nouvel endpoint DELETE planning.
+       - Adapters : ajouter deletePlanning(promotionId, coursPlanifieId) dans
+         core/adapters/promotion.adapter.ts (abstrait), promotion-http.adapter.ts (appel
+         HTTP DELETE) et promotion-mock.ts (suppression locale).
+    5) Re-tester la suppression de la promotion id=4 ("TEST CDA 2", debris connu avec
+       eleves/sessions) -> doit desormais retourner 204 et disparaitre de la liste.
+- Verification requise :
+    - Backend : ./gradlew test (si rapide) + verification manuelle : creer une promotion
+      de test avec un cours planifie et un eleve inscrit, verifier DELETE
+      /api/promotions/{id}/planning/{coursPlanifieId} (204, eleve desinscrit), puis DELETE
+      /api/promotions/{id} (204) avec eleves+sessions restants.
+    - Backend : verifier DELETE /api/cours/{id} sur un cours deja planifie au moins une fois.
+    - Frontend : npx ng build PASS + verification chrome-devtools (icone poubelle visible
+      et fonctionnelle dans promotion-detail, confirmation avant suppression).
+    - Nettoyer la promotion id=4 ("TEST CDA 2") si toujours presente (known_issue).
+
+## WI-20260611-FULLST-024 — Cloture (manager, 2026-06-11)
+- Status: DONE
+- Verification :
+    - backend : ./gradlew compileJava + ./gradlew test -> BUILD SUCCESSFUL
+    - frontend : npx ng build -> PASS
+    - chrome-devtools : icone poubelle "retirer un cours planifie" (cours-planifies-tab) OK + modal confirmation
+    - Tests manuels API : delete planning (avec inscriptions) -> 204 ; delete promotion avec eleves+sessions -> 204 ;
+      delete cours deja planifie (avec prerequis) -> 204
+- Decouverte additionnelle (hors scope initial mais resolue) :
+    - La cause reelle du 403 connu sur DELETE /api/promotions/4 (FULLST-022) etait une table
+      orpheline `promotion_cours` (residu PIT-010) avec 5 lignes encore liees par FK active a
+      promotion(id=4). Lignes supprimees manuellement, puis DELETE /api/promotions/4 -> 204.
+      Promotion id=4 ("TEST CDA 2") definitivement supprimee. known_issue clos.
+    - Risque residuel : la table `promotion_cours` peut contenir des lignes orphelines pour
+      d'autres promotions (non auditees). Voir suivi WI-20260611-FULLST-025.
+- Proposed Rules : ACCEPTE par rules-curator -> ai_rules/pitfalls.md PIT-020, ai_rules/conventions.md CONV-007
+- Memoire : ai_memory/2026-06-11__ROLE-developer__WI-20260611-FULLST-024.md,
+  ai_memory/2026-06-11__ROLE-rules-curator__WI-20260611-FULLST-024.md
+
+## WI-20260611-FULLST-025
+- Date: 2026-06-11
+- Title: Audit/nettoyage table orpheline `promotion_cours` (residu PIT-010) sur toutes promotions
+- Status: OPEN
+- TOA: manager
+- Executor: developer
+- attempt_count: 0
+- Contexte: |
+    WI-20260611-FULLST-024 a decouvert que la table `promotion_cours` (ancienne entite,
+    renommee en CoursPlanifie selon PIT-010) existe toujours en base avec une FK active vers
+    `promotion(id)`, et contenait 5 lignes orphelines bloquant DELETE /api/promotions/4 par
+    violation de contrainte (surfacee en 403 vide, voir PIT-020). Ces lignes ont ete
+    supprimees manuellement pour la promotion 4 uniquement.
+- Scope:
+    - Auditer la table `promotion_cours` pour des lignes residuelles referencant d'autres
+      promotions existantes.
+    - Si la table n'est plus utilisee par aucune entite JPA active, ecrire une migration
+      (Flyway/Liquibase si en place, sinon script SQL documente) pour la supprimer
+      proprement (DROP TABLE) plutot que de laisser ddl-auto=update la conserver.
+    - Documenter le resultat dans ai_memory et clore PIT-020/PIT-010 si plus pertinent.
+- Verification requise : DELETE /api/promotions/{id} sur chaque promotion existante -> 204 sans erreur FK.

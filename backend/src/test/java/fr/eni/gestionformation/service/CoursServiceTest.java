@@ -2,8 +2,10 @@ package fr.eni.gestionformation.service;
 
 import fr.eni.gestionformation.entity.Cours;
 import fr.eni.gestionformation.exception.CycleDetectedException;
+import fr.eni.gestionformation.repository.CoursPlanifieRepository;
 import fr.eni.gestionformation.repository.CoursRepository;
 import fr.eni.gestionformation.repository.CursusCoursRepository;
+import fr.eni.gestionformation.repository.InscriptionCoursRepository;
 import fr.eni.gestionformation.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,6 +37,14 @@ class CoursServiceTest {
     @Mock
     @SuppressWarnings("unused")
     CursusCoursRepository cursusCoursRepository;
+
+    @Mock
+    @SuppressWarnings("unused")
+    CoursPlanifieRepository coursPlanifieRepository;
+
+    @Mock
+    @SuppressWarnings("unused")
+    InscriptionCoursRepository inscriptionCoursRepository;
 
     @InjectMocks
     CoursService coursService;

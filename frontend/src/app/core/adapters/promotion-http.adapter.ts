@@ -37,6 +37,10 @@ export class HttpPromotionAdapter extends BasePromotionAdapter {
     return this.http.put<PromotionCours>(`${this.API}/${promotionId}/planning/${promotionCoursId}`, req);
   }
 
+  deletePlanning(promotionId: number, coursPlanifieId: number): Observable<void> {
+    return this.http.delete<void>(`${this.API}/${promotionId}/planning/${coursPlanifieId}`);
+  }
+
   addEleve(promotionId: number, eleveId: number): Observable<Promotion> {
     return this.http.post<Promotion>(`${this.API}/${promotionId}/eleves/${eleveId}`, {});
   }

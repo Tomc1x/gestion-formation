@@ -16,6 +16,8 @@ export abstract class BasePromotionAdapter {
 
   abstract updatePlanning(promotionId: number, promotionCoursId: number, req: PlanningUpdateRequest): Observable<PromotionCours>;
 
+  abstract deletePlanning(promotionId: number, coursPlanifieId: number): Observable<void>;
+
   abstract addEleve(promotionId: number, eleveId: number): Observable<Promotion>;
 
   abstract removeEleve(promotionId: number, eleveId: number): Observable<Promotion>;

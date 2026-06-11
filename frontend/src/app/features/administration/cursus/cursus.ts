@@ -613,4 +613,27 @@ export class CursusComponent implements OnInit {
       },
     });
   }
+  coursSearchQuery = signal<string>('');
+
+  filteredAvailableCoursForCursus = computed(() => {
+    const currentCursus = this.addingCoursToCursus();
+    const query = this.coursSearchQuery().toLowerCase().trim();
+
+    if (!currentCursus) return [];
+
+    const baseList = this.availableCoursForCursus(currentCursus);
+
+    if (!query) {
+      return baseList;
+    }
+
+    return baseList.filter(cours => cours.name.toLowerCase().includes(query));
+  });
+
+  onSearchQueryChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.coursSearchQuery.set(input.value);
+  }
+
+
 }

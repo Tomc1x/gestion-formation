@@ -19,6 +19,7 @@ import fr.eni.gestionformation.exception.UserNotFoundException;
 import fr.eni.gestionformation.repository.CoursPlanifieRepository;
 import fr.eni.gestionformation.repository.CoursRepository;
 import fr.eni.gestionformation.repository.CursusRepository;
+import fr.eni.gestionformation.repository.InscriptionCoursRepository;
 import fr.eni.gestionformation.repository.PromotionRepository;
 import fr.eni.gestionformation.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +38,7 @@ public class PromotionService {
     private final CursusRepository cursusRepository;
     private final CoursPlanifieRepository coursPlanifieRepository;
     private final CoursRepository coursRepository;
+    private final InscriptionCoursRepository inscriptionCoursRepository;
     private final PlanificationService planificationService;
 
     public List<Promotion> findAll() {
@@ -139,8 +141,32 @@ public class PromotionService {
         List<User> users = userRepository.findByPromotionId(id);
         users.forEach(user -> user.setPromotion(null));
         userRepository.saveAll(users);
-        coursPlanifieRepository.deleteAll(coursPlanifieRepository.findByPromotionIdOrderByOrdre(id));
+        List<CoursPlanifie> planning = coursPlanifieRepository.findByPromotionIdOrderByOrdre(id);
+        deleteInscriptionsForPlanning(planning);
+        coursPlanifieRepository.deleteAll(planning);
         promotionRepository.delete(promotion);
+    }
+
+    @Transactional
+    public void deletePlanning(Long promotionId, Long coursPlanifieId) {
+        findById(promotionId);
+        CoursPlanifie coursPlanifie = coursPlanifieRepository.findById(coursPlanifieId)
+                .orElseThrow(() -> new CoursPlanifieNotFoundException(coursPlanifieId));
+
+        if (coursPlanifie.getPromotion() == null || !coursPlanifie.getPromotion().getId().equals(promotionId)) {
+            throw new CoursPlanifieNotFoundException(coursPlanifieId);
+        }
+
+        deleteInscriptionsForPlanning(List.of(coursPlanifie));
+        coursPlanifieRepository.delete(coursPlanifie);
+    }
+
+    private void deleteInscriptionsForPlanning(List<CoursPlanifie> planning) {
+        if (planning.isEmpty()) {
+            return;
+        }
+        List<Long> coursPlanifieIds = planning.stream().map(CoursPlanifie::getId).toList();
+        inscriptionCoursRepository.deleteAll(inscriptionCoursRepository.findByCoursPlanifieIdIn(coursPlanifieIds));
     }
 
     @Transactional

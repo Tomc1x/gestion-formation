@@ -95,6 +95,21 @@
   margin: 0;
 }
 
+.btn-danger {
+  background: var(--red);
+  color: var(--surface, #fff);
+  border-color: var(--red);
+
+  &:hover:not(:disabled) {
+    filter: brightness(0.92);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+}
+
 .warning-box {
   background: var(--amber-bg);
   border: 1px solid var(--amber);

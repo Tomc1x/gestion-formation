@@ -45,6 +45,14 @@
             >
               <svg lucidePencil class="lic" aria-hidden="true"></svg>
             </button>
+            <button
+              class="btn btn-ghost btn-sm"
+              type="button"
+              [attr.aria-label]="'Retirer le cours planifié ' + pc.coursNom"
+              (click)="openDeleteConfirm(pc)"
+            >
+              <svg lucideTrash2 class="lic" aria-hidden="true"></svg>
+            </button>
           </td>
         </tr>
       }
@@ -113,6 +121,34 @@
           </button>
         </div>
       </form>
+    </div>
+  </div>
+}
+
+@if (deleteTarget(); as target) {
+  <div class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-delete-session-title" (click)="closeDeleteConfirm()">
+    <div class="card modal anim-in" (click)="$event.stopPropagation()">
+      <div class="modal__header">
+        <h2 id="modal-delete-session-title">Retirer le cours planifié</h2>
+      </div>
+
+      <div class="modal__body">
+        <p>
+          Voulez-vous vraiment retirer <strong>{{ target.coursNom }}</strong> du planning de cette promotion ?
+          Les inscriptions des stagiaires à cette session seront également supprimées.
+        </p>
+
+        @if (deleteError()) {
+          <p class="form-api-error" role="alert">{{ deleteError() }}</p>
+        }
+      </div>
+
+      <div class="modal__footer">
+        <button class="btn btn-outline" type="button" (click)="closeDeleteConfirm()">Annuler</button>
+        <button class="btn btn-danger" type="button" [disabled]="deleting()" (click)="confirmDelete()">
+          {{ deleting() ? 'Suppression…' : 'Retirer' }}
+        </button>
+      </div>
     </div>
   </div>
 }

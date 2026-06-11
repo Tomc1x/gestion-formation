@@ -15,4 +15,6 @@ public interface InscriptionCoursRepository extends JpaRepository<InscriptionCou
     boolean existsByEleveUidAndCoursPlanifieId(Long eleveId, Long coursPlanifieId);
 
     Optional<InscriptionCours> findByEleveUidAndCoursPlanifieId(Long eleveId, Long coursPlanifieId);
+
+    List<InscriptionCours> findByCoursPlanifieIdIn(List<Long> coursPlanifieIds);
 }

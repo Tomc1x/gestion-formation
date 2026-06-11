@@ -148,6 +148,15 @@ export class MockPromotionAdapter extends BasePromotionAdapter {
     return of(updated);
   }
 
+  deletePlanning(promotionId: number, coursPlanifieId: number): Observable<void> {
+    const promotion = this.findPromotion(promotionId);
+    if (!promotion.planning.some(pc => pc.id === coursPlanifieId)) {
+      return throwError(() => ({ status: 404, error: 'Cours planifié introuvable.' }));
+    }
+    this.replace({ ...promotion, planning: promotion.planning.filter(pc => pc.id !== coursPlanifieId) });
+    return of(undefined);
+  }
+
   addEleve(promotionId: number, eleveId: number): Observable<Promotion> {
     const promotion = this.findPromotion(promotionId);
     if (!promotion.eleveIds.includes(eleveId)) {

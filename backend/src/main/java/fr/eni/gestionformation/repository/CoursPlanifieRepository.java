@@ -14,6 +14,8 @@ public interface CoursPlanifieRepository extends JpaRepository<CoursPlanifie, Lo
 
     List<CoursPlanifie> findByPromotionIsNullOrderByOrdre();
 
+    List<CoursPlanifie> findByCoursId(Long coursId);
+
     @Query("""
             SELECT pc FROM CoursPlanifie pc
             JOIN pc.cours.formateurs f

@@ -1,4 +1,5 @@
 ANALYSIS | WI-20260611-FULLST-007 | ai_doc/ANALYSIS__WI-20260611-FULLST-007__cours-planifie-inscription.md | Modele CoursPlanifie / InscriptionCours
+WI-20260611-FULLST-026 | Tests unitaires/integration backend manquants (services/controllers) | OPEN | developer | ai_memory/2026-06-11__ROLE-developer__WI-20260611-FULLST-026.md
 
 WI-20260610-BACKEN-008 | Fix budget CSS utilisateurs.scss/header/register | DONE | developer, manager | ai_memory/2026-06-10__ROLE-developer__WI-20260610-BACKEN-008.md
 WI-20260610-BACKEN-002 | Frontend design system GestionFormation (index.html) | DONE | developer, rules-curator | ai_memory/2026-06-10__ROLE-developer__WI-20260610-BACKEN-002.md
@@ -64,3 +65,6 @@ WI-20260611-FULLST-019 | Backend - Fix 403 ajout/retrait eleve promotion + Front
 WI-20260611-FULLST-020 | Frontend+Backend - CRUD complet Cursus (renommer/filiere/supprimer/ajouter-retirer cours) | DONE | developer | ai_memory/2026-06-11__ROLE-developer__WI-20260611-FULLST-020.md
 WI-20260611-FULLST-021 | Frontend - Refonte visuelle page Cursus & Filieres (maquette React) | DONE | developer, manager | ai_memory/2026-06-11__ROLE-developer__WI-20260611-FULLST-021.md
 WI-20260611-FULLST-022 | Bug - Liste des cursus vide dans le dropdown de creation de promotion | DONE | manager | ai_memory/WORK_ITEMS.md#WI-20260611-FULLST-022
+WI-20260611-FULLST-023 | Restriction routes/acces par role (API + app.routes.ts + sidebar) + fix IDOR planning eleve | DONE | developer | ai_memory/WORK_ITEMS.md#WI-20260611-FULLST-023
+WI-20260611-FULLST-024 | Suppression robuste cours planifie / promotion (eleves+sessions) / cours catalogue | DONE | developer, rules-curator, manager | ai_memory/WORK_ITEMS.md#WI-20260611-FULLST-024
+WI-20260611-FULLST-025 | Audit/nettoyage table orpheline promotion_cours (residu PIT-010) | OPEN | developer | ai_memory/WORK_ITEMS.md#WI-20260611-FULLST-025

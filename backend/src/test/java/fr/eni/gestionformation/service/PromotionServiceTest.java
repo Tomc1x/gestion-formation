@@ -19,6 +19,7 @@ import fr.eni.gestionformation.exception.UserNotFoundException;
 import fr.eni.gestionformation.repository.CursusRepository;
 import fr.eni.gestionformation.repository.CoursPlanifieRepository;
 import fr.eni.gestionformation.repository.CoursRepository;
+import fr.eni.gestionformation.repository.InscriptionCoursRepository;
 import fr.eni.gestionformation.repository.PromotionRepository;
 import fr.eni.gestionformation.repository.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -56,6 +57,9 @@ class PromotionServiceTest {
 
     @Mock
     CoursRepository coursRepository;
+
+    @Mock
+    InscriptionCoursRepository inscriptionCoursRepository;
 
     @Mock
     PlanificationService planificationService;

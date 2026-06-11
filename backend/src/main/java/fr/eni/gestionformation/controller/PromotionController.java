@@ -84,6 +84,12 @@ public class PromotionController {
         return ResponseEntity.ok(toCoursPlanifieResponse(coursPlanifie, warnings));
     }
 
+    @DeleteMapping("/{id}/planning/{coursPlanifieId}")
+    public ResponseEntity<Void> deletePlanning(@PathVariable Long id, @PathVariable Long coursPlanifieId) {
+        promotionService.deletePlanning(id, coursPlanifieId);
+        return ResponseEntity.noContent().build();
+    }
+
     private PromotionResponse toResponse(Promotion promotion) {
         Long cursusId = promotion.getCursus() != null ? promotion.getCursus().getId() : null;
         String cursusNom = promotion.getCursus() != null ? promotion.getCursus().getName() : null;

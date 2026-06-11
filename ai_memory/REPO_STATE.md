@@ -74,14 +74,17 @@ active_work_items:
   - WI-20260611-FULLST-020 (DONE - PUT /api/cursus/{id} et modal "Ajouter un cours" revalides via chrome-devtools)
   - WI-20260611-FULLST-021 (DONE - refonte visuelle Cursus & Filieres, maquette React fournie ; build PASS, revalide chrome-devtools)
   - WI-20260611-FULLST-022 (DONE - cursus dropdown vide, fix promotion 3 corrompue + nettoyage debris de tests)
+  - WI-20260611-FULLST-023 (DONE - restriction routes/acces par role API+front+sidebar, fix IDOR planning eleve)
+  - WI-20260611-FULLST-024 (DONE - suppression cascade cours planifie/promotion/cours catalogue, fix 403 promotion 4)
+  - WI-20260611-FULLST-025 (OPEN - audit table orpheline promotion_cours)
+  - WI-20260611-FULLST-026 (OPEN - tests backend manquants services/controllers)
 
 blocking_questions:
   - "Quel ordre de priorisation pour FULLST-001/005/006/007-009 ?"
 # Resolu 2026-06-11: WI-020 utilisera FullCalendar Angular (@fullcalendar/angular + core/daygrid/timegrid/interaction).
 
-known_issues:
-  - "DELETE /api/promotions/{id} retourne 403 (corps vide) pour une promotion
-     qui a (ou a eu) des eleves rattaches (repro sur promotion id=4 'TEST CDA
-     2'). GET/POST/PUT et add/retrait eleve fonctionnent (200). Cause non
-     identifiee, voir WI-20260611-FULLST-022 section 'Bug additionnel'.
-     Promotion id=4 reste presente dans /app/admin/promotions comme debris."
+known_issues: []
+# Resolu 2026-06-11 (WI-20260611-FULLST-024) : DELETE /api/promotions/{id} 403 vide
+# -> cause = lignes orphelines dans la table promotion_cours (residu PIT-010) avec
+# FK active vers promotion(id=4). Lignes supprimees, promotion 4 ("TEST CDA 2")
+# definitivement supprimee. Voir PIT-020. Audit des autres promotions -> WI-20260611-FULLST-025.

@@ -41,16 +41,19 @@ export const routes: Routes = [
       {
         title: 'Promotions',
         path: 'promotions',
+        canActivate: [roleGuard(['REF'])],
         loadComponent: () => import('./features/promotions/promotions-list/promotions-list').then(m => m.PromotionsListComponent)
       },
       {
         title: 'Promotion Detail',
         path: 'promotions/:id',
+        canActivate: [roleGuard(['REF'])],
         loadComponent: () => import('./features/promotions/promotion-detail/promotion-detail').then(m => m.PromotionDetailComponent)
       },
       {
         title: 'Calendrier',
         path: 'calendrier',
+        canActivate: [roleGuard(['FORMATEUR', 'ELEVE'])],
         loadComponent: () => import('./features/calendrier/mon-calendrier/mon-calendrier').then(m => m.MonCalendrierComponent)
       },
       {

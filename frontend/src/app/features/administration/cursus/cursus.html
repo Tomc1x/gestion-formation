@@ -505,9 +505,6 @@
   </div>
 }
 
-<!-- ══════════════════════════════════════════════════════════════════════════ -->
-<!-- Modale : Supprimer un cursus                                                -->
-<!-- ══════════════════════════════════════════════════════════════════════════ -->
 @if (deletingCursus()) {
   <div class="modal-overlay" role="alertdialog" aria-modal="true" aria-labelledby="modal-delete-cursus-title" (click)="closeDeleteCursusModal()">
     <div class="card modal modal--sm anim-in" (click)="$event.stopPropagation()">
@@ -540,12 +537,10 @@
   </div>
 }
 
-<!-- ══════════════════════════════════════════════════════════════════════════ -->
-<!-- Modale : Ajouter un cours à un cursus existant                             -->
-<!-- ══════════════════════════════════════════════════════════════════════════ -->
 @if (addingCoursToCursus()) {
   <div class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-add-cours-title" (click)="closeAddCoursModal()">
-    <div class="card modal modal--sm anim-in" (click)="$event.stopPropagation()">
+    <div class="card modal modal--lg anim-in" (click)="$event.stopPropagation()">
+
       <div class="modal__header">
         <h2 id="modal-add-cours-title">Ajouter un cours à {{ addingCoursToCursus()!.name }}</h2>
         <button class="btn btn-ghost btn-icon" type="button" aria-label="Fermer" (click)="closeAddCoursModal()">
@@ -554,13 +549,30 @@
       </div>
 
       <div class="modal__body">
-        <div class="checkbox-list builder__list">
-          @if (availableCoursForCursus(addingCoursToCursus()!).length === 0) {
-            <p class="p2 muted">Tous les cours du catalogue ont été ajoutés.</p>
+        <div class="field" style="margin-bottom: 1.5rem;">
+          <label for="search-cours" class="sr-only">Rechercher un cours</label>
+          <div class="search-input-wrapper" style="position: relative;">
+            <input
+              id="search-cours"
+              class="input"
+              type="text"
+              placeholder="Rechercher un cours par son nom..."
+              [value]="coursSearchQuery()"
+              (input)="onSearchQueryChange($event)"
+            />
+          </div>
+        </div>
+
+        <div class="checkbox-list builder__list" style="max-height: 400px; overflow-y: auto;">
+          @if (filteredAvailableCoursForCursus().length === 0) {
+            <p class="p2 muted" style="text-align: center; padding: 2rem 0;">
+              {{ availableCoursForCursus(addingCoursToCursus()!).length === 0 ? 'Tous les cours du catalogue ont été ajoutés.' : 'Aucun cours ne correspond à votre recherche.' }}
+            </p>
           }
-          @for (c of availableCoursForCursus(addingCoursToCursus()!); track c.id) {
-            <div class="builder__row">
-              <span>{{ c.name }}</span>
+
+          @for (c of filteredAvailableCoursForCursus(); track c.id) {
+            <div class="builder__row" style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid var(--border-color, #e2e8f0);">
+              <span style="font-weight: 500;">{{ c.name }}</span>
               <button class="btn btn-outline btn-sm" type="button" (click)="addCoursToCursus(addingCoursToCursus()!, c.id)">
                 <svg lucidePlus class="lic" aria-hidden="true"></svg>
                 Ajouter
@@ -570,7 +582,7 @@
         </div>
 
         @if (formError()) {
-          <p class="form-api-error" role="alert">{{ formError() }}</p>
+          <p class="form-api-error" role="alert" style="margin-top: 1rem;">{{ formError() }}</p>
         }
       </div>
 

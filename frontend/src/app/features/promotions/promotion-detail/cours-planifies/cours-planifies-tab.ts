@@ -1,7 +1,7 @@
 import { Component, ChangeDetectionStrategy, inject, input, output, signal, OnInit } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
-import { LucidePencil } from '@lucide/angular';
+import { LucidePencil, LucideTrash2 } from '@lucide/angular';
 import { BasePromotionAdapter } from '../../../../core/adapters/promotion.adapter';
 import { BaseUserAdminAdapter } from '../../../../core/adapters/user-admin.adapter';
 import { Promotion, PromotionCours } from '../../../../core/models/promotion.model';
@@ -13,7 +13,7 @@ export interface FormateurOption {
 
 @Component({
   selector: 'app-cours-planifies-tab',
-  imports: [DatePipe, ReactiveFormsModule, LucidePencil],
+  imports: [DatePipe, ReactiveFormsModule, LucidePencil, LucideTrash2],
   templateUrl: './cours-planifies-tab.html',
   styleUrl: './cours-planifies-tab.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -30,6 +30,10 @@ export class CoursPlanifiesTabComponent implements OnInit {
   protected readonly formError = signal<string | null>(null);
   protected readonly sessionWarnings = signal<string[]>([]);
   protected readonly formateurs = signal<FormateurOption[]>([]);
+
+  protected readonly deleteTarget = signal<PromotionCours | null>(null);
+  protected readonly deleting = signal(false);
+  protected readonly deleteError = signal<string | null>(null);
 
   ngOnInit(): void {
     this.userAdminAdapter.getAll().subscribe({
@@ -111,6 +115,41 @@ export class CoursPlanifiesTabComponent implements OnInit {
       error: () => {
         this.submitting.set(false);
         this.formError.set("Impossible d'enregistrer cette modification.");
+      },
+    });
+  }
+
+  protected openDeleteConfirm(pc: PromotionCours): void {
+    this.deleteError.set(null);
+    this.deleteTarget.set(pc);
+  }
+
+  protected closeDeleteConfirm(): void {
+    this.deleteTarget.set(null);
+    this.deleteError.set(null);
+  }
+
+  protected confirmDelete(): void {
+    const promotion = this.promotion();
+    const target = this.deleteTarget();
+    if (!target) return;
+
+    this.deleting.set(true);
+    this.deleteError.set(null);
+
+    this.promotionAdapter.deletePlanning(promotion.id, target.id).subscribe({
+      next: () => {
+        this.deleting.set(false);
+        const updatedPromotion: Promotion = {
+          ...promotion,
+          planning: promotion.planning.filter(pc => pc.id !== target.id),
+        };
+        this.promotionUpdated.emit(updatedPromotion);
+        this.closeDeleteConfirm();
+      },
+      error: () => {
+        this.deleting.set(false);
+        this.deleteError.set('Impossible de retirer ce cours planifié.');
       },
     });
   }

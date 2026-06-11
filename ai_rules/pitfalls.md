@@ -303,3 +303,43 @@ Verified: 2026-06-11
 **How to apply:** Before modifying security/config code in response to a reported 403 or auth anomaly, run `git status` + `git diff` on `SecurityConfig.java` (and related security files) to check for uncommitted changes not yet reflected in the running process. If the diff is non-empty and relevant, rebuild (`./gradlew bootJar`) and restart the process before concluding there is a code bug.
 
 **Counter-indications:** Does not apply to CI/deployed environments where the running artifact is guaranteed to match the checked-out commit.
+
+---
+
+### PIT-019 — No centralized helper to get the current authenticated user (IDOR checks rely on manual cast)
+
+Scope: backend/src/main/java/fr/eni/gestionformation/controller/**
+Origin: WI-20260611-FULLST-023, ai_memory/2026-06-11__ROLE-developer__WI-20260611-FULLST-023.md
+Added: 2026-06-11
+Verified: 2026-06-11
+
+**Pitfall:** There is no `CurrentUserService` or `@AuthenticationPrincipal`-based helper in this codebase. To fix an IDOR (e.g. `GET /api/eleves/{id}/planning` letting any authenticated user read another eleve's planning), the only available pattern is to inject `Authentication authentication` into the controller method and cast `authentication.getPrincipal()` to `fr.eni.gestionformation.entity.User` (which implements `UserDetails` via `UserDetailsServiceImpl.loadUserByUsername` and exposes `getUid()`).
+
+**Why:** `UserDetailsServiceImpl` returns the `User` entity directly as the principal, so this cast is safe and is now the only documented way to compare the requester's identity against a path-variable resource id. Without this rule, future endpoints needing the same ownership check risk inventing inconsistent or incorrect patterns.
+
+**How to apply:** Add `Authentication authentication` as a controller method parameter, then:
+```java
+if (!(authentication.getPrincipal() instanceof User currentUser) || !currentUser.getUid().equals(id)) {
+    throw new AccessDeniedException("...");
+}
+```
+No dedicated handler is needed in `GlobalExceptionHandler` — Spring Security's `ExceptionTranslationFilter` translates `AccessDeniedException` to HTTP 403 by default.
+
+**Counter-indications:** If a `CurrentUserService` or `@AuthenticationPrincipal CurrentUser` abstraction is introduced later, this entry should be deprecated in favor of that convention.
+
+---
+
+### PIT-020 — Empty-body 403 on a write endpoint may be an unhandled DataIntegrityViolationException, not an auth bug
+
+Scope: backend/src/main/java/fr/eni/gestionformation/service/PromotionService.java (deleteById), DB table `promotion_cours` (see PIT-010)
+Origin: WI-20260611-FULLST-024, ai_memory/2026-06-11__ROLE-developer__WI-20260611-FULLST-024.md
+Added: 2026-06-11
+Verified: 2026-06-11
+
+**Pitfall:** A `DELETE /api/promotions/{id}` (or similar) request can return an empty-body 403 with standard Spring Security headers even though the real cause is an uncaught `DataIntegrityViolationException` (FK violation), not an authorization failure — this project's filter chain surfaces unhandled exceptions from this code path as 403 instead of 500.
+
+**Why:** WI-20260611-FULLST-022 logged this as an unidentified "Bug additionnel" (403 on promotion delete) and left it unresolved. WI-20260611-FULLST-024 found the actual cause: 5 leftover rows in the orphan `promotion_cours` table (PIT-010) for promotion id=4, with an active FK to `promotion(id)` that no current entity/repository maps to, so the FK violation bubbled up unhandled.
+
+**How to apply:** When debugging an unexplained 403 on a write endpoint with an empty response body and no `GlobalExceptionHandler` mapping for the thrown exception, grep the backend log for `ERROR:` / `DataIntegrityViolation` around the request timestamp BEFORE assuming it's an authorization bug. If found, check `promotion_cours` and any other orphan tables left by entity renames under `ddl-auto=update` (see PIT-010) for rows referencing the entity being deleted.
+
+**Counter-indications:** Does not apply once `promotion_cours` is dropped/cleaned in all environments and/or `GlobalExceptionHandler` gains a mapping for `DataIntegrityViolationException` -> 409/500.

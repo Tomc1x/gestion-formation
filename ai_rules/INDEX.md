@@ -32,3 +32,6 @@ Deprecated entries are prefixed with `# DEPRECATED`.
 | PITFALL  | PIT-016 | Frontend models lack Filiere.couleur/Promotion.statut/dateFin assumed by design refs | pitfalls.md#pit-016 | 2026-06-11 |
 | PITFALL  | PIT-017 | @WithMockUser unreliable with @WebMvcTest + SecurityConfig on this project | pitfalls.md#pit-017 | 2026-06-11 |
 | PITFALL  | PIT-018 | Verify backend process freshness before diagnosing SecurityConfig bug | pitfalls.md#pit-018 | 2026-06-11 |
+| PITFALL  | PIT-019 | No centralized current-user helper; cast Authentication.getPrincipal() to User for IDOR checks | pitfalls.md#pit-019 | 2026-06-11 |
+| PITFALL  | PIT-020 | Empty-body 403 on delete may be unhandled DataIntegrityViolationException (orphan promotion_cours) | pitfalls.md#pit-020 | 2026-06-11 |
+| CONVENTION | CONV-007 | Manual cascade-delete pattern for required @ManyToOne FKs without JPA cascade | conventions.md#conv-007 | 2026-06-11 |
