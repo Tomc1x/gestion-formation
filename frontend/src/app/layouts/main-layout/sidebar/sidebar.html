@@ -17,7 +17,7 @@
   </div>
   <nav class="nav">
     <div class="nav-title">Navigation</div>
-    @for (route of routes; track route.path) {
+    @for (route of visibleRoutes(); track route.path) {
       <button class="nav-item" [routerLink]="route.path" routerLinkActive="active" (click)="sidebarService.close()">
         <span class="nav-item-icon">
           <svg [lucideIcon]="route.icon"></svg>

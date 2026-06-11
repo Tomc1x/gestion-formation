@@ -11,8 +11,8 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = "cours")
-@EqualsAndHashCode(exclude = "cours")
+@ToString(exclude = "cursusCours")
+@EqualsAndHashCode(exclude = "cursusCours")
 public class Cursus {
 
     @Id
@@ -28,6 +28,7 @@ public class Cursus {
 
     @Builder.Default
     @OneToMany(mappedBy = "cursus")
-    private List<Cours> cours = new ArrayList<>();
+    @OrderBy("ordre ASC")
+    private List<CursusCours> cursusCours = new ArrayList<>();
 
 }

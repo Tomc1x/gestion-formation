@@ -4,13 +4,19 @@ import fr.eni.gestionformation.entity.Cours;
 import fr.eni.gestionformation.entity.User;
 import fr.eni.gestionformation.entity.enums.Role;
 import fr.eni.gestionformation.exception.CoursNotFoundException;
+import fr.eni.gestionformation.exception.CycleDetectedException;
 import fr.eni.gestionformation.repository.CoursRepository;
+import fr.eni.gestionformation.repository.CursusCoursRepository;
 import fr.eni.gestionformation.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -18,6 +24,7 @@ public class CoursService {
 
     private final CoursRepository coursRepository;
     private final UserRepository userRepository;
+    private final CursusCoursRepository cursusCoursRepository;
 
     public List<Cours> findAll() {
         return coursRepository.findAll();
@@ -28,16 +35,17 @@ public class CoursService {
                 .orElseThrow(() -> new CoursNotFoundException(id));
     }
 
-    public List<Cours> findByCursusId(Long cursusId) {
-        return coursRepository.findByCursusId(cursusId);
-    }
-
     public Cours save(Cours cours) {
         return coursRepository.save(cours);
     }
 
+    @Transactional
     public void deleteById(Long id) {
         findById(id);
+        // Un cours du catalogue est independant : sa suppression retire aussi
+        // toutes les associations CursusCours qui le referencaient, dans
+        // n'importe quel cursus, sans bloquer la suppression.
+        cursusCoursRepository.deleteAll(cursusCoursRepository.findByCoursId(id));
         coursRepository.deleteById(id);
     }
 
@@ -53,5 +61,56 @@ public class CoursService {
         });
         cours.setFormateurs(formateurs);
         return coursRepository.save(cours);
+    }
+
+    @Transactional
+    public Cours setPrerequis(Long coursId, List<Long> prerequisIds) {
+        Cours cours = findById(coursId);
+        List<Cours> prerequisCandidats = prerequisIds == null
+                ? List.of()
+                : coursRepository.findAllById(prerequisIds);
+
+        for (Cours candidat : prerequisCandidats) {
+            if (candidat.getId().equals(coursId)) {
+                throw new CycleDetectedException(
+                        "Un cours ne peut pas etre son propre prerequis (cours id " + coursId + ").");
+            }
+            if (wouldCreateCycle(cours, candidat)) {
+                throw new CycleDetectedException(
+                        "Ajouter le cours id " + candidat.getId() + " comme prerequis du cours id " + coursId
+                                + " creerait un cycle dans le graphe des prerequis.");
+            }
+        }
+
+        cours.setPrerequis(new HashSet<>(prerequisCandidats));
+        return coursRepository.save(cours);
+    }
+
+    /**
+     * Verifie si ajouter "candidat" comme prerequis de "cours" creerait un cycle,
+     * c'est-a-dire si "cours" est atteignable depuis "candidat" en suivant
+     * les arcs de prerequis existants.
+     */
+    private boolean wouldCreateCycle(Cours cours, Cours candidat) {
+        Set<Long> visited = new HashSet<>();
+        Deque<Cours> toVisit = new ArrayDeque<>();
+        toVisit.push(candidat);
+
+        while (!toVisit.isEmpty()) {
+            Cours current = toVisit.pop();
+            if (current.getId().equals(cours.getId())) {
+                return true;
+            }
+            if (!visited.add(current.getId())) {
+                continue;
+            }
+            Cours loaded = coursRepository.findById(current.getId()).orElse(current);
+            for (Cours next : loaded.getPrerequis()) {
+                if (!visited.contains(next.getId())) {
+                    toVisit.push(next);
+                }
+            }
+        }
+        return false;
     }
 }

@@ -7,6 +7,6 @@ import java.util.List;
 @Data
 public class CoursRequest {
     private String name;
-    private Long cursusId;
     private List<Long> formateurIds;
+    private List<Long> prerequisIds;
 }

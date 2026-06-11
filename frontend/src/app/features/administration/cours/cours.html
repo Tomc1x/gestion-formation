@@ -1,0 +1,272 @@
+<div class="page anim-up">
+  <div class="page__header">
+    <div>
+      <h1>Catalogue de cours</h1>
+      <p class="p1 page__subtitle">Gestion des cours, de leurs formateurs et de leurs prérequis.</p>
+    </div>
+    <button class="btn btn-primary" type="button" (click)="openCreateModal()">
+      <svg lucidePlus class="lic" aria-hidden="true"></svg>
+      Créer un cours
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="card skel page__skel" aria-hidden="true"></div>
+  } @else if (loadError()) {
+    <p class="state-msg state-msg--error" role="alert">{{ loadError() }}</p>
+  } @else {
+    <div class="card table-wrap">
+      <table class="tbl" aria-label="Liste des cours">
+        <thead>
+          <tr>
+            <th scope="col">Cours</th>
+            <th scope="col">Formateurs</th>
+            <th scope="col">Prérequis</th>
+            <th scope="col">Requis par</th>
+            <th scope="col"><span class="sr-only">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (coursList().length === 0) {
+            <tr><td colspan="5" class="empty-row">Aucun cours dans le catalogue.</td></tr>
+          }
+          @for (cours of coursList(); track cours.id) {
+            <tr>
+              <td class="cell-name">
+                <svg lucideBookOpen class="lic" aria-hidden="true"></svg>
+                {{ cours.name }}
+              </td>
+              <td>
+                @if (cours.formateurs.length === 0) {
+                  <span class="muted">—</span>
+                } @else {
+                  <div class="badge-list">
+                    @for (f of cours.formateurs; track f.id) {
+                      <span class="pill pill-formateur">
+                        <svg lucideUsers class="lic" aria-hidden="true"></svg>
+                        {{ fullName(f) }}
+                      </span>
+                    }
+                  </div>
+                }
+              </td>
+              <td>
+                @if (cours.prerequis.length === 0) {
+                  <span class="muted">—</span>
+                } @else {
+                  <div class="badge-list">
+                    @for (p of cours.prerequis; track p.id) {
+                      <span class="badge badge-prereq">{{ p.name }}</span>
+                    }
+                  </div>
+                }
+              </td>
+              <td>
+                @if (requiredBy(cours.id).length === 0) {
+                  <span class="muted">—</span>
+                } @else {
+                  <div class="badge-list">
+                    @for (r of requiredBy(cours.id); track r.id) {
+                      <span class="badge badge-required-by">{{ r.name }}</span>
+                    }
+                  </div>
+                }
+              </td>
+              <td class="cell-actions">
+                <button class="btn btn-ghost btn-sm" type="button" [attr.aria-label]="'Modifier ' + cours.name" (click)="openEditModal(cours)">
+                  <svg lucidePencil class="lic" aria-hidden="true"></svg>
+                </button>
+                <button class="btn btn-ghost btn-sm" type="button" [attr.aria-label]="'Supprimer ' + cours.name" (click)="openDeleteModal(cours)">
+                  <svg lucideTrash2 class="lic" aria-hidden="true"></svg>
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<!-- Modale : Créer un cours                                                     -->
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+@if (showCreateModal()) {
+  <div class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-create-title" (click)="closeCreateModal()">
+    <div class="card modal anim-in" (click)="$event.stopPropagation()">
+      <div class="modal__header">
+        <h2 id="modal-create-title">Créer un cours</h2>
+        <button class="btn btn-ghost btn-icon" type="button" aria-label="Fermer" (click)="closeCreateModal()">
+          <svg lucideX class="lic" aria-hidden="true"></svg>
+        </button>
+      </div>
+
+      <form class="modal__body" [formGroup]="createForm" (ngSubmit)="submitCreate()">
+        <div class="field">
+          <label for="c-name">Nom du cours</label>
+          <input id="c-name" class="input" type="text" formControlName="name" placeholder="Ex : Angular Avancé" />
+          @if (createForm.controls.name.invalid && createForm.controls.name.touched) {
+            <span class="field-error">Champ requis</span>
+          }
+        </div>
+
+        @if (formateurs().length > 0) {
+          <div class="field" formArrayName="formateurIds">
+            <label>Formateurs</label>
+            <div class="checkbox-list">
+              @for (f of formateurs(); track f.id; let i = $index) {
+                <label class="checkbox-item">
+                  <input type="checkbox" [formControlName]="i" />
+                  {{ fullName(f) }}
+                </label>
+              }
+            </div>
+          </div>
+        }
+
+        @if (coursList().length > 0) {
+          <div class="field" formArrayName="prerequisIds">
+            <label>Prérequis</label>
+            <div class="checkbox-list">
+              @for (c of coursList(); track c.id; let i = $index) {
+                <label class="checkbox-item">
+                  <input type="checkbox" [formControlName]="i" />
+                  {{ c.name }}
+                </label>
+              }
+            </div>
+          </div>
+        }
+
+        @if (formError()) {
+          <p class="form-api-error" role="alert">{{ formError() }}</p>
+        }
+
+        <div class="modal__footer">
+          <button class="btn btn-outline" type="button" (click)="closeCreateModal()">Annuler</button>
+          <button class="btn btn-primary" type="submit" [disabled]="submitting()">
+            {{ submitting() ? 'Création…' : 'Créer le cours' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<!-- Modale : Modifier un cours                                                  -->
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+@if (editingCours()) {
+  <div class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-edit-title" (click)="closeEditModal()">
+    <div class="card modal anim-in" (click)="$event.stopPropagation()">
+      <div class="modal__header">
+        <h2 id="modal-edit-title">Modifier "{{ editingCours()!.name }}"</h2>
+        <button class="btn btn-ghost btn-icon" type="button" aria-label="Fermer" (click)="closeEditModal()">
+          <svg lucideX class="lic" aria-hidden="true"></svg>
+        </button>
+      </div>
+
+      <form class="modal__body" [formGroup]="editForm" (ngSubmit)="submitEdit()">
+        <div class="field">
+          <label for="e-name">Nom du cours</label>
+          <input id="e-name" class="input" type="text" formControlName="name" />
+          @if (editForm.controls.name.invalid && editForm.controls.name.touched) {
+            <span class="field-error">Champ requis</span>
+          }
+        </div>
+
+        @if (formateurs().length > 0) {
+          <div class="field" formArrayName="formateurIds">
+            <label>Formateurs</label>
+            <div class="checkbox-list">
+              @for (f of formateurs(); track f.id; let i = $index) {
+                <label class="checkbox-item">
+                  <input type="checkbox" [formControlName]="i" />
+                  {{ fullName(f) }}
+                </label>
+              }
+            </div>
+          </div>
+        }
+
+        @if (editOtherCours().length > 0) {
+          <div class="field" formArrayName="prerequisIds">
+            <label>Prérequis</label>
+            @if (hasDisabledPrerequis()) {
+              <p class="p2 hint">
+                Certains cours sont grisés car les sélectionner créerait un cycle de dépendances.
+              </p>
+            }
+            <div class="checkbox-list">
+              @for (c of editOtherCours(); track c.id; let i = $index) {
+                <label class="checkbox-item" [class.checkbox-item--disabled]="disabledPrerequisIds().has(c.id)">
+                  <input type="checkbox" [formControlName]="i" [attr.disabled]="disabledPrerequisIds().has(c.id) ? true : null" />
+                  {{ c.name }}
+                </label>
+              }
+            </div>
+          </div>
+        }
+
+        @if (formError()) {
+          <p class="form-api-error" role="alert">{{ formError() }}</p>
+        }
+
+        <div class="modal__footer">
+          <button class="btn btn-outline" type="button" (click)="closeEditModal()">Annuler</button>
+          <button class="btn btn-primary" type="submit" [disabled]="submitting()">
+            {{ submitting() ? 'Enregistrement…' : 'Enregistrer' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<!-- Modale : Confirmer la suppression                                           -->
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+@if (deletingCours()) {
+  <div class="modal-overlay" role="alertdialog" aria-modal="true" aria-labelledby="modal-delete-title" (click)="closeDeleteModal()">
+    <div class="card modal modal--sm anim-in" (click)="$event.stopPropagation()">
+      <div class="modal__header">
+        <h2 id="modal-delete-title">Supprimer le cours</h2>
+        <button class="btn btn-ghost btn-icon" type="button" aria-label="Fermer" (click)="closeDeleteModal()">
+          <svg lucideX class="lic" aria-hidden="true"></svg>
+        </button>
+      </div>
+
+      <div class="modal__body">
+        <p class="p1">
+          Vous êtes sur le point de supprimer le cours
+          <strong>{{ deletingCours()!.name }}</strong>.
+          Cette action est <strong>irréversible</strong>.
+        </p>
+
+        @if (requiredBy(deletingCours()!.id).length > 0) {
+          <div class="warning-box">
+            <p class="p2">
+              Ce cours est un prérequis pour d'autres cours. Le lien sera supprimé automatiquement pour :
+            </p>
+            <div class="badge-list">
+              @for (r of requiredBy(deletingCours()!.id); track r.id) {
+                <span class="badge badge-required-by">{{ r.name }}</span>
+              }
+            </div>
+          </div>
+        }
+
+        @if (formError()) {
+          <p class="form-api-error" role="alert">{{ formError() }}</p>
+        }
+
+        <div class="modal__footer">
+          <button class="btn btn-outline" type="button" (click)="closeDeleteModal()">Annuler</button>
+          <button class="btn btn-primary modal__delete-btn" type="button" [disabled]="submitting()" (click)="confirmDelete()">
+            {{ submitting() ? 'Suppression…' : 'Supprimer définitivement' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

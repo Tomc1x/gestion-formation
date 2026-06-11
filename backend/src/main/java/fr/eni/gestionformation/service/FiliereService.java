@@ -2,6 +2,7 @@ package fr.eni.gestionformation.service;
 
 import fr.eni.gestionformation.entity.Filiere;
 import fr.eni.gestionformation.exception.FiliereAlreadyExistsException;
+import fr.eni.gestionformation.exception.FiliereInUseException;
 import fr.eni.gestionformation.exception.FiliereNotFoundException;
 import fr.eni.gestionformation.repository.FiliereRepository;
 import lombok.RequiredArgsConstructor;
@@ -38,5 +39,24 @@ public class FiliereService {
             throw new FiliereAlreadyExistsException(filiere.getName());
          }
         return filiereRepository.save(filiere);
+     }
+
+     public Filiere update(Long id, String name) {
+        Filiere filiere = this.findById(id);
+        filiereRepository.findByName(name)
+                .filter(f -> !f.getId().equals(id))
+                .ifPresent(_ -> {
+                    throw new FiliereAlreadyExistsException(name);
+                });
+        filiere.setName(name);
+        return filiereRepository.save(filiere);
+     }
+
+     public void deleteById(Long id) {
+        Filiere filiere = this.findById(id);
+        if (!filiere.getCursus().isEmpty()) {
+            throw new FiliereInUseException(id);
+        }
+        filiereRepository.deleteById(id);
      }
 }

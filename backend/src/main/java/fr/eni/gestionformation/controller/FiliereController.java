@@ -52,4 +52,17 @@ public class FiliereController {
         FiliereResponse response = new FiliereResponse(filiere.getId(), filiere.getName());
         return ResponseEntity.ok(response);
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<FiliereResponse> update(@PathVariable Long id, @RequestBody FiliereRequest filiereRequest) {
+        Filiere updatedFiliere = filiereService.update(id, filiereRequest.getName());
+        FiliereResponse response = new FiliereResponse(updatedFiliere.getId(), updatedFiliere.getName());
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        filiereService.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
 }

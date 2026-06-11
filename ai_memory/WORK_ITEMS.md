@@ -214,7 +214,7 @@
 ## WI-20260610-BACKEN-002
 - Date: 2026-06-10
 - Title: Frontend — intégration design system "GestionFormation" (index.html Claude Design)
-- Status: OPEN
+- Status: DONE
 - TOA: manager
 - Executor: developer
 - attempt_count: 0
@@ -229,7 +229,7 @@
 ## WI-20260610-BACKEN-003
 - Date: 2026-06-10
 - Title: Backend — refonte modèle Cours/Cursus (catalogue global + table de liaison ordonnée CursusCours)
-- Status: OPEN
+- Status: DONE
 - TOA: manager
 - Executor: developer
 - attempt_count: 0
@@ -245,7 +245,7 @@
 ## WI-20260610-BACKEN-004
 - Date: 2026-06-10
 - Title: Backend — prérequis Cours ManyToMany auto-référencé + validation anti-cycle
-- Status: OPEN
+- Status: DONE
 - TOA: manager
 - Executor: developer
 - attempt_count: 0
@@ -257,7 +257,7 @@
 ## WI-20260610-BACKEN-005
 - Date: 2026-06-10
 - Title: Backend — CoursResponse récursif (prérequis imbriqués jusqu'à la racine)
-- Status: OPEN
+- Status: DONE
 - TOA: manager
 - Executor: developer
 - attempt_count: 0
@@ -269,7 +269,7 @@
 ## WI-20260610-BACKEN-006
 - Date: 2026-06-10
 - Title: Frontend — page Catalogue de cours (CRUD + gestion prérequis, adapter pattern)
-- Status: OPEN
+- Status: DONE
 - TOA: manager
 - Executor: developer
 - attempt_count: 0
@@ -282,7 +282,7 @@
 ## WI-20260610-BACKEN-007
 - Date: 2026-06-10
 - Title: Frontend — page Cursus (création cursus + filière, liste ordonnée, alertes ordre pédagogique)
-- Status: OPEN
+- Status: DONE
 - TOA: manager
 - Executor: developer
 - attempt_count: 0
@@ -291,3 +291,211 @@
       de liste ordonnée avec réordonnancement, alertes prérequis manquant/mal placé).
     - Dépend de WI-20260610-BACKEN-003, 005, 002, 006.
     - Nécessite verifier après intégration finale (changement de contrat API cross-module).
+
+## WI-20260610-BACKEN-008
+- Date: 2026-06-10
+- Title: Frontend — corriger le depassement de budget CSS (utilisateurs.scss + warnings header/register)
+- Status: DONE
+- TOA: manager
+- Executor: developer + manager
+- attempt_count: 0
+- Notes: |
+    - developer: factorisation locale (placeholders %focus-ring, %btn-base, %field-input, etc.)
+      header.scss corrige sous le budget warning (3.79 kB). utilisateurs.scss reduit de 9.89 a 9.09 kB
+      mais reste au-dessus de 8 kB (duplication modal/formulaire avec cours.scss/cursus.scss, hors scope simple).
+    - manager: angular.json anyComponentStyle maximumError 8kB -> 12kB (decision utilisateur).
+      ng build PASS, plus aucune erreur bloquante (warnings restants: utilisateurs.scss 9.09kB, register.scss 4.95kB).
+    - Dette technique restante (non bloquante): extraire un partial SCSS partage modal/formulaire
+      pour utilisateurs/cours/cursus si on veut repasser sous 8kB sans relever le budget davantage.
+
+## WI-20260610-BACKEN-009
+- Date: 2026-06-10
+- Title: Backend — CRUD complet Filiere (update + delete avec controle 409)
+- Status: DONE
+- TOA: manager
+- Executor: developer
+- attempt_count: 0
+- Notes: |
+    - PUT /api/filiere/{id} : modifier le nom (controle unicite, FiliereAlreadyExistsException existante).
+    - DELETE /api/filiere/{id} : 409 si des cursus sont rattaches (nouvelle FiliereInUseException,
+      mappee dans GlobalExceptionHandler selon CONV-003).
+    - Tests service + controller.
+
+## WI-20260610-BACKEN-010
+- Date: 2026-06-10
+- Title: Frontend — section CRUD Filieres dans la page Cursus
+- Status: DONE
+- TOA: manager
+- Executor: developer
+- attempt_count: 0
+- Notes: |
+    - BaseFiliereAdapter : ajout update/delete (+ Http/Mock).
+    - Section "Filieres" dans cursus.html/cursus.ts : liste, modale edition, suppression
+      avec gestion erreur 409 (filiere utilisee par X cursus).
+    - Depend de WI-20260610-BACKEN-009.
+
+## WI-20260610-BACKEN-011
+- Date: 2026-06-10
+- Title: Frontend — systeme de routes par role (roleGuard)
+- Status: DONE
+- TOA: manager
+- Executor: developer
+- attempt_count: 0
+- Notes: |
+    - roleGuard: CanActivateFn, lit route.data['roles'] vs authService.currentRole(),
+      redirige vers /app/dashboard si non autorise.
+    - admin/utilisateurs -> ADMIN uniquement. admin/cours, admin/cursus -> REF uniquement.
+    - Pas de commentaires dans le code (consigne utilisateur).
+
+## WI-20260610-BACKEN-012
+- Date: 2026-06-10
+- Title: Backend — Cours.dureeJours (champ duree indicative)
+- Status: OPEN
+- TOA: manager
+- Executor: TBD
+- attempt_count: 0
+- Notes: |
+    - Ajouter champ dureeJours (Integer, jours) sur entite Cours.
+    - Mettre a jour CoursRequest/CoursResponse + service + migration DB (si Flyway/Liquibase, sinon ddl-auto).
+    - Champ purement indicatif, modifiable a la planification (cf WI-016).
+
+## WI-20260610-BACKEN-013
+- Date: 2026-06-10
+- Title: Backend — Entite Promotion (cursus + eleves)
+- Status: OPEN
+- TOA: manager
+- Executor: TBD
+- attempt_count: 0
+- Notes: |
+    - Entite Promotion: id, name, ManyToOne Cursus, dateDebut.
+    - Lien eleves: ajout User.promotion_id (ManyToOne Promotion), 1 eleve = 1 promotion.
+    - Repository + DTO de base. Pas d'API encore (cf WI-017).
+
+## WI-20260610-BACKEN-014
+- Date: 2026-06-10
+- Title: Backend — Entite Rythme/cycle alternance (optionnel sur Promotion)
+- Status: OPEN
+- TOA: manager
+- Executor: TBD
+- attempt_count: 0
+- Notes: |
+    - Modele de cycle alternance: ex N semaines centre / M semaines entreprise, rattache a Promotion (optionnel, null = continu).
+    - Utilise par le moteur de planification (WI-016) pour exclure les semaines "entreprise" du placement automatique.
+
+## WI-20260610-BACKEN-015
+- Date: 2026-06-10
+- Title: Backend — Entite PromotionCours (planning)
+- Status: OPEN
+- TOA: manager
+- Executor: TBD
+- attempt_count: 0
+- Notes: |
+    - Entite PromotionCours: ManyToOne Promotion, ManyToOne Cours (issu de CursusCours.cursus de la promotion),
+      dateDebut, dateFin, ordre (herite de CursusCours.ordre), statut.
+    - Une ligne par cours planifie pour une promotion donnee.
+    - Depend de WI-013 (Promotion) et structure CursusCours existante.
+
+## WI-20260610-BACKEN-016
+- Date: 2026-06-10
+- Title: Backend — Moteur de planification automatique (auto-placement)
+- Status: OPEN
+- TOA: manager
+- Executor: TBD
+- attempt_count: 0
+- Notes: |
+    - Service de generation du planning a la creation de la promotion: a partir de dateDebut + ordre CursusCours
+      + Cours.dureeJours, place chaque PromotionCours en sequence.
+    - Calcul en jours ouvres (lun-ven), week-ends exclus. Pas de gestion des jours feries (abandonne).
+    - Si Rythme defini (WI-014): exclut les semaines "entreprise" du placement (traitees comme hors-planning).
+    - Strictement sequentiel: un seul cours actif a la fois par promotion (V1).
+    - Depend de WI-012, WI-014, WI-015.
+
+## WI-20260610-BACKEN-017
+- Date: 2026-06-10
+- Title: Backend — API Promotion + planning (CRUD + drag&drop)
+- Status: OPEN
+- TOA: manager
+- Executor: TBD
+- attempt_count: 0
+- Notes: |
+    - CRUD Promotion (creation declenche le moteur WI-016, association eleves, cursus).
+    - Endpoint(s) pour deplacer/redimensionner un PromotionCours (drag&drop frontend): recalcul des dates,
+      retourne un warning (sans bloquer) si l'ordre chronologique du cursus n'est plus respecte.
+    - Depend de WI-013, WI-015, WI-016.
+
+## WI-20260610-BACKEN-018
+- Date: 2026-06-10
+- Title: Backend — Detection conflits formateurs multi-promotions
+- Status: OPEN
+- TOA: manager
+- Executor: TBD
+- attempt_count: 0
+- Notes: |
+    - A la planification/deplacement d'un PromotionCours, verifier si un formateur assigne au Cours
+      est deja occupe sur les memes dates dans une autre promotion.
+    - Retourne un avertissement (pas de blocage), coherent avec WI-017 (warnings non bloquants).
+    - Depend de WI-017.
+
+## WI-20260610-BACKEN-019
+- Date: 2026-06-10
+- Title: Frontend — Module gestion Promotion (liste/creation)
+- Status: OPEN
+- TOA: manager
+- Executor: TBD
+- attempt_count: 0
+- Notes: |
+    - Page Promotions: liste, creation (nom, cursus, date debut, rythme optionnel, affectation eleves).
+    - Adapter pattern (cf conventions existantes Cursus/Cours).
+    - Depend de WI-017.
+
+## WI-20260610-BACKEN-020
+- Date: 2026-06-10
+- Title: Frontend — Calendrier planning drag-and-drop
+- Status: OPEN
+- TOA: manager
+- Executor: TBD
+- attempt_count: 0
+- Notes: |
+    - Vue calendrier (FullCalendar Angular ou equivalent) affichant les PromotionCours.
+    - Drag & drop pour deplacer/redimensionner un cours planifie, appel API WI-017.
+    - Affichage warnings visuels: violation ordre chronologique (WI-017) et conflits formateur (WI-018).
+    - Depend de WI-017, WI-018, WI-015.
+
+## WI-20260610-BACKEN-021
+- Date: 2026-06-10
+- Title: Frontend — Formulaire creation/edition Cours, ajout champ duree
+- Status: OPEN
+- TOA: manager
+- Executor: TBD
+- attempt_count: 0
+- Notes: |
+    - Ajouter le champ "duree (jours)" au formulaire de creation/edition d'un Cours dans la page Catalogue
+      (cf WI-20260610-BACKEN-006).
+    - Depend de WI-012 (champ backend Cours.dureeJours).
+
+## WI-20260610-BACKEN-022
+- Date: 2026-06-10
+- Title: Frontend — masquer les liens sidebar non accessibles selon le role (roleGuard)
+- Status: DONE
+- TOA: manager
+- Executor: developer
+- attempt_count: 0
+- Notes: |
+    - Suite a WI-20260610-BACKEN-011 (roleGuard). Filtrer routes[] de sidebar.ts
+      selon authService.currentRole() pour les entrees admin/utilisateurs (ADMIN),
+      admin/cours et admin/cursus (REF).
+
+## WI-20260610-BACKEN-023
+- Date: 2026-06-10
+- Title: Nettoyage warnings IDE avant commit (backend + frontend)
+- Status: DONE
+- TOA: manager
+- Executor: developer
+- attempt_count: 0
+- Notes: |
+    - Liste de warnings IDE fournie par l'utilisateur (CursusCoursRepository,
+      CoursServiceTest, CoursControllerTest, CursusService, FiliereService,
+      GlobalExceptionHandler, header.scss, styles.scss).
+    - L'erreur signalee dans ai_memory/2026-06-10__ROLE-developer__WI-20260610-BACKEN-011.md
+      (lignes 40-42) est un faux positif IDE sur un bloc de code ```ts dans une note
+      memoire (pas de code reel) - hors scope, pas d'action.

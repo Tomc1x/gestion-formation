@@ -18,6 +18,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
     }
 
+    @ExceptionHandler(FiliereInUseException.class)
+    public ResponseEntity<String> handleFiliereInUse(FiliereInUseException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
+    }
+
     @ExceptionHandler(CursusNotFoundException.class)
     public ResponseEntity<String> handleCursusNotFound(CursusNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
@@ -41,5 +46,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidInvitationTokenException.class)
     public ResponseEntity<String> handleInvalidInvitationToken(InvalidInvitationTokenException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(CycleDetectedException.class)
+    public ResponseEntity<String> handleCycleDetected(CycleDetectedException ex) {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT).body(ex.getMessage());
     }
 }
