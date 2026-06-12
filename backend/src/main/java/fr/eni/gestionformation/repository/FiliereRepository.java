@@ -7,4 +7,5 @@ import java.util.Optional;
 
 public interface FiliereRepository extends JpaRepository<Filiere, Long> {
     Optional<Filiere> findByName(String name);
+    Optional<Filiere> findByNameIgnoreCase(String name);
 }

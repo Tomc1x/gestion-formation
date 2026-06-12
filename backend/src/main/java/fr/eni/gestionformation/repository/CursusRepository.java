@@ -9,4 +9,5 @@ import java.util.Optional;
 public interface CursusRepository extends JpaRepository<Cursus, Long> {
     List<Cursus> findByFiliereId(Long filiereId);
     Optional<Cursus> findByName(String name);
+    Optional<Cursus> findByNameIgnoreCase(String name);
 }

@@ -40,7 +40,7 @@ public class CursusService {
     }
 
     public Cursus save(Cursus cursus) {
-        cursusRepository.findByName(cursus.getName()).ifPresent(_ -> {
+        cursusRepository.findByNameIgnoreCase(cursus.getName()).ifPresent(_ -> {
             throw new IllegalArgumentException("Un cursus avec le nom '" + cursus.getName() + "' existe déjà.");
         });
         return cursusRepository.save(cursus);
@@ -50,7 +50,7 @@ public class CursusService {
     public Cursus update(Long id, String name, Long filiereId, Filiere filiere) {
         Cursus cursus = findById(id);
 
-        cursusRepository.findByName(name)
+        cursusRepository.findByNameIgnoreCase(name)
                 .filter(c -> !c.getId().equals(id))
                 .ifPresent(_ -> {
                     throw new IllegalArgumentException("Un cursus avec le nom '" + name + "' existe déjà.");

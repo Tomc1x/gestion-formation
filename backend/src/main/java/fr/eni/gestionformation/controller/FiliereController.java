@@ -2,7 +2,7 @@ package fr.eni.gestionformation.controller;
 
 import fr.eni.gestionformation.dto.FiliereRequest;
 import fr.eni.gestionformation.dto.FiliereResponse;
-import fr.eni.gestionformation.entity.Filiere;
+import fr.eni.gestionformation.mapper.FiliereMapper;
 import fr.eni.gestionformation.service.FiliereService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,29 +16,22 @@ import java.util.List;
 public class FiliereController {
 
     private final FiliereService filiereService;
+    private final FiliereMapper filiereMapper;
 
     @PostMapping
     public ResponseEntity<FiliereResponse> save(@RequestBody FiliereRequest filiereRequest) {
-        String name = filiereRequest.getName();
-        Filiere filiere = new Filiere();
-        filiere.setName(name);
-        Filiere savedFiliere = filiereService.save(filiere);
-        FiliereResponse response = new FiliereResponse(savedFiliere.getId(), savedFiliere.getName());
-        return ResponseEntity.ok(response);
+        var filiere = filiereMapper.toEntity(filiereRequest.getName());
+        return ResponseEntity.ok(filiereMapper.toResponseDto(filiereService.save(filiere)));
     }
 
     @GetMapping
     public ResponseEntity<List<FiliereResponse>> getAll() {
-        return ResponseEntity.ok(filiereService.findAll().stream()
-                .map(f -> new FiliereResponse(f.getId(), f.getName()))
-                .toList());
+        return ResponseEntity.ok(filiereMapper.toResponseDtoList(filiereService.findAll()));
     }
 
     @GetMapping("/search")
     public ResponseEntity<List<FiliereResponse>> searchByName(@RequestParam String name) {
-        return ResponseEntity.ok(filiereService.findByName(name).stream()
-                .map(f -> new FiliereResponse(f.getId(), f.getName()))
-                .toList());
+        return ResponseEntity.ok(filiereMapper.toResponseDtoList(filiereService.findByName(name)));
     }
 
     @GetMapping("/exists")
@@ -48,16 +41,12 @@ public class FiliereController {
 
     @GetMapping("/{id}")
     public ResponseEntity<FiliereResponse> getById(@PathVariable Long id) {
-        Filiere filiere = filiereService.findById(id);
-        FiliereResponse response = new FiliereResponse(filiere.getId(), filiere.getName());
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(filiereMapper.toResponseDto(filiereService.findById(id)));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<FiliereResponse> update(@PathVariable Long id, @RequestBody FiliereRequest filiereRequest) {
-        Filiere updatedFiliere = filiereService.update(id, filiereRequest.getName());
-        FiliereResponse response = new FiliereResponse(updatedFiliere.getId(), updatedFiliere.getName());
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(filiereMapper.toResponseDto(filiereService.update(id, filiereRequest.getName())));
     }
 
     @DeleteMapping("/{id}")
