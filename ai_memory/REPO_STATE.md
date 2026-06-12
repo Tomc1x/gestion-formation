@@ -77,7 +77,12 @@ active_work_items:
   - WI-20260611-FULLST-023 (DONE - restriction routes/acces par role API+front+sidebar, fix IDOR planning eleve)
   - WI-20260611-FULLST-024 (DONE - suppression cascade cours planifie/promotion/cours catalogue, fix 403 promotion 4)
   - WI-20260611-FULLST-025 (OPEN - audit table orpheline promotion_cours)
-  - WI-20260611-FULLST-026 (OPEN - tests backend manquants services/controllers)
+  - WI-20260611-FULLST-026 (DONE - 8 fichiers de test crees, ./gradlew test PASS)
+  - WI-20260611-FULLST-027 (DONE - page detail cursus admin/cursus/:id + alertes prerequis mal ordonnes, ng build PASS)
+  - WI-20260611-FULLST-028 (DONE - cartes cursus liste simplifiees, badge alerte + navigation vers detail, ng build PASS)
+  - WI-20260611-FULLST-029 (DONE - cursus DWWM verifie, 14 alertes "prereq absent du cursus" = probleme catalogue, pas d'ordre a corriger)
+  - WI-20260611-FULLST-030 (DONE - dockerisation backend+frontend, images buildees et testees OK)
+  - WI-20260611-FULLST-031 (DONE - prerequis cours id 10 "Web Client / HTML & CSS" vide, resout 14 alertes DWWM sans casser CDA, PIT-023/024)
 
 blocking_questions:
   - "Quel ordre de priorisation pour FULLST-001/005/006/007-009 ?"

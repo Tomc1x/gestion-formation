@@ -1,5 +1,6 @@
 ANALYSIS | WI-20260611-FULLST-007 | ai_doc/ANALYSIS__WI-20260611-FULLST-007__cours-planifie-inscription.md | Modele CoursPlanifie / InscriptionCours
-WI-20260611-FULLST-026 | Tests unitaires/integration backend manquants (services/controllers) | OPEN | developer | ai_memory/2026-06-11__ROLE-developer__WI-20260611-FULLST-026.md
+WI-20260611-FULLST-026 | Tests unitaires/integration backend manquants (services/controllers) | DONE | developer, rules-curator | ai_memory/2026-06-11__ROLE-developer__WI-20260611-FULLST-026.md
+WI-20260611-FULLST-030 | Dockerisation complete backend+frontend, docker compose up -d | DONE | devops-engineer, rules-curator | ai_memory/2026-06-11__ROLE-devops-engineer__WI-20260611-FULLST-030.md
 
 WI-20260610-BACKEN-008 | Fix budget CSS utilisateurs.scss/header/register | DONE | developer, manager | ai_memory/2026-06-10__ROLE-developer__WI-20260610-BACKEN-008.md
 WI-20260610-BACKEN-002 | Frontend design system GestionFormation (index.html) | DONE | developer, rules-curator | ai_memory/2026-06-10__ROLE-developer__WI-20260610-BACKEN-002.md
@@ -68,3 +69,7 @@ WI-20260611-FULLST-022 | Bug - Liste des cursus vide dans le dropdown de creatio
 WI-20260611-FULLST-023 | Restriction routes/acces par role (API + app.routes.ts + sidebar) + fix IDOR planning eleve | DONE | developer | ai_memory/WORK_ITEMS.md#WI-20260611-FULLST-023
 WI-20260611-FULLST-024 | Suppression robuste cours planifie / promotion (eleves+sessions) / cours catalogue | DONE | developer, rules-curator, manager | ai_memory/WORK_ITEMS.md#WI-20260611-FULLST-024
 WI-20260611-FULLST-025 | Audit/nettoyage table orpheline promotion_cours (residu PIT-010) | OPEN | developer | ai_memory/WORK_ITEMS.md#WI-20260611-FULLST-025
+WI-20260611-FULLST-027 | Page detail cursus (route + alertes desordre pedagogique) | DONE | developer, rules-curator | ai_memory/2026-06-11__ROLE-developer__WI-20260611-FULLST-027.md
+WI-20260611-FULLST-028 | Simplification cartes cursus (resume + badge + nav detail) | DONE | developer | ai_memory/2026-06-11__ROLE-developer__WI-20260611-FULLST-028.md
+WI-20260611-FULLST-029 | Correction ordre pedagogique cursus DWWM | DONE (aucune action - cause = catalogue) | developer | ai_memory/2026-06-11__ROLE-developer__WI-20260611-FULLST-029.md
+WI-20260611-FULLST-031 | Catalogue - prerequis cours 10 vide (resout alertes DWWM sans casser CDA) | DONE | developer, rules-curator | ai_memory/2026-06-11__ROLE-developer__WI-20260611-FULLST-031.md

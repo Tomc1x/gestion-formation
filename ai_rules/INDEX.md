@@ -35,3 +35,10 @@ Deprecated entries are prefixed with `# DEPRECATED`.
 | PITFALL  | PIT-019 | No centralized current-user helper; cast Authentication.getPrincipal() to User for IDOR checks | pitfalls.md#pit-019 | 2026-06-11 |
 | PITFALL  | PIT-020 | Empty-body 403 on delete may be unhandled DataIntegrityViolationException (orphan promotion_cours) | pitfalls.md#pit-020 | 2026-06-11 |
 | CONVENTION | CONV-007 | Manual cascade-delete pattern for required @ManyToOne FKs without JPA cascade | conventions.md#conv-007 | 2026-06-11 |
+| CONVENTION | CONV-008 | Controller test pattern for @WebMvcTest with SecurityConfig | conventions.md#conv-008 | 2026-06-11 |
+| CONVENTION | CONV-009 | Shared calculation logic in Angular goes to core/utils/*.util.ts as pure TS | conventions.md#conv-009 | 2026-06-11 |
+| PITFALL  | PIT-021 | backend/build.gradle pins Java 25, not Java 21 | pitfalls.md#pit-021 | 2026-06-11 |
+| PITFALL  | PIT-022 | frontend/package-lock.json desynced from package.json breaks `npm ci` | pitfalls.md#pit-022 | 2026-06-11 |
+| CONVENTION | CONV-010 | Escape `$` as `$$` in `.env` values for docker-compose | conventions.md#conv-010 | 2026-06-11 |
+| PITFALL  | PIT-023 | Catalogue cours id 26 is a cross-cursus junction point (DWWM/CDA) | pitfalls.md#pit-023 | 2026-06-11 |
+| PITFALL  | PIT-024 | PUT /api/cours/{id} silently ignores `prerequisIds` | pitfalls.md#pit-024 | 2026-06-11 |

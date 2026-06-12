@@ -75,6 +75,12 @@ export const routes: Routes = [
         loadComponent: () => import('./features/administration/cursus/cursus').then(m => m.CursusComponent)
       },
       {
+        title: 'Détail du cursus',
+        path: 'admin/cursus/:id',
+        canActivate: [roleGuard(['REF'])],
+        loadComponent: () => import('./features/administration/cursus-detail/cursus-detail').then(m => m.CursusDetailComponent)
+      },
+      {
         title: 'Promotions',
         path: 'admin/promotions',
         canActivate: [roleGuard(['REF'])],

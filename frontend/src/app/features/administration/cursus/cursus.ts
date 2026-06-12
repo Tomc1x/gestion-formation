@@ -6,6 +6,7 @@ import {
   computed,
   OnInit,
 } from '@angular/core';
+import { Router } from '@angular/router';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
 import {
   LucideListTree,
@@ -14,15 +15,14 @@ import {
   LucideArrowUp,
   LucideArrowDown,
   LucideTrash2,
-  LucideUsers,
   LucidePencil,
-  LucideGripVertical,
 } from '@lucide/angular';
 import { BaseCursusAdapter } from '../../../core/adapters/cursus.adapter';
 import { BaseFiliereAdapter } from '../../../core/adapters/filiere.adapter';
 import { BaseCoursAdapter } from '../../../core/adapters/cours.adapter';
 import { Cursus, Filiere, CreateCursusRequest } from '../../../core/models/cursus.model';
 import { Cours } from '../../../core/models/cours.model';
+import { computeCursusPrereqAlerts } from '../../../core/utils/cursus-alerts.util';
 
 /** Une ligne de la liste construite dans la modale "Nouveau cursus". */
 interface BuilderRow {
@@ -47,9 +47,7 @@ const FILIERE_COLORS = [
     LucideArrowUp,
     LucideArrowDown,
     LucideTrash2,
-    LucideUsers,
     LucidePencil,
-    LucideGripVertical,
   ],
   templateUrl: './cursus.html',
   styleUrl: './cursus.scss',
@@ -59,6 +57,7 @@ export class CursusComponent implements OnInit {
   private readonly cursusAdapter = inject(BaseCursusAdapter);
   private readonly filiereAdapter = inject(BaseFiliereAdapter);
   private readonly coursAdapter = inject(BaseCoursAdapter);
+  private readonly router = inject(Router);
 
   protected readonly cursusList = signal<Cursus[]>([]);
   protected readonly filieres = signal<Filiere[]>([]);
@@ -84,6 +83,29 @@ export class CursusComponent implements OnInit {
 
   protected cursusCount(filiereId: number): number {
     return this.cursusList().filter(c => c.filiereId === filiereId).length;
+  }
+
+  protected openCursus(cursus: Cursus): void {
+    this.router.navigate(['/app/admin/cursus', cursus.id]);
+  }
+
+  /** Nombre d'alertes "prérequis mal ordonné" pour ce cursus (0 = pas de badge). */
+  protected cursusAlertCount(cursus: Cursus): number {
+    const catalogue = this.catalogue();
+    const byId = new Map(catalogue.map(c => [c.id, c]));
+
+    const coursWithPrereqs: Cours[] = cursus.cours.map(c => {
+      const catalogueCours = byId.get(c.id);
+      return {
+        id: c.id,
+        name: c.name,
+        dureeJours: catalogueCours?.dureeJours ?? null,
+        formateurs: c.formateurs,
+        prerequis: catalogueCours?.prerequis ?? [],
+      };
+    });
+
+    return computeCursusPrereqAlerts(coursWithPrereqs).length;
   }
 
   /** Index dans FILIERE_COLORS qui sera attribué à la prochaine filière créée (basé sur son futur id). */
@@ -121,60 +143,6 @@ export class CursusComponent implements OnInit {
 
     this.coursAdapter.getAll().subscribe({
       next: cours => this.catalogue.set(cours),
-    });
-  }
-
-  protected fullName(p: { firstName: string; lastName: string }): string {
-    return `${p.firstName} ${p.lastName}`;
-  }
-
-  // ── Réordonnancement des cours d'un cursus (drag&drop + boutons monter/descendre) ──
-  protected readonly draggedCours = signal<{ cursusId: number; coursId: number } | null>(null);
-
-  protected onDragStart(cursusId: number, coursId: number): void {
-    this.draggedCours.set({ cursusId, coursId });
-  }
-
-  protected onDragEnd(): void {
-    this.draggedCours.set(null);
-  }
-
-  protected onDropOnCours(cursus: Cursus, targetCoursId: number): void {
-    const dragged = this.draggedCours();
-    if (!dragged || dragged.cursusId !== cursus.id || dragged.coursId === targetCoursId) return;
-
-    const ids = cursus.cours.map(c => c.id);
-    const fromIndex = ids.indexOf(dragged.coursId);
-    const toIndex = ids.indexOf(targetCoursId);
-    if (fromIndex === -1 || toIndex === -1) return;
-
-    const reordered = [...ids];
-    reordered.splice(fromIndex, 1);
-    reordered.splice(toIndex, 0, dragged.coursId);
-    this.draggedCours.set(null);
-    this.persistReorder(cursus.id, reordered);
-  }
-
-  /** Alternative clavier au drag&drop : déplace un cours vers le haut/bas dans son cursus. */
-  protected moveCoursInCursus(cursus: Cursus, coursId: number, direction: -1 | 1): void {
-    const ids = cursus.cours.map(c => c.id);
-    const index = ids.indexOf(coursId);
-    const target = index + direction;
-    if (index === -1 || target < 0 || target >= ids.length) return;
-
-    const reordered = [...ids];
-    [reordered[index], reordered[target]] = [reordered[target], reordered[index]];
-    this.persistReorder(cursus.id, reordered);
-  }
-
-  private persistReorder(cursusId: number, coursIds: number[]): void {
-    this.cursusAdapter.reorder(cursusId, coursIds).subscribe({
-      next: updated => {
-        this.cursusList.update(list => list.map(c => (c.id === updated.id ? updated : c)));
-      },
-      error: () => {
-        this.formError.set('Une erreur est survenue lors du réordonnancement du cursus.');
-      },
     });
   }
 
@@ -570,70 +538,5 @@ export class CursusComponent implements OnInit {
       },
     });
   }
-
-  // ── Ajouter / retirer un cours sur une carte cursus existante ────────────────
-  protected availableCoursForCursus(cursus: Cursus): Cours[] {
-    const ids = new Set(cursus.cours.map(c => c.id));
-    return this.catalogue().filter(c => !ids.has(c.id));
-  }
-
-  protected readonly addingCoursToCursus = signal<Cursus | null>(null);
-
-  protected openAddCoursModal(cursus: Cursus): void {
-    this.formError.set(null);
-    this.addingCoursToCursus.set(cursus);
-  }
-
-  protected closeAddCoursModal(): void {
-    this.addingCoursToCursus.set(null);
-  }
-
-  protected addCoursToCursus(cursus: Cursus, coursId: number): void {
-    if (!coursId) return;
-    this.cursusAdapter.addCours(cursus.id, coursId).subscribe({
-      next: updated => {
-        this.cursusList.update(list => list.map(c => (c.id === updated.id ? updated : c)));
-        if (this.addingCoursToCursus()?.id === updated.id) {
-          this.addingCoursToCursus.set(updated);
-        }
-      },
-      error: () => {
-        this.formError.set('Une erreur est survenue lors de l\'ajout du cours au cursus.');
-      },
-    });
-  }
-
-  protected removeCoursFromCursus(cursus: Cursus, coursId: number): void {
-    this.cursusAdapter.removeCours(cursus.id, coursId).subscribe({
-      next: updated => {
-        this.cursusList.update(list => list.map(c => (c.id === updated.id ? updated : c)));
-      },
-      error: () => {
-        this.formError.set('Une erreur est survenue lors du retrait du cours.');
-      },
-    });
-  }
-  coursSearchQuery = signal<string>('');
-
-  filteredAvailableCoursForCursus = computed(() => {
-    const currentCursus = this.addingCoursToCursus();
-    const query = this.coursSearchQuery().toLowerCase().trim();
-
-    if (!currentCursus) return [];
-
-    const baseList = this.availableCoursForCursus(currentCursus);
-
-    if (!query) {
-      return baseList;
-    }
-
-    return baseList.filter(cours => cours.name.toLowerCase().includes(query));
-  });
-
-  onSearchQueryChange(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    this.coursSearchQuery.set(input.value);
-  }
-
 
 }

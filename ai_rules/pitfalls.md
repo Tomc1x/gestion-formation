@@ -287,6 +287,10 @@ Verified: 2026-06-11
 
 **Counter-indications:** None known — applies to any `@WebMvcTest` importing this project's `SecurityConfig`.
 
+**See also:** CONV-008 for the full `@WebMvcTest` setup pattern (required `@MockitoBean`s, `@Import`, helper) reused across 6 controller test classes added in WI-20260611-FULLST-026.
+
+Verified: 2026-06-11 (re-confirmed in WI-20260611-FULLST-026 across UserAdminControllerTest, FiliereControllerTest, CursusControllerTest, InvitationControllerTest, InscriptionCoursControllerTest, PromotionControllerTest).
+
 ---
 
 ### PIT-018 — Verify the running backend process is up to date before diagnosing a SecurityConfig bug
@@ -343,3 +347,77 @@ Verified: 2026-06-11
 **How to apply:** When debugging an unexplained 403 on a write endpoint with an empty response body and no `GlobalExceptionHandler` mapping for the thrown exception, grep the backend log for `ERROR:` / `DataIntegrityViolation` around the request timestamp BEFORE assuming it's an authorization bug. If found, check `promotion_cours` and any other orphan tables left by entity renames under `ddl-auto=update` (see PIT-010) for rows referencing the entity being deleted.
 
 **Counter-indications:** Does not apply once `promotion_cours` is dropped/cleaned in all environments and/or `GlobalExceptionHandler` gains a mapping for `DataIntegrityViolationException` -> 409/500.
+
+---
+
+### PIT-021 — backend/build.gradle pins Java 25, not Java 21
+
+Scope: backend/, Dockerfile, CI
+
+Origin: WI-20260611-FULLST-030
+
+Added: 2026-06-11
+
+Verified: 2026-06-11
+
+**Rule / Decision / Pitfall:** `backend/build.gradle` sets `java.toolchain.languageVersion = JavaLanguageVersion.of(25)`, while some briefs/STACK_SPEC docs still say Java 21 — Java 25 is the actual, working version.
+
+**Why:** WI-20260611-FULLST-030 (Dockerisation) hit this when picking a JDK base image: building with `eclipse-temurin:21-*` would mismatch the toolchain. The dev machine also has `liberica-full-25.0.1` installed, consistent with the 25 pin.
+
+**How to apply:** When writing/updating any Dockerfile, CI pipeline, or local setup instructions for the backend, use `eclipse-temurin:25-jdk-alpine` (build stage) and `eclipse-temurin:25-jre-alpine` (runtime stage), and verify the locally installed JDK is 25.x. If a doc/brief says Java 21, treat `build.gradle` as the source of truth and flag the doc as stale.
+
+**Counter-indications:** If `build.gradle` is later changed to target a different Java version, update this entry and the Docker base images together — they must stay in sync.
+
+---
+
+### PIT-022 — frontend/package-lock.json desynced from package.json breaks `npm ci`
+
+Scope: frontend/, Dockerfile, CI
+
+Origin: WI-20260611-FULLST-030
+
+Added: 2026-06-11
+
+Verified: 2026-06-11
+
+**Rule / Decision / Pitfall:** `frontend/package-lock.json` is out of sync with `frontend/package.json` (missing optional deps such as `@emnapi/*`), so `npm ci` fails with `EUSAGE`. `npm install` succeeds and was used as a workaround in `frontend/Dockerfile`.
+
+**Why:** Found while building the frontend Docker image for WI-20260611-FULLST-030 — `npm ci` is the reproducible/preferred install command for CI and Docker builds but currently cannot be used.
+
+**How to apply:** Until fixed, frontend Dockerfile/CI steps should use `npm install` instead of `npm ci`. To fix permanently: run `npm install` locally in `frontend/`, commit the regenerated `package-lock.json`, then switch Dockerfile/CI back to `npm ci` for reproducible builds.
+
+**Counter-indications:** Once `package-lock.json` is regenerated and committed and `npm ci` is verified to pass, this entry should be marked obsolete/deprecated.
+
+---
+
+### PIT-023 — Catalogue cours id 26 is a cross-cursus junction point (DWWM/CDA)
+
+Scope: Cours catalogue / cursus modeling (tables `cours`, `cours_prerequis`, `cursus_cours`)
+Origin: WI-20260611-FULLST-031, ai_memory/2026-06-11__ROLE-developer__WI-20260611-FULLST-031.md
+Added: 2026-06-11
+Verified: 2026-06-11
+
+**Rule / Decision / Pitfall:** Never change `prerequis` of cours id 10 ("Web Client / HTML & CSS") or the composition (`cursus_cours`) of cursus DWWM (id 5) / CDA (id 6) without first simulating `computeCursusPrereqAlerts`/`transitivePrerequis` (frontend/src/app/core/utils/cursus-alerts.util.ts) on BOTH cursus before and after the change.
+
+**Why:** Cours id 26 ("Algorithmique + Initiation à la Programmation / Java") and ids 8+9 ("Algorithmique / Pseudo-Code" + "Initiation à la Programmation / Java") are two competing catalogue representations of the same pedagogical prerequisite. DWWM (cursus 5) contains 8+9 but not 26; CDA (cursus 6) contains 26 (position 0) but not 8/9. A single `prerequis` value on cours 10 cannot satisfy both. In FULLST-031, repointing cours 10's prerequis from `[26]` to `[8,9]` resolved 13 DWWM alerts but introduced 44 new CDA alerts (0 -> 44).
+
+**How to apply:** Before any change touching `prerequis` of cours 8, 9, 10, or 26, fetch `GET /api/cursus/5` and `GET /api/cursus/6`, and simulate `transitivePrerequis`/`computeCursusPrereqAlerts` on both ordered course lists before/after. As of WI-20260611-FULLST-031, cours 10's `prerequis` was set to `[]` (resolves both cursus to 0 alerts); any future change reintroducing a prerequis on cours 10 must re-run this simulation.
+
+**Counter-indications:** None — applies to any future modification of cours 8/9/10/26 prerequis or DWWM/CDA composition.
+
+---
+
+### PIT-024 — PUT /api/cours/{id} silently ignores `prerequisIds`
+
+Scope: backend/src/main/java/fr/eni/gestionformation/controller/CoursController.java (`update`), backend/.../service/CoursService.java (`updateNomEtDuree`)
+Origin: WI-20260611-FULLST-031, ai_memory/2026-06-11__ROLE-developer__WI-20260611-FULLST-031.md
+Added: 2026-06-11
+Verified: 2026-06-11
+
+**Rule / Decision / Pitfall:** To modify a catalogue cours's `prerequis`, use the dedicated `PUT /api/cours/{id}/prerequis` endpoint with a raw JSON array body (`List<Long>`, e.g. `[8,9]` or `[]`) — NOT `PUT /api/cours/{id}` with a `prerequisIds` field in the body.
+
+**Why:** `PUT /api/cours/{id}` (`CoursController.update`) only calls `CoursService.updateNomEtDuree`, which touches only `name`/`dureeJours`. During FULLST-031, a first attempt with `PUT /api/cours/10` and body `{"prerequisIds":[]}` returned HTTP 200 but `prerequis` remained `[26]` — a misleadingly successful no-op.
+
+**How to apply:** Always use `PUT /api/cours/{id}/prerequis` with a raw `List<Long>` body for any prerequis mutation. If reviewing/extending `CoursController.update`, consider either rejecting unknown fields like `prerequisIds` or documenting the split explicitly in the API docs/Swagger.
+
+**Counter-indications:** None — applies to any current or future caller of the cours update API.

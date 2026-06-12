@@ -1,18 +1,34 @@
 # WORK ITEMS
 
+## WI-20260611-FULLST-030
+- Date: 2026-06-11
+- Title: Dockerisation complete backend + frontend, docker compose up -d
+- Status: OPEN
+- TOA: manager
+- Executor: devops-engineer
+- attempt_count: 0
+- Notes: |
+    - backend/Dockerfile: multi-stage Gradle build -> JRE 21, profil docker
+      (datasource host=db, mail host=mailhog).
+    - frontend/Dockerfile: multi-stage ng build -> nginx, proxy /api vers backend.
+    - docker-compose.yml: ajouter services backend + frontend, depends_on, reseau
+      formation-network, variables .env.
+    - Verification: docker compose up -d --build -> tous conteneurs up, /api repond,
+      frontend accessible.
+
 ## WI-20260611-FULLST-026
 - Date: 2026-06-11
 - Title: Tests unitaires/integration backend basiques pour services/controllers manquants
-- Status: OPEN
+- Status: DONE
 - TOA: manager
-- Executor: developer
+- Executor: developer, rules-curator
 - attempt_count: 0
 - Notes: |
-    - Cibles: UserAdminService/Controller, InvitationService/Controller, FiliereController,
-      CursusController, InscriptionCoursController, PromotionController (tests fonctionnels basiques).
-    - Style: s'inspirer des tests existants (Mockito pour services, MockMvc pour controllers).
-    - Quelques cas nominaux + 1 cas d'erreur par element, pas de couverture exhaustive.
-    - Verification: ./gradlew test
+    - 8 nouveaux fichiers de test crees (UserAdminService/Controller, InvitationService/Controller,
+      FiliereController, CursusController, InscriptionCoursController, PromotionController).
+    - Verification: ./gradlew test -> BUILD SUCCESSFUL, tous tests verts.
+    - Proposed Rule triee: CONV-008 ajoutee dans ai_rules/conventions.md (pattern test controller
+      WebMvcTest + SecurityConfig + MockitoBean), cross-ref avec PIT-017.
 
 ## WI-20260608-FRONTE-003
 - Date: 2026-06-08
@@ -1854,3 +1870,131 @@ promotion). Repro :
       proprement (DROP TABLE) plutot que de laisser ddl-auto=update la conserver.
     - Documenter le resultat dans ai_memory et clore PIT-020/PIT-010 si plus pertinent.
 - Verification requise : DELETE /api/promotions/{id} sur chaque promotion existante -> 204 sans erreur FK.
+
+---
+
+- WI: WI-20260611-FULLST-027
+- Date: 2026-06-11
+- Title: Page detail cursus (route admin/cursus/:id) avec alertes de desordre pedagogique
+- Status: DONE
+- TOA: manager
+- Executor: developer
+- attempt_count: 0
+- Contexte: |
+    La page Cursus (frontend/src/app/features/administration/cursus) liste actuellement
+    chaque cursus avec sa liste ordonnee de cours (drag&drop, monter/descendre,
+    ajouter/retirer un cours) directement sur la carte, ce qui la rend dense. L'utilisateur
+    souhaite extraire cela dans une page de detail par cursus, qui affichera aussi des
+    alertes "prerequis mal ordonne" (logique deja existante dans la modale de creation via
+    misorderedPrereqs/hasMisorderedPrereqs/fixOrder sur BuilderRow, a adapter pour
+    cours: CoursInCursus[] reels en croisant avec le catalogue pour recuperer prerequis).
+- Scope:
+    - Nouvelle route `admin/cursus/:id` (roleGuard ['REF']), nouveau composant standalone
+      `cursus-detail` (frontend/src/app/features/administration/cursus-detail/).
+    - Reprendre sur cette page : liste ordonnee (drag&drop, monter/descendre),
+      ajouter/retirer un cours (modale existante adaptee), affichage formateurs.
+    - Ajouter un bloc d'alertes "prerequis mal ordonne" avec action "Corriger"
+      (reutilise le pattern fixOrder).
+    - Extraire la logique de calcul des alertes dans une fonction pure partagee
+      (ex. frontend/src/app/core/utils/cursus-alerts.util.ts ou similaire) reutilisable
+      par WI-028.
+- Verification requise : `ng build` PASS, test manuel (chrome-devtools ou description) de
+  la navigation, du drag&drop, et de l'affichage/correction d'une alerte.
+
+---
+
+- WI: WI-20260611-FULLST-028
+- Date: 2026-06-11
+- Title: Simplification cartes cursus (liste) - resume + badge alerte + navigation vers detail
+- Status: DONE
+- TOA: manager
+- Executor: developer
+- attempt_count: 0
+- Contexte: |
+    Suite a WI-20260611-FULLST-027 (page detail cursus + fonction partagee de calcul des
+    alertes), la page liste (frontend/src/app/features/administration/cursus) doit etre
+    simplifiee : chaque carte cursus devient un resume (nom, filiere, nombre de cours,
+    badge "N alerte(s)" si desordre pedagogique detecte via la fonction partagee).
+- Scope:
+    - Supprimer de la carte liste : liste ordonnee/drag&drop, "Ajouter un cours".
+    - Carte entiere cliquable -> navigue vers admin/cursus/:id (router.navigate).
+      Modifier/Supprimer restent des boutons avec (click)="$event.stopPropagation()".
+    - Badge "N alerte(s)" calcule via la fonction partagee de WI-027.
+    - Conserver inchangee la gestion des filieres (modales Nouvelle/Modifier/Supprimer
+      filiere) et la modale "Nouveau cursus" (builder).
+- Depends on: WI-20260611-FULLST-027
+- Verification requise : `ng build` PASS, test manuel de la navigation depuis une carte et
+  de l'affichage des badges.
+
+---
+
+- WI: WI-20260611-FULLST-029
+- Date: 2026-06-11
+- Title: Correction de l'ordre pedagogique du cursus DWWM (data fix via Corriger)
+- Status: DONE (rien a corriger - cause = donnees catalogue, voir note)
+- TOA: manager
+- Executor: developer
+- attempt_count: 0
+- Contexte: |
+    L'utilisateur a colle la liste actuelle des cours du cursus "DWWM" (un module
+    "Programmation Orientee Objet / Java" apparait deux fois, "Developpement Web
+    cote Serveur (Back-End) / Java Spring Boot" trois fois, "Projet Web / Symfony"
+    deux fois, etc. -- noms de cours du catalogue qui partagent un libelle proche
+    pour des modules differents). Suite a WI-20260611-FULLST-027/028, la page
+    /app/admin/cursus/:id pour ce cursus doit afficher des alertes "prerequis mal
+    ordonne" avec un bouton "Corriger". L'utilisateur demande de corriger l'ordre.
+- Scope:
+    - Lancer l'app en local (docker compose ou local_backend + frontend ng serve).
+    - Identifier le cursus "DWWM" via /app/admin/cursus puis ouvrir sa page detail
+      /app/admin/cursus/:id.
+    - Pour chaque alerte "prerequis mal ordonne" affichee, cliquer "Corriger" et
+      verifier que la liste se reordonne (PUT/PATCH reorder via cursusAdapter).
+    - Repeter jusqu'a disparition de toutes les alertes (ou jusqu'a ce qu'il ne
+      reste que des alertes "prerequis absent du cursus" non corrigeables par ce
+      bouton -- documenter ces cas residuels separement).
+    - Si le bouton "Corriger" ne resout pas correctement un cas (ex: cycle de
+      dependances, alerte qui revient), documenter precisement le cas en BLOCKED
+      avec capture/etat avant de tenter un fix manuel cote donnees.
+- Verification requise : capture (chrome-devtools ou description precise) de la
+  page detail DWWM avant/apres montrant la disparition des alertes corrigees.
+
+---
+
+- WI: WI-20260611-FULLST-031
+- Date: 2026-06-11
+- Title: Catalogue cours - repointer les prerequis "Algorithmique + Initiation a la Programmation / Java" vers les deux cours splittes
+- Status: DONE (option 3 appliquee : prerequis du cours id 10 "Web Client / HTML & CSS" vide ; DWWM 0 alerte, CDA 0 alerte, persistance verifiee ; PIT-023/PIT-024 ajoutees)
+- TOA: manager
+- Executor: developer
+- attempt_count: 0
+- Contexte: |
+    Suite a WI-20260611-FULLST-029 : sur le cursus DWWM (id 5), 14 alertes "prerequis
+    mal ordonne / absent du cursus" referencent toutes le meme cours catalogue
+    "Algorithmique + Initiation à la Programmation / Java" comme prerequis. Ce cours
+    n'est pas membre du cursus DWWM, qui contient a la place deux cours separes
+    ("Algorithmique / Pseudo-Code" et "Initiation à la Programmation / Java", positions
+    0 et 1). L'utilisateur a choisi l'option (b) : repointer les `prerequis` des cours
+    catalogue concernes vers ces deux cours deja presents, plutot que d'ajouter le cours
+    fusionne au cursus.
+- Scope:
+    - Identifier via l'API/DB les ids : cours fusionne "Algorithmique + Initiation a la
+      Programmation / Java", et les deux cours cibles "Algorithmique / Pseudo-Code" et
+      "Initiation à la Programmation / Java".
+    - Lister tous les cours catalogue ayant le cours fusionne dans leurs `prerequis`
+      (les 14 alertes du DWWM en donnent une partie ; verifier aussi via le catalogue
+      complet car d'autres cursus pourraient etre impactes - blast radius global au
+      catalogue, pas seulement DWWM).
+    - Pour chacun de ces cours, retirer le prerequis fusionne et ajouter les deux
+      prerequis cibles (via PUT /api/cours/{id} avec prerequisIds mis a jour, en
+      respectant la validation anti-cycle deja en place cote backend).
+    - Decider du sort du cours catalogue fusionne lui-meme (orphelin si plus reference
+      par aucun prerequis et n'appartient a aucun cursus) : NE PAS le supprimer dans ce
+      WI sans confirmation explicite -- documenter juste son etat residuel.
+    - Re-verifier la page /app/admin/cursus/5 (DWWM) : les 14 alertes doivent disparaitre
+      (ou se transformer en alertes "mal ordonne" corrigibles si l'ordre relatif des
+      deux nouveaux prerequis n'est pas respecte -- dans ce cas, utiliser le bouton
+      "Corriger").
+    - Verifier qu'aucun AUTRE cursus n'a ete casse par ce changement (recharger
+      /app/admin/cursus et observer les badges d'alerte globaux avant/apres).
+- Verification requise : capture avant/apres des alertes sur DWWM (id 5) et sur la page
+  liste /app/admin/cursus (badges), confirmation persistance apres rechargement.

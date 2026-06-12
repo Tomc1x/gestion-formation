@@ -124,3 +124,57 @@ Verified: 2026-06-11
 **How to apply:** See `PromotionService.deleteInscriptionsForPlanning` and `CoursService.deleteById` (steps 2-3) for the reference implementation. Order matters: InscriptionCours -> CoursPlanifie -> parent (Cours/Promotion).
 
 **Counter-indications:** Does not apply to cross-aggregate reference-nulling (e.g. `Cursus` deletion nulling `Promotion.cursus`) — that case is covered by DEC-002's sibling-service-call pattern, not by deep deletion chains.
+
+---
+
+### CONV-008 — Controller test pattern for `@WebMvcTest` with `SecurityConfig`
+
+Scope: backend/src/test/java/fr/eni/gestionformation/controller/*ControllerTest.java
+Origin: WI-20260611-FULLST-026, ai_memory/2026-06-11__ROLE-developer__WI-20260611-FULLST-026.md
+Added: 2026-06-11
+Verified: 2026-06-11
+
+**Rule / Decision / Pitfall:** New controller tests must use `@WebMvcTest(XController.class)` + `@Import(SecurityConfig.class)`, mock the controller's service plus `JwtService` and `UserDetailsServiceImpl` with `@MockitoBean`, and authenticate requests via `SecurityMockMvcRequestPostProcessors.user(User.builder()...build())` rather than disabling security or using `@WithMockUser` (see PIT-017).
+
+**Why:** Importing the real `SecurityConfig` makes controller tests also implicitly verify the role-based access rules declared there, instead of duplicating/drifting from them. Confirmed across 6 new controller test classes (UserAdminControllerTest, FiliereControllerTest, CursusControllerTest, InvitationControllerTest, InscriptionCoursControllerTest, PromotionControllerTest) added in WI-20260611-FULLST-026, consistent with the earlier PromotionControllerSecurityTest/AuthControllerTest.
+
+**How to apply:** Copy the `@MockitoBean` list (the controller's service, `JwtService`, `UserDetailsServiceImpl`) and the `userWithRole(...)` helper from any of the controller tests listed above. Authenticate with `.with(user(userEntityWithRole))`, not `@WithMockUser`.
+
+**Counter-indications:** None identified — applies to all new `@WebMvcTest` controller tests in this package.
+
+---
+
+### CONV-009 — Shared calculation logic in Angular goes to core/utils/*.util.ts as pure TS
+
+Scope: frontend/src/app/core/utils/, composants administration
+Origin: WI-20260611-FULLST-027
+Added: 2026-06-11
+Verified: 2026-06-11
+
+**Rule / Decision / Pitfall:** When a calculation/transformation logic (alerts, data transformations) must be reused by multiple components, extract it into `core/utils/<domaine>.util.ts` as pure functions (no signals, no Angular injection), taking `core/models/*` types as input/output.
+
+**Why:** Enables testing independent of the Angular lifecycle (e.g. a badge on the list page and an alerts block on the detail page compute the same thing) — implemented for `cursus-alerts.util.ts`.
+
+**How to apply:** Create the file under `core/utils/`, export types + pure functions, call them from `computed()` in components.
+
+**Counter-indications:** None identified — applies to any cross-component calculation logic.
+
+---
+
+### CONV-010 — Escape `$` as `$$` in `.env` values for docker-compose
+
+Scope: .env, docker-compose.yml
+
+Origin: WI-20260611-FULLST-030
+
+Added: 2026-06-11
+
+Verified: 2026-06-11
+
+**Rule / Decision / Pitfall:** Any `.env` value containing a literal `$` (e.g. `JWT_SECRET`) must escape it as `$$`, otherwise docker-compose's variable interpolation (`${VAR}` syntax) partially consumes/corrupts the value before it reaches the container.
+
+**Why:** WI-20260611-FULLST-030 found `JWT_SECRET` in `.env` contained `$` characters that docker-compose tried to interpolate as variable references, producing a wrong secret inside the container.
+
+**How to apply:** When adding or editing `.env` values that contain `$`, write `$$` for each literal `$`. Verify the final resolved value with `docker compose config` before running `docker compose up`.
+
+**Counter-indications:** Does not apply to values consumed directly by the app outside docker-compose (e.g. `application-local.properties`, `application.properties`) — only `.env` files read by docker-compose's interpolation engine are affected.
