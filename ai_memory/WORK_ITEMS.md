@@ -1,5 +1,57 @@
 # WORK ITEMS
 
+## WI-20260612-FRONTE-005
+- Date: 2026-06-12
+- Title: Centrage des modals "Ajouter un eleve" (promotion) et "Modifier profil" (utilisateurs)
+- Status: DONE
+- TOA: manager
+- Executor: developer
+- attempt_count: 1
+- Notes: |
+    - Cause racine: @keyframes fadeUp (.anim-up, styles.scss) animait `transform`
+      jusqu'a `transform: none`, mais avec animation-fill-mode: forwards le navigateur
+      conserve une matrice transform calculee != none -> .page devient containing
+      block pour ses .modal-overlay (position:fixed; inset:0) descendants -> overlay
+      cale sur .page au lieu du viewport.
+    - Fix: fadeUp remplace transform par margin-top (10px -> 0), meme effet visuel
+      sans creer de containing block.
+    - Modal utilisateurs (.page sans anim-up) etait deja correct, non casse par le fix.
+    - Verification: npm run build PASS. Modal utilisateurs verifie visuellement (centre).
+      Modal stagiaires-tab non teste live (necessite role REF) - a verifier manuellement.
+    - Proposed Rules ecrites par developer (pitfall transform:none + fill-mode forwards
+      + containing block position:fixed).
+
+## WI-20260612-FRONTE-003
+- Date: 2026-06-12
+- Title: Vue semaine "Mon calendrier" - barres multi-jours en grid-column span, sans heure
+- Status: DONE
+- TOA: manager
+- Executor: developer
+- attempt_count: 1
+- Notes: |
+    - eventsByDay groupait les evenements uniquement par startDate -> un evenement
+      de 1 semaine n'apparaissait que le dernier jour (probleme rapporte par
+      l'utilisateur).
+    - Ajout computed weekEventSegments() (date-fns max/min/differenceInCalendarDays)
+      + overlay .week-events en grid-column span sur week-body. Heure masquee si span>1.
+    - Verification: npm run build PASS (warning budget SCSS preexistant, non bloquant).
+
+## WI-20260612-FRONTE-004
+- Date: 2026-06-12
+- Title: Vue mois "Mon calendrier" - meme correction de spanning multi-jours par ligne de semaine
+- Status: DONE
+- TOA: manager
+- Executor: developer
+- attempt_count: 1
+- Notes: |
+    - Factorisation computeWeekSegments(events, weekStart, weekEnd) partagee entre
+      vue semaine (refactor) et nouveau monthEventSegments (un tableau de segments
+      par ligne monthGrid()). Evenements multi-jours retires de getEventsForDay.
+    - Overlay .month-events par .grid-week (grid-column span), event-card--month,
+      heure masquee si span>1. Evenements 1 jour restent en event-chip avec heure.
+    - Verification: npm run build PASS (warning budget SCSS +1.72kB sur mon-calendrier.scss,
+      accepte). Pas de script lint dans frontend/package.json (BLOCKED informatif).
+
 ## WI-20260611-FULLST-040
 - Date: 2026-06-11
 - Title: Tableau de bord FORMATEUR (cours dispenses + eleves inscrits par cours)

@@ -414,14 +414,17 @@ table.tbl {
 
 // --- ANIMATIONS ---
 @keyframes fadeUp {
-  from { transform: translateY(10px); }
-  // `transform: none` (not `translateY(0)`) avoids leaving a permanent CSS
-  // containing block on `.page` (animation-fill-mode: forwards keeps the
-  // final keyframe's computed value applied). A containing block here would
-  // break `position: fixed` on descendant `.modal-overlay` elements, causing
-  // modals to be positioned/clipped relative to `.page` instead of the
-  // viewport when the page content is taller than the screen.
-  to { transform: none; }
+  // Uses `margin-top` instead of `transform: translateY()` on purpose.
+  // Even when a `transform` animation's final keyframe is `transform: none`,
+  // `animation-fill-mode: forwards` keeps the *computed* value as
+  // `matrix(1, 0, 0, 1, 0, 0)` (not the keyword `none`) for the lifetime of
+  // the element. Any computed `transform` other than the keyword `none`
+  // establishes a CSS containing block, which breaks `position: fixed` on
+  // descendant `.modal-overlay` elements — they end up positioned relative
+  // to `.page` instead of the viewport. `margin-top` produces the same
+  // "fade up" motion without ever creating a containing block.
+  from { margin-top: 10px; }
+  to { margin-top: 0; }
 }
 
 @keyframes fadeIn {

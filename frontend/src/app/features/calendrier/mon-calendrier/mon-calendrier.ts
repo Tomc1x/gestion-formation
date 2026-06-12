@@ -19,11 +19,44 @@ import {
   addWeeks,
   subWeeks,
   isSameMonth,
+  max,
+  min,
+  differenceInCalendarDays,
 } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { DatePipe } from '@angular/common';
 import { BaseCalendarAdapter } from '../../../core/adapters/calendar.adapter';
 import { CalendarEvent } from '../../../core/models/calendar-event.model';
+
+export interface EventSegment {
+  event: CalendarEvent;
+  startCol: number;
+  span: number;
+}
+
+/**
+ * Computes the grid segments (1-based start column + span) for events that
+ * intersect the given week range [weekStart, weekEnd]. Used by both the
+ * week view and the month view (one call per week row).
+ */
+export function computeWeekSegments(
+  events: CalendarEvent[],
+  weekStart: Date,
+  weekEnd: Date
+): EventSegment[] {
+  const segments: EventSegment[] = [];
+  for (const event of events) {
+    if (event.endDate < weekStart || event.startDate > weekEnd) {
+      continue;
+    }
+    const segmentStart = max([event.startDate, weekStart]);
+    const segmentEnd = min([event.endDate, weekEnd]);
+    const startCol = differenceInCalendarDays(segmentStart, weekStart) + 1;
+    const span = differenceInCalendarDays(segmentEnd, segmentStart) + 1;
+    segments.push({ event, startCol, span });
+  }
+  return segments;
+}
 
 @Component({
   selector: 'app-mon-calendrier',
@@ -102,6 +135,20 @@ export class MonCalendrierComponent {
     return `${format(start, 'd MMM', { locale: fr })} – ${format(end, 'd MMM yyyy', { locale: fr })}`;
   });
 
+  // Week view: events as grid segments (1-based start column + span)
+  readonly weekEventSegments = computed<EventSegment[]>(() => {
+    const days = this.weekDays();
+    return computeWeekSegments(this.events(), days[0], days[6]);
+  });
+
+  // Month view: events as grid segments, one list per week row of monthGrid()
+  readonly monthEventSegments = computed<EventSegment[][]>(() => {
+    const events = this.events();
+    return this.monthGrid().map((week) =>
+      computeWeekSegments(events, week[0], week[6])
+    );
+  });
+
   readonly weekDayLabels = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
   readonly selectedEvent = signal<CalendarEvent | null>(null);
@@ -118,9 +165,13 @@ export class MonCalendrierComponent {
     return isSameMonth(date, this.referenceDate());
   }
 
+  // Single-day events only: multi-day events are rendered as overlay bars
+  // (see monthEventSegments / weekEventSegments) to avoid duplication.
   getEventsForDay(date: Date): CalendarEvent[] {
     const key = format(date, 'yyyy-MM-dd');
-    return this.eventsByDay().get(key) ?? [];
+    return (this.eventsByDay().get(key) ?? []).filter(
+      (event) => differenceInCalendarDays(event.endDate, event.startDate) === 0
+    );
   }
 
   formatEventTime(date: Date): string {

@@ -26,7 +26,7 @@ export class SidebarComponent {
   private readonly authService = inject(AuthService);
 
   protected readonly routes: { path: string; label: string; icon: LucideIconInput; roles?: Role[] }[] = [
-    { path: '/app/dashboard', label: 'Tableau de bord', icon: LucideGraduationCap, roles: ['ADMIN'] },
+    { path: '/app/dashboard', label: 'Tableau de bord', icon: LucideGraduationCap, roles: ['REF', 'ADMIN', 'FORMATEUR', 'ELEVE'] },
     { path: '/app/calendrier', label: 'Calendrier', icon: LucideCalendar, roles: ['FORMATEUR', 'ELEVE'] },
     { path:'/app/admin/utilisateurs', label: 'Utilisateurs', icon: LucideUsers, roles: ['ADMIN'] },
     { path:'/app/admin/cours', label: 'Catalogue de cours', icon: LucideBookOpen, roles: ['REF'] },
