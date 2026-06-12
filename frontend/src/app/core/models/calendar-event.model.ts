@@ -5,4 +5,5 @@ export interface CalendarEvent {
     userId: number;
     cours: string;
     promotion?: string;
+    origine?: 'PROMOTION' | 'INDIVIDUEL';
   }

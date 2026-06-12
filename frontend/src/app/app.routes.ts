@@ -41,16 +41,19 @@ export const routes: Routes = [
       {
         title: 'Promotions',
         path: 'promotions',
+        canActivate: [roleGuard(['REF'])],
         loadComponent: () => import('./features/promotions/promotions-list/promotions-list').then(m => m.PromotionsListComponent)
       },
       {
         title: 'Promotion Detail',
         path: 'promotions/:id',
+        canActivate: [roleGuard(['REF'])],
         loadComponent: () => import('./features/promotions/promotion-detail/promotion-detail').then(m => m.PromotionDetailComponent)
       },
       {
         title: 'Calendrier',
         path: 'calendrier',
+        canActivate: [roleGuard(['FORMATEUR', 'ELEVE'])],
         loadComponent: () => import('./features/calendrier/mon-calendrier/mon-calendrier').then(m => m.MonCalendrierComponent)
       },
       {
@@ -70,6 +73,30 @@ export const routes: Routes = [
         path: 'admin/cursus',
         canActivate: [roleGuard(['REF'])],
         loadComponent: () => import('./features/administration/cursus/cursus').then(m => m.CursusComponent)
+      },
+      {
+        title: 'Détail du cursus',
+        path: 'admin/cursus/:id',
+        canActivate: [roleGuard(['REF'])],
+        loadComponent: () => import('./features/administration/cursus-detail/cursus-detail').then(m => m.CursusDetailComponent)
+      },
+      {
+        title: 'Promotions',
+        path: 'admin/promotions',
+        canActivate: [roleGuard(['REF'])],
+        loadComponent: () => import('./features/administration/promotions/promotions').then(m => m.PromotionsComponent)
+      },
+      {
+        title: 'Promotion',
+        path: 'admin/promotions/:id',
+        canActivate: [roleGuard(['REF'])],
+        loadComponent: () => import('./features/promotions/promotion-detail/promotion-detail').then(m => m.PromotionDetailComponent)
+      },
+      {
+        title: 'Élèves inscrits',
+        path: 'cours-planifies/:id/inscrits',
+        canActivate: [roleGuard(['FORMATEUR'])],
+        loadComponent: () => import('./features/formateur/inscrits/inscrits').then(m => m.InscritsComponent)
       }
     ]
   },

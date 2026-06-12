@@ -3,6 +3,7 @@ package fr.eni.gestionformation.service;
 import fr.eni.gestionformation.entity.Cours;
 import fr.eni.gestionformation.entity.Cursus;
 import fr.eni.gestionformation.entity.CursusCours;
+import fr.eni.gestionformation.entity.Filiere;
 import fr.eni.gestionformation.exception.CursusNotFoundException;
 import fr.eni.gestionformation.repository.CursusCoursRepository;
 import fr.eni.gestionformation.repository.CursusRepository;
@@ -23,6 +24,7 @@ public class CursusService {
     private final CursusRepository cursusRepository;
     private final CursusCoursRepository cursusCoursRepository;
     private final CoursService coursService;
+    private final PromotionService promotionService;
 
     public List<Cursus> findAll() {
         return cursusRepository.findAll();
@@ -45,10 +47,26 @@ public class CursusService {
     }
 
     @Transactional
+    public Cursus update(Long id, String name, Long filiereId, Filiere filiere) {
+        Cursus cursus = findById(id);
+
+        cursusRepository.findByName(name)
+                .filter(c -> !c.getId().equals(id))
+                .ifPresent(_ -> {
+                    throw new IllegalArgumentException("Un cursus avec le nom '" + name + "' existe déjà.");
+                });
+
+        cursus.setName(name);
+        cursus.setFiliere(filiereId != null ? filiere : null);
+        return cursusRepository.save(cursus);
+    }
+
+    @Transactional
     public void deleteById(Long id) {
         Cursus cursus = findById(id);
         List<CursusCours> liaisons = cursusCoursRepository.findByCursusIdOrderByOrdre(id);
         cursusCoursRepository.deleteAll(liaisons);
+        promotionService.clearCursusReferences(id);
         cursusRepository.delete(cursus);
     }
 

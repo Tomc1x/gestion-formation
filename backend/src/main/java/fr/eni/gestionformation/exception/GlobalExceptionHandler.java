@@ -52,4 +52,24 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleCycleDetected(CycleDetectedException ex) {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT).body(ex.getMessage());
     }
+
+    @ExceptionHandler(PromotionNotFoundException.class)
+    public ResponseEntity<String> handlePromotionNotFound(PromotionNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(CoursPlanifieNotFoundException.class)
+    public ResponseEntity<String> handleCoursPlanifieNotFound(CoursPlanifieNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(InscriptionAlreadyExistsException.class)
+    public ResponseEntity<String> handleInscriptionAlreadyExists(InscriptionAlreadyExistsException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(InscriptionNotFoundException.class)
+    public ResponseEntity<String> handleInscriptionNotFound(InscriptionNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    }
 }

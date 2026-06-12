@@ -1,0 +1,47 @@
+<div class="page anim-up">
+  <div class="page__header">
+    <div class="page__title-group">
+      <a class="btn btn-ghost btn-sm" routerLink="/app/dashboard" aria-label="Retour au tableau de bord">
+        <svg lucideArrowLeft class="lic" aria-hidden="true"></svg>
+        Retour
+      </a>
+      <h1>Élèves inscrits</h1>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="card skel page__skel" aria-hidden="true"></div>
+  } @else if (loadError()) {
+    <p class="state-msg state-msg--error" role="alert">{{ loadError() }}</p>
+  } @else {
+    <section class="card section">
+      <div class="table-wrap">
+        <table class="tbl" aria-label="Élèves inscrits à cette session">
+          <thead>
+            <tr>
+              <th scope="col">Nom</th>
+              <th scope="col">Prénom</th>
+              <th scope="col">Origine</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (inscrits().length === 0) {
+              <tr><td colspan="3" class="empty-row">Aucun élève inscrit à cette session.</td></tr>
+            }
+            @for (inscrit of inscrits(); track inscrit.eleveId) {
+              <tr>
+                <td>{{ inscrit.lastName }}</td>
+                <td>{{ inscrit.firstName }}</td>
+                <td>
+                  <span class="badge" [class.badge--promo]="inscrit.origine === 'PROMOTION'" [class.badge--unit]="inscrit.origine === 'INDIVIDUEL'">
+                    {{ inscrit.origine === 'PROMOTION' ? 'Promotion' : 'Individuel' }}
+                  </span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  }
+</div>

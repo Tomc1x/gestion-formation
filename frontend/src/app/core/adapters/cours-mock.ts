@@ -6,6 +6,7 @@ import { BaseCoursAdapter } from "./cours.adapter";
 interface MockCours {
   id: number;
   name: string;
+  dureeJours: number | null;
   formateurIds: number[];
   prerequisIds: number[];
 }
@@ -15,12 +16,12 @@ const MOCK_FORMATEURS: FormateurInfo[] = [
 ];
 
 let MOCK_DATA: MockCours[] = [
-  { id: 1, name: 'TypeScript Bases', formateurIds: [3], prerequisIds: [] },
-  { id: 2, name: 'Angular Avancé', formateurIds: [3], prerequisIds: [1] },
-  { id: 3, name: 'HTML/CSS Fondamentaux', formateurIds: [], prerequisIds: [] },
-  { id: 4, name: 'Angular Bases', formateurIds: [3], prerequisIds: [1, 3] },
-  { id: 5, name: 'Spring Boot Avancé', formateurIds: [], prerequisIds: [6] },
-  { id: 6, name: 'Java Bases', formateurIds: [], prerequisIds: [] },
+  { id: 1, name: 'TypeScript Bases', dureeJours: 3, formateurIds: [3], prerequisIds: [] },
+  { id: 2, name: 'Angular Avancé', dureeJours: 5, formateurIds: [3], prerequisIds: [1] },
+  { id: 3, name: 'HTML/CSS Fondamentaux', dureeJours: 2, formateurIds: [], prerequisIds: [] },
+  { id: 4, name: 'Angular Bases', dureeJours: 4, formateurIds: [3], prerequisIds: [1, 3] },
+  { id: 5, name: 'Spring Boot Avancé', dureeJours: 5, formateurIds: [], prerequisIds: [6] },
+  { id: 6, name: 'Java Bases', dureeJours: 3, formateurIds: [], prerequisIds: [] },
 ];
 
 @Injectable({ providedIn: 'root' })
@@ -33,11 +34,19 @@ export class MockCoursAdapter extends BaseCoursAdapter {
     const created: MockCours = {
       id: Math.max(...MOCK_DATA.map(c => c.id), 0) + 1,
       name: req.name,
+      dureeJours: req.dureeJours ?? null,
       formateurIds: req.formateurIds ?? [],
       prerequisIds: req.prerequisIds ?? [],
     };
     MOCK_DATA = [...MOCK_DATA, created];
     return of(this.toResponse(created));
+  }
+
+  update(id: number, req: CreateCoursRequest): Observable<Cours> {
+    const cours = this.findCours(id);
+    const updated: MockCours = { ...cours, name: req.name, dureeJours: req.dureeJours ?? null };
+    this.replaceCours(updated);
+    return of(this.toResponse(updated));
   }
 
   delete(id: number): Observable<void> {
@@ -101,6 +110,7 @@ export class MockCoursAdapter extends BaseCoursAdapter {
     return {
       id: cours.id,
       name: cours.name,
+      dureeJours: cours.dureeJours,
       formateurs: MOCK_FORMATEURS.filter(f => cours.formateurIds.includes(f.id)),
       prerequis: cours.prerequisIds.map(pid => {
         const prereq = MOCK_DATA.find(c => c.id === pid);

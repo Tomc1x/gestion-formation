@@ -1,0 +1,154 @@
+<div class="table-wrap">
+  <table class="tbl" aria-label="Cours planifiés de la promotion">
+    <thead>
+      <tr>
+        <th scope="col">Cours</th>
+        <th scope="col">Période</th>
+        <th scope="col">Formateur</th>
+        <th scope="col">Salle</th>
+        <th scope="col">Inscrits</th>
+        <th scope="col"><span class="sr-only">Actions</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      @if (promotion().planning.length === 0) {
+        <tr><td colspan="6" class="empty-row">Aucun cours planifié pour cette promotion.</td></tr>
+      }
+      @for (pc of promotion().planning; track pc.id) {
+        <tr>
+          <td>
+            <span class="cell-title">{{ pc.coursNom }}</span>
+            <span class="pill pill--muted">{{ pc.statut }}</span>
+          </td>
+          <td>{{ pc.dateDebut | date:'dd/MM/yyyy' }} – {{ pc.dateFin | date:'dd/MM/yyyy' }}</td>
+          <td>
+            @if (pc.formateurNom) {
+              {{ pc.formateurNom }}
+            } @else {
+              <span class="muted">Non assigné</span>
+            }
+          </td>
+          <td>
+            @if (pc.salle) {
+              {{ pc.salle }}
+            } @else {
+              <span class="muted">—</span>
+            }
+          </td>
+          <td>{{ promotion().eleves.length }}</td>
+          <td class="cell-actions">
+            <button
+              class="btn btn-ghost btn-sm"
+              type="button"
+              [attr.aria-label]="'Modifier la session ' + pc.coursNom"
+              (click)="openSession(pc)"
+            >
+              <svg lucidePencil class="lic" aria-hidden="true"></svg>
+            </button>
+            <button
+              class="btn btn-ghost btn-sm"
+              type="button"
+              [attr.aria-label]="'Retirer le cours planifié ' + pc.coursNom"
+              (click)="openDeleteConfirm(pc)"
+            >
+              <svg lucideTrash2 class="lic" aria-hidden="true"></svg>
+            </button>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
+
+@if (editingSession(); as session) {
+  <div class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-edit-session-title" (click)="closeSessionModal()">
+    <div class="card modal anim-in" (click)="$event.stopPropagation()">
+      <div class="modal__header">
+        <h2 id="modal-edit-session-title">Modifier la session — {{ session.coursNom }}</h2>
+      </div>
+
+      <form class="modal__body" [formGroup]="editForm" (ngSubmit)="submitSession()">
+        <div class="field">
+          <label for="session-date-debut">Début</label>
+          <input id="session-date-debut" class="input" type="date" formControlName="dateDebut" />
+          @if (editForm.controls.dateDebut.invalid && editForm.controls.dateDebut.touched) {
+            <span class="field-error">Champ requis</span>
+          }
+        </div>
+
+        <div class="field">
+          <label for="session-date-fin">Fin</label>
+          <input id="session-date-fin" class="input" type="date" formControlName="dateFin" [min]="editForm.controls.dateDebut.value" />
+          @if (editForm.controls.dateFin.invalid && editForm.controls.dateFin.touched) {
+            <span class="field-error">Champ requis</span>
+          }
+        </div>
+
+        <div class="field">
+          <label for="session-formateur">Formateur</label>
+          <select id="session-formateur" class="input" formControlName="formateurId">
+            <option [ngValue]="null">Non assigné</option>
+            @for (f of formateurs(); track f.id) {
+              <option [ngValue]="f.id">{{ f.nom }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="session-salle">Salle</label>
+          <input id="session-salle" class="input" type="text" formControlName="salle" placeholder="Ex. Salle 12" />
+        </div>
+
+        @if (sessionWarnings().length > 0) {
+          <div class="warning-box">
+            <p class="p2">Avertissements (non bloquants) :</p>
+            <ul class="warning-box__list">
+              @for (warning of sessionWarnings(); track warning) {
+                <li>{{ warning }}</li>
+              }
+            </ul>
+          </div>
+        }
+
+        @if (formError()) {
+          <p class="form-api-error" role="alert">{{ formError() }}</p>
+        }
+
+        <div class="modal__footer">
+          <button class="btn btn-outline" type="button" (click)="closeSessionModal()">Annuler</button>
+          <button class="btn btn-primary" type="submit" [disabled]="submitting()">
+            {{ submitting() ? 'Enregistrement…' : 'Enregistrer' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+@if (deleteTarget(); as target) {
+  <div class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-delete-session-title" (click)="closeDeleteConfirm()">
+    <div class="card modal anim-in" (click)="$event.stopPropagation()">
+      <div class="modal__header">
+        <h2 id="modal-delete-session-title">Retirer le cours planifié</h2>
+      </div>
+
+      <div class="modal__body">
+        <p>
+          Voulez-vous vraiment retirer <strong>{{ target.coursNom }}</strong> du planning de cette promotion ?
+          Les inscriptions des stagiaires à cette session seront également supprimées.
+        </p>
+
+        @if (deleteError()) {
+          <p class="form-api-error" role="alert">{{ deleteError() }}</p>
+        }
+      </div>
+
+      <div class="modal__footer">
+        <button class="btn btn-outline" type="button" (click)="closeDeleteConfirm()">Annuler</button>
+        <button class="btn btn-danger" type="button" [disabled]="deleting()" (click)="confirmDelete()">
+          {{ deleting() ? 'Suppression…' : 'Retirer' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

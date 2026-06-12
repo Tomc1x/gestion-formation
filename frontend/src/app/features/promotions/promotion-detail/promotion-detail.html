@@ -1,1 +1,111 @@
-<p>promotion-detail works</p>
+<div class="page anim-up">
+  <div class="page__header">
+    <div class="page__title-group">
+      <a class="btn btn-ghost btn-sm" routerLink="/app/admin/promotions" aria-label="Retour aux promotions">
+        <svg lucideArrowLeft class="lic" aria-hidden="true"></svg>
+        Retour
+      </a>
+      @if (promotion(); as p) {
+        <h1>{{ p.name }}</h1>
+      }
+    </div>
+    @if (promotion()) {
+      <div class="page__actions">
+        <button class="btn btn-outline" type="button" (click)="onOpenEnrollmentForm()">
+          <svg lucideUserPlus class="lic" aria-hidden="true"></svg>
+          Inscrire un stagiaire
+        </button>
+        <button class="btn btn-primary" type="button" (click)="openPlanCourseModal()">
+          <svg lucideCalendarPlus class="lic" aria-hidden="true"></svg>
+          Planifier un cours
+        </button>
+      </div>
+    }
+  </div>
+
+  @if (loading()) {
+    <div class="card skel page__skel" aria-hidden="true"></div>
+  } @else if (loadError()) {
+    <p class="state-msg state-msg--error" role="alert">{{ loadError() }}</p>
+  } @else if (promotion(); as p) {
+    <div class="card detail-header">
+      <div class="detail-header__pills">
+        @if (p.cursusNom) {
+          <span class="pill">{{ p.cursusNom }}</span>
+        } @else {
+          <span class="pill pill--muted">Aucun cursus</span>
+        }
+        @if (p.rythme) {
+          <span class="pill">Alternance : {{ p.rythme.semainesCentre }}s centre / {{ p.rythme.semainesEntreprise }}s entreprise</span>
+        } @else {
+          <span class="pill pill--muted">Pas d'alternance</span>
+        }
+      </div>
+
+      <div class="meta-grid">
+        <div class="meta-item">
+          <span class="meta-item__label">Cursus</span>
+          <span class="meta-item__value">{{ p.cursusNom ?? '—' }}</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-item__label">Période</span>
+          <span class="meta-item__value">Début : {{ p.dateDebut }}</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-item__label">Stagiaires</span>
+          <span class="meta-item__value">{{ p.eleves.length }}</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-item__label">Cours planifiés</span>
+          <span class="meta-item__value">{{ p.planning.length }}/{{ cursusCoursCount() ?? '?' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="tabs" role="tablist">
+      <button
+        class="tab"
+        type="button"
+        role="tab"
+        [class.tab--active]="activeTab() === 'cours'"
+        [attr.aria-selected]="activeTab() === 'cours'"
+        (click)="setActiveTab('cours')"
+      >
+        Cours planifiés ({{ p.planning.length }})
+      </button>
+      <button
+        class="tab"
+        type="button"
+        role="tab"
+        [class.tab--active]="activeTab() === 'stagiaires'"
+        [attr.aria-selected]="activeTab() === 'stagiaires'"
+        (click)="setActiveTab('stagiaires')"
+      >
+        Stagiaires ({{ p.eleves.length }})
+      </button>
+    </div>
+
+    <section class="card section">
+      @if (activeTab() === 'cours') {
+        <app-cours-planifies-tab [promotion]="p" (promotionUpdated)="onPromotionUpdated($event)" />
+      } @else {
+        <app-stagiaires-tab
+          [promotion]="p"
+          [openEnrollmentTrigger]="enrollmentTrigger()"
+          (promotionUpdated)="onPromotionUpdated($event)"
+        />
+      }
+    </section>
+  }
+</div>
+
+@if (showPlanCourseModal() && promotion(); as p) {
+  <app-plan-course-modal
+    [promotion]="p"
+    [coursDisponibles]="coursDisponibles()"
+    [formateurs]="formateurs()"
+    [editTarget]="planCourseEditTarget()"
+    (closed)="closePlanCourseModal()"
+    (saved)="onPlanCourseSaved($event)"
+  />
+}

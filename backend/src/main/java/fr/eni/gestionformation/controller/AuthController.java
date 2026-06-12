@@ -38,7 +38,7 @@ public class AuthController {
 
         User user = userRepository.findByEmail(request.getEmail()).orElseThrow();
         String token = jwtService.generateToken(user);
-        return ResponseEntity.ok(new AuthResponse(token, user.getFirstName(), user.getLastName(), user.getEmail(), user.getRole().name()));
+        return ResponseEntity.ok(new AuthResponse(token, user.getUid(), user.getFirstName(), user.getLastName(), user.getEmail(), user.getRole().name()));
     }
 
     @PostMapping("/register")
@@ -53,6 +53,6 @@ public class AuthController {
 
         userRepository.save(user);
         String token = jwtService.generateToken(user);
-        return ResponseEntity.ok(new AuthResponse(token, user.getFirstName(), user.getLastName(), user.getEmail(), user.getRole().name()));
+        return ResponseEntity.ok(new AuthResponse(token, user.getUid(), user.getFirstName(), user.getLastName(), user.getEmail(), user.getRole().name()));
     }
 }

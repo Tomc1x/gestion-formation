@@ -6,6 +6,8 @@ export abstract class BaseCoursAdapter {
 
   abstract create(req: CreateCoursRequest): Observable<Cours>;
 
+  abstract update(id: number, req: CreateCoursRequest): Observable<Cours>;
+
   abstract delete(id: number): Observable<void>;
 
   abstract setFormateurs(id: number, formateurIds: number[]): Observable<Cours>;

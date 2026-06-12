@@ -1,0 +1,169 @@
+<div class="page anim-up">
+  <div class="page__header">
+    <div class="page__title-group">
+      <a class="btn btn-ghost btn-sm" routerLink="/app/admin/cursus" aria-label="Retour aux cursus">
+        <svg lucideArrowLeft class="lic" aria-hidden="true"></svg>
+        Retour
+      </a>
+      @if (cursus(); as c) {
+        <h1>
+          <svg lucideListTree class="lic" aria-hidden="true"></svg>
+          {{ c.name }}
+        </h1>
+      }
+    </div>
+    @if (cursus(); as c) {
+      @if (availableCours().length > 0) {
+        <div class="page__actions">
+          <button class="btn btn-primary" type="button" (click)="openAddCoursModal()">
+            <svg lucidePlus class="lic" aria-hidden="true"></svg>
+            Ajouter un cours
+          </button>
+        </div>
+      }
+    }
+  </div>
+
+  @if (loading()) {
+    <div class="card skel page__skel" aria-hidden="true"></div>
+  } @else if (loadError()) {
+    <p class="state-msg state-msg--error" role="alert">{{ loadError() }}</p>
+  } @else if (cursus(); as c) {
+    <div class="card detail-header">
+      <div class="detail-header__pills">
+        @if (c.filiereName) {
+          <span class="pill">{{ c.filiereName }}</span>
+        } @else {
+          <span class="pill pill--muted">Sans filière</span>
+        }
+        <span class="pill">{{ c.cours.length }} cours · ordre pédagogique</span>
+      </div>
+    </div>
+
+    @if (formError()) {
+      <p class="form-api-error" role="alert">{{ formError() }}</p>
+    }
+
+    @if (prereqAlerts().length > 0) {
+      <div class="card alerts-card">
+        <h2 class="p1 alerts-card__title">⚠ Prérequis mal ordonnés</h2>
+        @for (alert of prereqAlerts(); track alert.cours.id + '-' + alert.prereq.id) {
+          <div class="warning-box">
+            <p class="p2">
+              « {{ alert.cours.name }} » (position {{ alert.coursPosition }}) requiert « {{ alert.prereq.name }} »
+              @if (alert.prereqPosition > 0) {
+                — actuellement en position {{ alert.prereqPosition }}
+              } @else {
+                — absent du cursus
+              }
+            </p>
+            @if (alert.prereqPosition > 0) {
+              <button class="btn btn-outline btn-sm" type="button" (click)="fixOrder(alert.prereq.id, alert.cours.id)">
+                Corriger
+              </button>
+            }
+          </div>
+        }
+      </div>
+    }
+
+    <div class="card cursus-card">
+      @if (c.cours.length === 0) {
+        <p class="p2 muted">Aucun cours dans ce cursus.</p>
+      } @else {
+        <ol class="cours-ordered-list">
+          @for (course of c.cours; track course.id; let i = $index) {
+            <li
+              draggable="true"
+              (dragstart)="onDragStart(course.id)"
+              (dragend)="onDragEnd()"
+              (dragover)="$event.preventDefault()"
+              (drop)="onDropOnCours(course.id)"
+            >
+              <svg lucideGripVertical class="lic cours-ordered-list__grip" aria-hidden="true"></svg>
+              <span class="badge-num">{{ course.ordre }}</span>
+              <span class="cours-ordered-list__name">{{ course.name }}</span>
+              @if (course.formateurs.length > 0) {
+                <span class="badge-list">
+                  @for (f of course.formateurs; track f.id) {
+                    <span class="pill pill-formateur">
+                      <svg lucideUsers class="lic" aria-hidden="true"></svg>
+                      {{ fullName(f) }}
+                    </span>
+                  }
+                </span>
+              }
+              <div class="cours-ordered-list__actions">
+                <button class="btn btn-ghost btn-sm" type="button" aria-label="Monter" [disabled]="i === 0" (click)="moveCoursInCursus(course.id, -1)">
+                  <svg lucideArrowUp class="lic" aria-hidden="true"></svg>
+                </button>
+                <button class="btn btn-ghost btn-sm" type="button" aria-label="Descendre" [disabled]="i === c.cours.length - 1" (click)="moveCoursInCursus(course.id, 1)">
+                  <svg lucideArrowDown class="lic" aria-hidden="true"></svg>
+                </button>
+                <button class="btn btn-ghost btn-sm" type="button" [attr.aria-label]="'Retirer ' + course.name" (click)="removeCoursFromCursus(course.id)">
+                  <svg lucideX class="lic" aria-hidden="true"></svg>
+                </button>
+              </div>
+            </li>
+          }
+        </ol>
+      }
+    </div>
+  }
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<!-- Modale : Ajouter un cours                                                   -->
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+@if (showAddCoursModal()) {
+  <div class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-add-cours-title" (click)="closeAddCoursModal()">
+    <div class="card modal modal--lg anim-in" (click)="$event.stopPropagation()">
+      <div class="modal__header">
+        <h2 id="modal-add-cours-title">Ajouter un cours{{ cursus() ? ' à ' + cursus()!.name : '' }}</h2>
+        <button class="btn btn-ghost btn-icon" type="button" aria-label="Fermer" (click)="closeAddCoursModal()">
+          <svg lucideX class="lic" aria-hidden="true"></svg>
+        </button>
+      </div>
+
+      <div class="modal__body">
+        <div class="field">
+          <label for="search-cours" class="sr-only">Rechercher un cours</label>
+          <input
+            id="search-cours"
+            class="input"
+            type="text"
+            placeholder="Rechercher un cours par son nom..."
+            [value]="coursSearchQuery()"
+            (input)="onSearchQueryChange($event)"
+          />
+        </div>
+
+        <div class="checkbox-list builder__list">
+          @if (filteredAvailableCours().length === 0) {
+            <p class="p2 muted" style="text-align: center; padding: 2rem 0;">
+              {{ availableCours().length === 0 ? 'Tous les cours du catalogue ont été ajoutés.' : 'Aucun cours ne correspond à votre recherche.' }}
+            </p>
+          }
+
+          @for (c of filteredAvailableCours(); track c.id) {
+            <div class="builder__row">
+              <span class="builder__name">{{ c.name }}</span>
+              <button class="btn btn-outline btn-sm" type="button" (click)="addCoursToCursus(c.id)">
+                <svg lucidePlus class="lic" aria-hidden="true"></svg>
+                Ajouter
+              </button>
+            </div>
+          }
+        </div>
+
+        @if (formError()) {
+          <p class="form-api-error" role="alert">{{ formError() }}</p>
+        }
+      </div>
+
+      <div class="modal__footer">
+        <button class="btn btn-primary" type="button" (click)="closeAddCoursModal()">Fermer</button>
+      </div>
+    </div>
+  </div>
+}

@@ -20,6 +20,7 @@
         <thead>
           <tr>
             <th scope="col">Cours</th>
+            <th scope="col">Durée</th>
             <th scope="col">Formateurs</th>
             <th scope="col">Prérequis</th>
             <th scope="col">Requis par</th>
@@ -28,7 +29,7 @@
         </thead>
         <tbody>
           @if (coursList().length === 0) {
-            <tr><td colspan="5" class="empty-row">Aucun cours dans le catalogue.</td></tr>
+            <tr><td colspan="6" class="empty-row">Aucun cours dans le catalogue.</td></tr>
           }
           @for (cours of coursList(); track cours.id) {
             <tr>
@@ -37,15 +38,35 @@
                 {{ cours.name }}
               </td>
               <td>
+                @if (cours.dureeJours) {
+                  <span class="badge badge-duree">{{ cours.dureeJours }}j</span>
+                } @else {
+                  <span class="muted">—</span>
+                }
+              </td>
+              <td>
                 @if (cours.formateurs.length === 0) {
                   <span class="muted">—</span>
                 } @else {
                   <div class="badge-list">
-                    @for (f of cours.formateurs; track f.id) {
+                    @for (f of visibleBadges(cours.formateurs); track f.id) {
                       <span class="pill pill-formateur">
                         <svg lucideUsers class="lic" aria-hidden="true"></svg>
                         {{ fullName(f) }}
                       </span>
+                    }
+                    @if (hiddenCount(cours.formateurs) > 0) {
+                      <details class="badge-more">
+                        <summary class="pill pill-formateur badge-more__summary">+{{ hiddenCount(cours.formateurs) }} autres</summary>
+                        <div class="popover">
+                          @for (f of hiddenBadges(cours.formateurs); track f.id) {
+                            <span class="pill pill-formateur">
+                              <svg lucideUsers class="lic" aria-hidden="true"></svg>
+                              {{ fullName(f) }}
+                            </span>
+                          }
+                        </div>
+                      </details>
                     }
                   </div>
                 }
@@ -55,8 +76,18 @@
                   <span class="muted">—</span>
                 } @else {
                   <div class="badge-list">
-                    @for (p of cours.prerequis; track p.id) {
+                    @for (p of visibleBadges(cours.prerequis); track p.id) {
                       <span class="badge badge-prereq">{{ p.name }}</span>
+                    }
+                    @if (hiddenCount(cours.prerequis) > 0) {
+                      <details class="badge-more">
+                        <summary class="badge badge-prereq badge-more__summary">+{{ hiddenCount(cours.prerequis) }} autres</summary>
+                        <div class="popover">
+                          @for (p of hiddenBadges(cours.prerequis); track p.id) {
+                            <span class="badge badge-prereq">{{ p.name }}</span>
+                          }
+                        </div>
+                      </details>
                     }
                   </div>
                 }
@@ -66,8 +97,18 @@
                   <span class="muted">—</span>
                 } @else {
                   <div class="badge-list">
-                    @for (r of requiredBy(cours.id); track r.id) {
+                    @for (r of visibleBadges(requiredBy(cours.id)); track r.id) {
                       <span class="badge badge-required-by">{{ r.name }}</span>
+                    }
+                    @if (hiddenCount(requiredBy(cours.id)) > 0) {
+                      <details class="badge-more">
+                        <summary class="badge badge-required-by badge-more__summary">+{{ hiddenCount(requiredBy(cours.id)) }} autres</summary>
+                        <div class="popover">
+                          @for (r of hiddenBadges(requiredBy(cours.id)); track r.id) {
+                            <span class="badge badge-required-by">{{ r.name }}</span>
+                          }
+                        </div>
+                      </details>
                     }
                   </div>
                 }
@@ -110,31 +151,36 @@
           }
         </div>
 
-        @if (formateurs().length > 0) {
-          <div class="field" formArrayName="formateurIds">
-            <label>Formateurs</label>
-            <div class="checkbox-list">
-              @for (f of formateurs(); track f.id; let i = $index) {
-                <label class="checkbox-item">
-                  <input type="checkbox" [formControlName]="i" />
-                  {{ fullName(f) }}
-                </label>
-              }
-            </div>
+        <div class="field">
+          <label for="c-duree">Durée (jours)</label>
+          <input id="c-duree" class="input" type="number" min="1" formControlName="dureeJours" placeholder="Ex : 3" />
+        </div>
+
+        @if (formateurItems().length > 0) {
+          <div class="field">
+            <span class="label1" id="c-formateurs-label">Formateurs</span>
+            <app-entity-selector
+              mode="multi-select"
+              aria-labelledby="c-formateurs-label"
+              [items]="formateurItems()"
+              [selectedIds]="selectedFormateurIdsCreate()"
+              placeholder="Rechercher un formateur..."
+              (selectionChange)="onFormateurSelectionChangeCreate($event)"
+            />
           </div>
         }
 
-        @if (coursList().length > 0) {
-          <div class="field" formArrayName="prerequisIds">
-            <label>Prérequis</label>
-            <div class="checkbox-list">
-              @for (c of coursList(); track c.id; let i = $index) {
-                <label class="checkbox-item">
-                  <input type="checkbox" [formControlName]="i" />
-                  {{ c.name }}
-                </label>
-              }
-            </div>
+        @if (coursItemsExcluding(null).length > 0) {
+          <div class="field">
+            <span class="label1" id="c-prerequis-label">Prérequis</span>
+            <app-entity-selector
+              mode="multi-select"
+              aria-labelledby="c-prerequis-label"
+              [items]="coursItemsExcluding(null)"
+              [selectedIds]="selectedPrerequisIdsCreate()"
+              placeholder="Rechercher un cours..."
+              (selectionChange)="onPrerequisSelectionChangeCreate($event)"
+            />
           </div>
         }
 
@@ -175,36 +221,42 @@
           }
         </div>
 
-        @if (formateurs().length > 0) {
-          <div class="field" formArrayName="formateurIds">
-            <label>Formateurs</label>
-            <div class="checkbox-list">
-              @for (f of formateurs(); track f.id; let i = $index) {
-                <label class="checkbox-item">
-                  <input type="checkbox" [formControlName]="i" />
-                  {{ fullName(f) }}
-                </label>
-              }
-            </div>
+        <div class="field">
+          <label for="e-duree">Durée (jours)</label>
+          <input id="e-duree" class="input" type="number" min="1" formControlName="dureeJours" placeholder="Ex : 3" />
+        </div>
+
+        @if (formateurItems().length > 0) {
+          <div class="field">
+            <span class="label1" id="e-formateurs-label">Formateurs</span>
+            <app-entity-selector
+              mode="multi-select"
+              aria-labelledby="e-formateurs-label"
+              [items]="formateurItems()"
+              [selectedIds]="selectedFormateurIdsEdit()"
+              placeholder="Rechercher un formateur..."
+              (selectionChange)="onFormateurSelectionChangeEdit($event)"
+            />
           </div>
         }
 
         @if (editOtherCours().length > 0) {
-          <div class="field" formArrayName="prerequisIds">
-            <label>Prérequis</label>
+          <div class="field">
+            <span class="label1" id="e-prerequis-label">Prérequis</span>
             @if (hasDisabledPrerequis()) {
               <p class="p2 hint">
                 Certains cours sont grisés car les sélectionner créerait un cycle de dépendances.
               </p>
             }
-            <div class="checkbox-list">
-              @for (c of editOtherCours(); track c.id; let i = $index) {
-                <label class="checkbox-item" [class.checkbox-item--disabled]="disabledPrerequisIds().has(c.id)">
-                  <input type="checkbox" [formControlName]="i" [attr.disabled]="disabledPrerequisIds().has(c.id) ? true : null" />
-                  {{ c.name }}
-                </label>
-              }
-            </div>
+            <app-entity-selector
+              mode="multi-select"
+              aria-labelledby="e-prerequis-label"
+              [items]="coursItemsExcluding(editingCours()!.id)"
+              [selectedIds]="selectedPrerequisIdsEdit()"
+              [disabledIds]="disabledPrerequisIds()"
+              placeholder="Rechercher un cours..."
+              (selectionChange)="onPrerequisSelectionChangeEdit($event)"
+            />
           </div>
         }
 

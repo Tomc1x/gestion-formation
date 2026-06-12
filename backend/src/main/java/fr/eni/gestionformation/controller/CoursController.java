@@ -36,6 +36,7 @@ public class CoursController {
     public ResponseEntity<CoursResponse> create(@RequestBody CoursRequest request) {
         Cours cours = new Cours();
         cours.setName(request.getName());
+        cours.setDureeJours(request.getDureeJours());
         Cours saved = coursService.save(cours);
 
         if (request.getFormateurIds() != null && !request.getFormateurIds().isEmpty()) {
@@ -45,6 +46,11 @@ public class CoursController {
             saved = coursService.setPrerequis(saved.getId(), request.getPrerequisIds());
         }
         return ResponseEntity.ok(toResponse(saved));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<CoursResponse> update(@PathVariable Long id, @RequestBody CoursRequest request) {
+        return ResponseEntity.ok(toResponse(coursService.updateNomEtDuree(id, request.getName(), request.getDureeJours())));
     }
 
     @DeleteMapping("/{id}")
@@ -81,7 +87,7 @@ public class CoursController {
         List<CoursResponse> prerequis = cours.getPrerequis() != null
                 ? cours.getPrerequis().stream()
                     .map(p -> visited.contains(p.getId())
-                            ? new CoursResponse(p.getId(), p.getName(),
+                            ? new CoursResponse(p.getId(), p.getName(), p.getDureeJours(),
                                 p.getFormateurs() != null
                                         ? p.getFormateurs().stream()
                                             .map(u -> new FormateurInfo(u.getUid(), u.getFirstName(), u.getLastName()))
@@ -92,6 +98,6 @@ public class CoursController {
                     .toList()
                 : List.of();
 
-        return new CoursResponse(cours.getId(), cours.getName(), formateurs, prerequis);
+        return new CoursResponse(cours.getId(), cours.getName(), cours.getDureeJours(), formateurs, prerequis);
     }
 }

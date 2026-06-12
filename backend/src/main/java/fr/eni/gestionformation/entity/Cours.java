@@ -23,6 +23,8 @@ public class Cours {
 
     private String name;
 
+    private Integer dureeJours;
+
     @Builder.Default
     @ManyToMany
     @JoinTable(

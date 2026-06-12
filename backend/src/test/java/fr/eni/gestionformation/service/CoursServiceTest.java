@@ -2,8 +2,10 @@ package fr.eni.gestionformation.service;
 
 import fr.eni.gestionformation.entity.Cours;
 import fr.eni.gestionformation.exception.CycleDetectedException;
+import fr.eni.gestionformation.repository.CoursPlanifieRepository;
 import fr.eni.gestionformation.repository.CoursRepository;
 import fr.eni.gestionformation.repository.CursusCoursRepository;
+import fr.eni.gestionformation.repository.InscriptionCoursRepository;
 import fr.eni.gestionformation.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,8 +38,28 @@ class CoursServiceTest {
     @SuppressWarnings("unused")
     CursusCoursRepository cursusCoursRepository;
 
+    @Mock
+    @SuppressWarnings("unused")
+    CoursPlanifieRepository coursPlanifieRepository;
+
+    @Mock
+    @SuppressWarnings("unused")
+    InscriptionCoursRepository inscriptionCoursRepository;
+
     @InjectMocks
     CoursService coursService;
+
+    @Test
+    void updateNomEtDuree_modifieNomEtDuree() {
+        Cours cours = Cours.builder().id(1L).name("Ancien nom").dureeJours(2).build();
+        when(coursRepository.findById(1L)).thenReturn(Optional.of(cours));
+        when(coursRepository.save(any(Cours.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Cours result = coursService.updateNomEtDuree(1L, "Nouveau nom", 5);
+
+        assertThat(result.getName()).isEqualTo("Nouveau nom");
+        assertThat(result.getDureeJours()).isEqualTo(5);
+    }
 
     @Test
     void setPrerequis_selfPrerequisite_throwsCycleDetected() {

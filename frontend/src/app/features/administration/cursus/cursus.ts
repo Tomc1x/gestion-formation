@@ -6,6 +6,7 @@ import {
   computed,
   OnInit,
 } from '@angular/core';
+import { Router } from '@angular/router';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
 import {
   LucideListTree,
@@ -14,7 +15,6 @@ import {
   LucideArrowUp,
   LucideArrowDown,
   LucideTrash2,
-  LucideUsers,
   LucidePencil,
 } from '@lucide/angular';
 import { BaseCursusAdapter } from '../../../core/adapters/cursus.adapter';
@@ -22,6 +22,7 @@ import { BaseFiliereAdapter } from '../../../core/adapters/filiere.adapter';
 import { BaseCoursAdapter } from '../../../core/adapters/cours.adapter';
 import { Cursus, Filiere, CreateCursusRequest } from '../../../core/models/cursus.model';
 import { Cours } from '../../../core/models/cours.model';
+import { computeCursusPrereqAlerts } from '../../../core/utils/cursus-alerts.util';
 
 /** Une ligne de la liste construite dans la modale "Nouveau cursus". */
 interface BuilderRow {
@@ -46,7 +47,6 @@ const FILIERE_COLORS = [
     LucideArrowUp,
     LucideArrowDown,
     LucideTrash2,
-    LucideUsers,
     LucidePencil,
   ],
   templateUrl: './cursus.html',
@@ -57,6 +57,7 @@ export class CursusComponent implements OnInit {
   private readonly cursusAdapter = inject(BaseCursusAdapter);
   private readonly filiereAdapter = inject(BaseFiliereAdapter);
   private readonly coursAdapter = inject(BaseCoursAdapter);
+  private readonly router = inject(Router);
 
   protected readonly cursusList = signal<Cursus[]>([]);
   protected readonly filieres = signal<Filiere[]>([]);
@@ -68,26 +69,13 @@ export class CursusComponent implements OnInit {
   protected readonly formError = signal<string | null>(null);
 
   // ── Regroupement par filière ─────────────────────────────────────────────────
-  protected readonly groupedByFiliere = computed<{ filiere: Filiere | null; cursus: Cursus[] }[]>(() => {
-    const groups = new Map<number | null, Cursus[]>();
-    for (const cursus of this.cursusList()) {
-      const list = groups.get(cursus.filiereId) ?? [];
-      list.push(cursus);
-      groups.set(cursus.filiereId, list);
-    }
-    const result: { filiere: Filiere | null; cursus: Cursus[] }[] = [];
-    for (const filiere of this.filieres()) {
-      const cursus = groups.get(filiere.id) ?? [];
-      if (cursus.length > 0) {
-        result.push({ filiere, cursus });
-      }
-    }
-    const sansFiliere = groups.get(null) ?? [];
-    if (sansFiliere.length > 0) {
-      result.push({ filiere: null, cursus: sansFiliere });
-    }
-    return result;
-  });
+  protected readonly cursusSansFiliere = computed<Cursus[]>(() =>
+    this.cursusList().filter(c => c.filiereId === null)
+  );
+
+  protected cursusForFiliere(filiereId: number): Cursus[] {
+    return this.cursusList().filter(c => c.filiereId === filiereId);
+  }
 
   protected filiereColor(filiereId: number): string {
     return FILIERE_COLORS[filiereId % FILIERE_COLORS.length];
@@ -95,6 +83,39 @@ export class CursusComponent implements OnInit {
 
   protected cursusCount(filiereId: number): number {
     return this.cursusList().filter(c => c.filiereId === filiereId).length;
+  }
+
+  protected openCursus(cursus: Cursus): void {
+    this.router.navigate(['/app/admin/cursus', cursus.id]);
+  }
+
+  /** Nombre d'alertes "prérequis mal ordonné" pour ce cursus (0 = pas de badge). */
+  protected cursusAlertCount(cursus: Cursus): number {
+    const catalogue = this.catalogue();
+    const byId = new Map(catalogue.map(c => [c.id, c]));
+
+    const coursWithPrereqs: Cours[] = cursus.cours.map(c => {
+      const catalogueCours = byId.get(c.id);
+      return {
+        id: c.id,
+        name: c.name,
+        dureeJours: catalogueCours?.dureeJours ?? null,
+        formateurs: c.formateurs,
+        prerequis: catalogueCours?.prerequis ?? [],
+      };
+    });
+
+    return computeCursusPrereqAlerts(coursWithPrereqs).length;
+  }
+
+  /** Index dans FILIERE_COLORS qui sera attribué à la prochaine filière créée (basé sur son futur id). */
+  protected nextFiliereColorIndex(): number {
+    const maxId = this.filieres().reduce((max, f) => Math.max(max, f.id), 0);
+    return (maxId + 1) % FILIERE_COLORS.length;
+  }
+
+  protected nextFiliereColor(): string {
+    return FILIERE_COLORS[this.nextFiliereColorIndex()];
   }
 
   ngOnInit(): void {
@@ -123,10 +144,6 @@ export class CursusComponent implements OnInit {
     this.coursAdapter.getAll().subscribe({
       next: cours => this.catalogue.set(cours),
     });
-  }
-
-  protected fullName(p: { firstName: string; lastName: string }): string {
-    return `${p.firstName} ${p.lastName}`;
   }
 
   // ── Modale : Nouvelle filière ─────────────────────────────────────────────────
@@ -448,4 +465,78 @@ export class CursusComponent implements OnInit {
       },
     });
   }
+
+  // ── Modale : Modifier un cursus ───────────────────────────────────────────────
+  protected readonly editingCursus = signal<Cursus | null>(null);
+
+  protected readonly editCursusForm = new FormGroup({
+    name: new FormControl('', { nonNullable: true, validators: Validators.required }),
+    filiereId: new FormControl<number | null>(null, { validators: Validators.required }),
+  });
+
+  protected openEditCursusModal(cursus: Cursus): void {
+    this.formError.set(null);
+    this.editCursusForm.reset({ name: cursus.name, filiereId: cursus.filiereId });
+    this.editingCursus.set(cursus);
+  }
+
+  protected closeEditCursusModal(): void {
+    this.editingCursus.set(null);
+  }
+
+  protected submitEditCursus(): void {
+    const cursus = this.editingCursus();
+    if (!cursus || this.editCursusForm.invalid || this.submitting()) return;
+
+    const v = this.editCursusForm.getRawValue();
+    const req: CreateCursusRequest = { name: v.name, filiereId: v.filiereId! };
+
+    this.submitting.set(true);
+    this.formError.set(null);
+
+    this.cursusAdapter.update(cursus.id, req).subscribe({
+      next: updated => {
+        this.cursusList.update(list => list.map(c => (c.id === updated.id ? updated : c)));
+        this.submitting.set(false);
+        this.closeEditCursusModal();
+      },
+      error: err => {
+        this.formError.set(this.extractError(err, 'Une erreur est survenue lors de la modification du cursus.'));
+        this.submitting.set(false);
+      },
+    });
+  }
+
+  // ── Modale : Supprimer un cursus ──────────────────────────────────────────────
+  protected readonly deletingCursus = signal<Cursus | null>(null);
+
+  protected openDeleteCursusModal(cursus: Cursus): void {
+    this.formError.set(null);
+    this.deletingCursus.set(cursus);
+  }
+
+  protected closeDeleteCursusModal(): void {
+    this.deletingCursus.set(null);
+  }
+
+  protected confirmDeleteCursus(): void {
+    const cursus = this.deletingCursus();
+    if (!cursus || this.submitting()) return;
+
+    this.submitting.set(true);
+    this.formError.set(null);
+
+    this.cursusAdapter.delete(cursus.id).subscribe({
+      next: () => {
+        this.cursusList.update(list => list.filter(c => c.id !== cursus.id));
+        this.submitting.set(false);
+        this.closeDeleteCursusModal();
+      },
+      error: err => {
+        this.formError.set(this.extractError(err, 'Impossible de supprimer ce cursus.'));
+        this.submitting.set(false);
+      },
+    });
+  }
+
 }

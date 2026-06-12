@@ -16,87 +16,121 @@
     </div>
   </div>
 
-  @if (!loading() && !loadError() && filieres().length > 0) {
-    <div class="card">
-      <table class="tbl">
-        <thead>
-          <tr>
-            <th>Filière</th>
-            <th>Cursus rattachés</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (filiere of filieres(); track filiere.id) {
-            <tr>
-              <td>
-                <span class="dot" [style.background]="filiereColor(filiere.id)"></span>
-                {{ filiere.name }}
-              </td>
-              <td><span class="pill">{{ cursusCount(filiere.id) }}</span></td>
-              <td>
-                <button class="btn btn-ghost btn-icon" type="button" [attr.aria-label]="'Modifier ' + filiere.name" (click)="openEditFiliereModal(filiere)">
-                  <svg lucidePencil class="lic" aria-hidden="true"></svg>
-                </button>
-                <button class="btn btn-ghost btn-icon" type="button" [attr.aria-label]="'Supprimer ' + filiere.name" (click)="openDeleteFiliereModal(filiere)">
-                  <svg lucideTrash2 class="lic" aria-hidden="true"></svg>
-                </button>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  }
-
   @if (loading()) {
     <div class="card skel page__skel" aria-hidden="true"></div>
   } @else if (loadError()) {
     <p class="state-msg state-msg--error" role="alert">{{ loadError() }}</p>
-  } @else if (groupedByFiliere().length === 0) {
+  } @else if (filieres().length === 0) {
     <div class="card empty-state">
-      <p class="p1">Aucun cursus pour le moment.</p>
+      <p class="p1">Aucune filière pour le moment.</p>
     </div>
   } @else {
-    @for (group of groupedByFiliere(); track group.filiere?.id ?? -1) {
+    @for (filiere of filieres(); track filiere.id) {
       <section class="filiere-group">
-        <h2 class="filiere-group__title">
-          @if (group.filiere) {
-            <span class="dot" [style.background]="filiereColor(group.filiere.id)"></span>
-            {{ group.filiere.name }}
-          } @else {
-            Sans filière
-          }
-        </h2>
+        <div class="filiere-group__header">
+          <div class="filiere-group__title">
+            <span class="dot dot--lg" [style.background]="filiereColor(filiere.id)"></span>
+            <h2>{{ filiere.name }}</h2>
+            <span class="badge badge-filiere">{{ cursusCount(filiere.id) }} cursus</span>
+          </div>
+          <div class="filiere-group__actions">
+            <button class="btn btn-outline btn-sm" type="button" [attr.aria-label]="'Modifier ' + filiere.name" (click)="openEditFiliereModal(filiere)">
+              <svg lucidePencil class="lic" aria-hidden="true"></svg>
+              Modifier filière
+            </button>
+            <button class="btn btn-outline btn-sm" type="button" [attr.aria-label]="'Supprimer ' + filiere.name" (click)="openDeleteFiliereModal(filiere)">
+              <svg lucideTrash2 class="lic" aria-hidden="true"></svg>
+              Supprimer
+            </button>
+          </div>
+        </div>
+
+        @if (cursusCount(filiere.id) === 0) {
+          <div class="card empty-state" style="padding: 2rem">
+            <p class="p1" style="margin-bottom: .875rem">Aucun cursus dans cette filière.</p>
+            <button class="btn btn-primary btn-sm" type="button" (click)="openCursusModal()">
+              <svg lucidePlus class="lic" aria-hidden="true"></svg>
+              Créer le premier cursus
+            </button>
+          </div>
+        } @else {
+          <div class="cursus-grid">
+            @for (cursus of cursusForFiliere(filiere.id); track cursus.id) {
+              <div
+                class="card cursus-card cursus-card--clickable"
+                role="button"
+                tabindex="0"
+                [attr.aria-label]="'Voir le cursus ' + cursus.name"
+                (click)="openCursus(cursus)"
+                (keydown.enter)="openCursus(cursus)"
+                (keydown.space)="$event.preventDefault(); openCursus(cursus)"
+              >
+                <div class="cursus-card__header">
+                  <div>
+                    <h3 class="cursus-card__title">
+                      <svg lucideListTree class="lic" aria-hidden="true"></svg>
+                      {{ cursus.name }}
+                    </h3>
+                    <p class="p2 muted">{{ cursus.cours.length }} cours</p>
+                    @if (cursusAlertCount(cursus) > 0) {
+                      <span class="badge badge-warning">⚠ {{ cursusAlertCount(cursus) }} alerte{{ cursusAlertCount(cursus) > 1 ? 's' : '' }}</span>
+                    }
+                  </div>
+                  <div class="cursus-card__actions">
+                    <button class="btn btn-ghost btn-icon" type="button" [attr.aria-label]="'Modifier ' + cursus.name" (click)="$event.stopPropagation(); openEditCursusModal(cursus)">
+                      <svg lucidePencil class="lic" aria-hidden="true"></svg>
+                    </button>
+                    <button class="btn btn-ghost btn-icon" type="button" [attr.aria-label]="'Supprimer ' + cursus.name" (click)="$event.stopPropagation(); openDeleteCursusModal(cursus)">
+                      <svg lucideTrash2 class="lic" aria-hidden="true"></svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </section>
+    }
+
+    @if (cursusSansFiliere().length > 0) {
+      <section class="filiere-group">
+        <div class="filiere-group__header">
+          <div class="filiere-group__title">
+            <h2>Sans filière</h2>
+            <span class="badge badge-filiere">{{ cursusSansFiliere().length }} cursus</span>
+          </div>
+        </div>
         <div class="cursus-grid">
-          @for (cursus of group.cursus; track cursus.id) {
-            <div class="card cursus-card">
-              <h3 class="cursus-card__title">
-                <svg lucideListTree class="lic" aria-hidden="true"></svg>
-                {{ cursus.name }}
-              </h3>
-              @if (cursus.cours.length === 0) {
-                <p class="p2 muted">Aucun cours dans ce cursus.</p>
-              } @else {
-                <ol class="cours-ordered-list">
-                  @for (c of cursus.cours; track c.id) {
-                    <li>
-                      <span class="badge badge-ordre">{{ c.ordre }}</span>
-                      <span class="cours-ordered-list__name">{{ c.name }}</span>
-                      @if (c.formateurs.length > 0) {
-                        <span class="badge-list">
-                          @for (f of c.formateurs; track f.id) {
-                            <span class="pill pill-formateur">
-                              <svg lucideUsers class="lic" aria-hidden="true"></svg>
-                              {{ fullName(f) }}
-                            </span>
-                          }
-                        </span>
-                      }
-                    </li>
+          @for (cursus of cursusSansFiliere(); track cursus.id) {
+            <div
+              class="card cursus-card cursus-card--clickable"
+              role="button"
+              tabindex="0"
+              [attr.aria-label]="'Voir le cursus ' + cursus.name"
+              (click)="openCursus(cursus)"
+              (keydown.enter)="openCursus(cursus)"
+              (keydown.space)="$event.preventDefault(); openCursus(cursus)"
+            >
+              <div class="cursus-card__header">
+                <div>
+                  <h3 class="cursus-card__title">
+                    <svg lucideListTree class="lic" aria-hidden="true"></svg>
+                    {{ cursus.name }}
+                  </h3>
+                  <p class="p2 muted">{{ cursus.cours.length }} cours</p>
+                  @if (cursusAlertCount(cursus) > 0) {
+                    <span class="badge badge-warning">⚠ {{ cursusAlertCount(cursus) }} alerte{{ cursusAlertCount(cursus) > 1 ? 's' : '' }}</span>
                   }
-                </ol>
-              }
+                </div>
+                <div class="cursus-card__actions">
+                  <button class="btn btn-ghost btn-icon" type="button" [attr.aria-label]="'Modifier ' + cursus.name" (click)="$event.stopPropagation(); openEditCursusModal(cursus)">
+                    <svg lucidePencil class="lic" aria-hidden="true"></svg>
+                  </button>
+                  <button class="btn btn-ghost btn-icon" type="button" [attr.aria-label]="'Supprimer ' + cursus.name" (click)="$event.stopPropagation(); openDeleteCursusModal(cursus)">
+                    <svg lucideTrash2 class="lic" aria-hidden="true"></svg>
+                  </button>
+                </div>
+              </div>
             </div>
           }
         </div>
@@ -125,6 +159,14 @@
           @if (filiereForm.controls.name.invalid && filiereForm.controls.name.touched) {
             <span class="field-error">Champ requis</span>
           }
+        </div>
+
+        <div class="field">
+          <label>Couleur d'identification</label>
+          <div class="builder__row">
+            <span class="dot dot--lg" [style.background]="nextFiliereColor()"></span>
+            <p class="p2 muted">Attribuée automatiquement à la création (couleur {{ nextFiliereColorIndex() + 1 }} de la palette).</p>
+          </div>
         </div>
 
         @if (formError()) {
@@ -162,6 +204,14 @@
           @if (editFiliereForm.controls.name.invalid && editFiliereForm.controls.name.touched) {
             <span class="field-error">Champ requis</span>
           }
+        </div>
+
+        <div class="field">
+          <label>Couleur d'identification</label>
+          <div class="builder__row">
+            <span class="dot dot--lg" [style.background]="filiereColor(editingFiliere()!.id)"></span>
+            <p class="p2 muted">Couleur attribuée automatiquement, non modifiable.</p>
+          </div>
         </div>
 
         @if (formError()) {
@@ -332,3 +382,86 @@
     </div>
   </div>
 }
+
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<!-- Modale : Modifier un cursus                                                 -->
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+@if (editingCursus()) {
+  <div class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-edit-cursus-title" (click)="closeEditCursusModal()">
+    <div class="card modal modal--sm anim-in" (click)="$event.stopPropagation()">
+      <div class="modal__header">
+        <h2 id="modal-edit-cursus-title">Modifier le cursus</h2>
+        <button class="btn btn-ghost btn-icon" type="button" aria-label="Fermer" (click)="closeEditCursusModal()">
+          <svg lucideX class="lic" aria-hidden="true"></svg>
+        </button>
+      </div>
+
+      <form class="modal__body" [formGroup]="editCursusForm" (ngSubmit)="submitEditCursus()">
+        <div class="field">
+          <label for="ec-name">Nom du cursus</label>
+          <input id="ec-name" class="input" type="text" formControlName="name" placeholder="Ex : Développeur Front-End" />
+          @if (editCursusForm.controls.name.invalid && editCursusForm.controls.name.touched) {
+            <span class="field-error">Champ requis</span>
+          }
+        </div>
+
+        <div class="field">
+          <label for="ec-filiere">Filière</label>
+          <select id="ec-filiere" class="input" formControlName="filiereId">
+            <option [value]="null" disabled>Sélectionner une filière</option>
+            @for (f of filieres(); track f.id) {
+              <option [value]="f.id">{{ f.name }}</option>
+            }
+          </select>
+          @if (editCursusForm.controls.filiereId.invalid && editCursusForm.controls.filiereId.touched) {
+            <span class="field-error">Champ requis</span>
+          }
+        </div>
+
+        @if (formError()) {
+          <p class="form-api-error" role="alert">{{ formError() }}</p>
+        }
+
+        <div class="modal__footer">
+          <button class="btn btn-outline" type="button" (click)="closeEditCursusModal()">Annuler</button>
+          <button class="btn btn-primary" type="submit" [disabled]="submitting()">
+            {{ submitting() ? 'Enregistrement…' : 'Enregistrer' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+@if (deletingCursus()) {
+  <div class="modal-overlay" role="alertdialog" aria-modal="true" aria-labelledby="modal-delete-cursus-title" (click)="closeDeleteCursusModal()">
+    <div class="card modal modal--sm anim-in" (click)="$event.stopPropagation()">
+      <div class="modal__header">
+        <h2 id="modal-delete-cursus-title">Supprimer le cursus</h2>
+        <button class="btn btn-ghost btn-icon" type="button" aria-label="Fermer" (click)="closeDeleteCursusModal()">
+          <svg lucideX class="lic" aria-hidden="true"></svg>
+        </button>
+      </div>
+
+      <div class="modal__body">
+        <p class="p1">
+          Vous êtes sur le point de supprimer le cursus
+          <strong>{{ deletingCursus()!.name }}</strong>.
+          Cette action est <strong>irréversible</strong>.
+        </p>
+
+        @if (formError()) {
+          <p class="form-api-error" role="alert">{{ formError() }}</p>
+        }
+
+        <div class="modal__footer">
+          <button class="btn btn-outline" type="button" (click)="closeDeleteCursusModal()">Annuler</button>
+          <button class="btn btn-primary" type="button" [disabled]="submitting()" (click)="confirmDeleteCursus()">
+            {{ submitting() ? 'Suppression…' : 'Supprimer définitivement' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
