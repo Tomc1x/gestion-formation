@@ -35,7 +35,7 @@ class FiliereServiceTest {
     void update_validName_updatesFiliere() {
         Filiere filiere = Filiere.builder().id(1L).name("Ancien nom").build();
         when(filiereRepository.findById(1L)).thenReturn(Optional.of(filiere));
-        when(filiereRepository.findByName("Nouveau nom")).thenReturn(Optional.empty());
+        when(filiereRepository.findByNameIgnoreCase("Nouveau nom")).thenReturn(Optional.empty());
         when(filiereRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
         Filiere result = filiereService.update(1L, "Nouveau nom");
@@ -48,7 +48,7 @@ class FiliereServiceTest {
         Filiere filiere = Filiere.builder().id(1L).name("Ancien nom").build();
         Filiere autreFiliere = Filiere.builder().id(2L).name("Nom pris").build();
         when(filiereRepository.findById(1L)).thenReturn(Optional.of(filiere));
-        when(filiereRepository.findByName("Nom pris")).thenReturn(Optional.of(autreFiliere));
+        when(filiereRepository.findByNameIgnoreCase("Nom pris")).thenReturn(Optional.of(autreFiliere));
 
         assertThrows(FiliereAlreadyExistsException.class, () -> filiereService.update(1L, "Nom pris"));
     }
@@ -57,7 +57,7 @@ class FiliereServiceTest {
     void update_sameNameAsItself_doesNotThrow() {
         Filiere filiere = Filiere.builder().id(1L).name("Meme nom").build();
         when(filiereRepository.findById(1L)).thenReturn(Optional.of(filiere));
-        when(filiereRepository.findByName("Meme nom")).thenReturn(Optional.of(filiere));
+        when(filiereRepository.findByNameIgnoreCase("Meme nom")).thenReturn(Optional.of(filiere));
         when(filiereRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
         Filiere result = filiereService.update(1L, "Meme nom");
