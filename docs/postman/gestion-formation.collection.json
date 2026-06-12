@@ -1,0 +1,700 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "name": "gestion-formation",
+    "description": "Collection Postman pour l'API gestion-formation — Spring Boot 3 / JWT",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.token) {",
+                  "    pm.environment.set(\"token\", res.token);",
+                  "    console.log(\"Token JWT sauvegardé automatiquement.\");",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@eni.fr\",\n  \"password\": \"Admin1234!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "description": "Authentification — retourne un token JWT stocké automatiquement dans la variable {{token}}."
+          }
+        },
+        {
+          "name": "Register (ADMIN ou REFERENTE requis)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"nouveau@eni.fr\",\n  \"password\": \"User1234!\",\n  \"firstName\": \"Jean\",\n  \"lastName\": \"Dupont\",\n  \"role\": \"FORMATEUR\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register"]
+            },
+            "description": "Créer un compte utilisateur — nécessite le rôle ADMIN ou REFERENTE."
+          }
+        },
+        {
+          "name": "Register via invitation (public)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"<invitation-token>\",\n  \"password\": \"User1234!\",\n  \"firstName\": \"Marie\",\n  \"lastName\": \"Martin\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register-invitation",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register-invitation"]
+            },
+            "description": "Finaliser la création d'un compte via un lien d'invitation — endpoint public."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin — Utilisateurs",
+      "item": [
+        {
+          "name": "Lister les utilisateurs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "users"]
+            },
+            "description": "Retourne la liste de tous les utilisateurs — rôle ADMINISTRATEUR requis."
+          }
+        },
+        {
+          "name": "Obtenir un utilisateur par ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "users", "{{userId}}"]
+            },
+            "description": "Retourne les détails d'un utilisateur identifié par {{userId}}."
+          }
+        },
+        {
+          "name": "Créer un utilisateur",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.uid) {",
+                  "    pm.environment.set(\"userId\", res.uid);",
+                  "    console.log(\"userId sauvegardé : \" + res.uid);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"formateur@eni.fr\",\n  \"password\": \"Form1234!\",\n  \"firstName\": \"Paul\",\n  \"lastName\": \"Bernard\",\n  \"role\": \"FORMATEUR\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "users"]
+            },
+            "description": "Créer un utilisateur — l'uid retourné est stocké dans {{userId}}."
+          }
+        },
+        {
+          "name": "Activer un utilisateur",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users/{{userId}}/enable",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "users", "{{userId}}", "enable"]
+            },
+            "description": "Activer le compte de l'utilisateur identifié par {{userId}}."
+          }
+        },
+        {
+          "name": "Désactiver un utilisateur",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users/{{userId}}/disable",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "users", "{{userId}}", "disable"]
+            },
+            "description": "Désactiver le compte de l'utilisateur identifié par {{userId}}."
+          }
+        },
+        {
+          "name": "Modifier le mot de passe d'un utilisateur",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"newPassword\": \"NewPass1234!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users/{{userId}}/password",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "users", "{{userId}}", "password"]
+            },
+            "description": "Modifier le mot de passe d'un utilisateur."
+          }
+        },
+        {
+          "name": "Modifier le rôle d'un utilisateur",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"REFERENTE\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users/{{userId}}/role",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "users", "{{userId}}", "role"]
+            },
+            "description": "Modifier le rôle d'un utilisateur. Valeurs possibles : ADMINISTRATEUR, REFERENTE, FORMATEUR."
+          }
+        },
+        {
+          "name": "Supprimer un utilisateur",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "users", "{{userId}}"]
+            },
+            "description": "Supprimer définitivement l'utilisateur identifié par {{userId}}."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin — Invitation",
+      "item": [
+        {
+          "name": "Envoyer une invitation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"invite@eni.fr\",\n  \"role\": \"FORMATEUR\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/invite",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "invite"]
+            },
+            "description": "Envoyer un email d'invitation à un nouvel utilisateur — rôle ADMINISTRATEUR requis."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Filière",
+      "item": [
+        {
+          "name": "Lister les filières",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/filiere",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "filiere"]
+            },
+            "description": "Retourne la liste de toutes les filières — endpoint public."
+          }
+        },
+        {
+          "name": "Obtenir une filière par ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/filiere/{{filiereId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "filiere", "{{filiereId}}"]
+            },
+            "description": "Retourne les détails d'une filière identifiée par {{filiereId}}."
+          }
+        },
+        {
+          "name": "Rechercher une filière par nom",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/filiere/search?name=Informatique",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "filiere", "search"],
+              "query": [
+                {
+                  "key": "name",
+                  "value": "Informatique"
+                }
+              ]
+            },
+            "description": "Rechercher des filières dont le nom contient la valeur fournie."
+          }
+        },
+        {
+          "name": "Vérifier l'existence d'une filière",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/filiere/exists?name=Informatique",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "filiere", "exists"],
+              "query": [
+                {
+                  "key": "name",
+                  "value": "Informatique"
+                }
+              ]
+            },
+            "description": "Retourne true/false selon qu'une filière avec ce nom existe déjà."
+          }
+        },
+        {
+          "name": "Créer une filière",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.id) {",
+                  "    pm.environment.set(\"filiereId\", res.id);",
+                  "    console.log(\"filiereId sauvegardé : \" + res.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Informatique\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/filiere",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "filiere"]
+            },
+            "description": "Créer une filière — rôle REFERENTE requis. L'id retourné est stocké dans {{filiereId}}."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cursus",
+      "item": [
+        {
+          "name": "Lister les cursus",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cursus",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "cursus"]
+            },
+            "description": "Retourne la liste de tous les cursus — authentification requise."
+          }
+        },
+        {
+          "name": "Obtenir un cursus par ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cursus/{{cursusId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "cursus", "{{cursusId}}"]
+            },
+            "description": "Retourne les détails d'un cursus identifié par {{cursusId}}."
+          }
+        },
+        {
+          "name": "Lister les cursus d'une filière",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cursus/filiere/{{filiereId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "cursus", "filiere", "{{filiereId}}"]
+            },
+            "description": "Retourne tous les cursus rattachés à la filière identifiée par {{filiereId}}."
+          }
+        },
+        {
+          "name": "Créer un cursus",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.id) {",
+                  "    pm.environment.set(\"cursusId\", res.id);",
+                  "    console.log(\"cursusId sauvegardé : \" + res.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Bachelor Développeur Web\",\n  \"filiereId\": {{filiereId}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/cursus",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "cursus"]
+            },
+            "description": "Créer un cursus rattaché à une filière — rôle REFERENTE requis. L'id retourné est stocké dans {{cursusId}}."
+          }
+        },
+        {
+          "name": "Supprimer un cursus",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cursus/{{cursusId}}?cascade=false",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "cursus", "{{cursusId}}"],
+              "query": [
+                {
+                  "key": "cascade",
+                  "value": "false",
+                  "description": "Mettre à true pour supprimer les cours associés"
+                }
+              ]
+            },
+            "description": "Supprimer un cursus. Le paramètre cascade=true supprime également les cours associés."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cours",
+      "item": [
+        {
+          "name": "Lister les cours",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cours",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "cours"]
+            },
+            "description": "Retourne la liste de tous les cours — authentification requise."
+          }
+        },
+        {
+          "name": "Obtenir un cours par ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cours/{{coursId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "cours", "{{coursId}}"]
+            },
+            "description": "Retourne les détails d'un cours identifié par {{coursId}}."
+          }
+        },
+        {
+          "name": "Lister les cours d'un cursus",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cours/cursus/{{cursusId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "cours", "cursus", "{{cursusId}}"]
+            },
+            "description": "Retourne tous les cours rattachés au cursus identifié par {{cursusId}}."
+          }
+        },
+        {
+          "name": "Créer un cours",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.id) {",
+                  "    pm.environment.set(\"coursId\", res.id);",
+                  "    console.log(\"coursId sauvegardé : \" + res.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Introduction à Java\",\n  \"cursusId\": {{cursusId}},\n  \"formateurIds\": []\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/cours",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "cours"]
+            },
+            "description": "Créer un cours rattaché à un cursus — rôle REFERENTE requis. L'id retourné est stocké dans {{coursId}}."
+          }
+        },
+        {
+          "name": "Supprimer un cours",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cours/{{coursId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "cours", "{{coursId}}"]
+            },
+            "description": "Supprimer un cours identifié par {{coursId}}."
+          }
+        },
+        {
+          "name": "Mettre à jour les formateurs d'un cours",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "[1, 2]"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/cours/{{coursId}}/formateurs",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "cours", "{{coursId}}", "formateurs"]
+            },
+            "description": "Remplace la liste des formateurs associés au cours par les IDs fournis."
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [],
+  "event": []
+}

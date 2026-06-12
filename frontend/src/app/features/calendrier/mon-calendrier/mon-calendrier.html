@@ -1,1 +1,158 @@
-<p>mon-calendrier works</p>
+<section class="calendrier" aria-label="Mon calendrier">
+
+  <!-- Toolbar -->
+  <div class="calendrier__toolbar">
+    <div class="calendrier__view-toggle" role="group" aria-label="Choisir la vue">
+      <button
+        type="button"
+        class="toggle-btn"
+        [class.toggle-btn--active]="view() === 'month'"
+        (click)="setView('month')"
+        [attr.aria-pressed]="view() === 'month'"
+      >
+        Mois
+      </button>
+      <button
+        type="button"
+        class="toggle-btn"
+        [class.toggle-btn--active]="view() === 'week'"
+        (click)="setView('week')"
+        [attr.aria-pressed]="view() === 'week'"
+      >
+        Semaine
+      </button>
+    </div>
+
+    <div class="calendrier__nav">
+      <button
+        type="button"
+        class="nav-btn"
+        (click)="navigatePrev()"
+        aria-label="Période précédente"
+      >
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+
+      <h2 class="calendrier__title">{{ navTitle() }}</h2>
+
+      <button
+        type="button"
+        class="nav-btn"
+        (click)="navigateNext()"
+        aria-label="Période suivante"
+      >
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Légende -->
+    <div class="calendrier__legend" aria-label="Légende">
+      <span class="legend-item">
+        <span class="legend-dot legend-dot--promo" aria-hidden="true"></span>
+        Cours de promotion
+      </span>
+      <span class="legend-item">
+        <span class="legend-dot legend-dot--unit" aria-hidden="true"></span>
+        Cours à l'unité
+      </span>
+    </div>
+  </div>
+
+  <!-- Vue mois -->
+  @if (view() === 'month') {
+    <div class="calendrier__grid calendrier__grid--month" role="grid" [attr.aria-label]="'Calendrier mois ' + navTitle()">
+
+      <!-- En-têtes jours -->
+      <div class="grid-header" role="row">
+        @for (label of weekDayLabels; track label) {
+          <div class="grid-header__cell" role="columnheader" [attr.aria-label]="label">
+            {{ label }}
+          </div>
+        }
+      </div>
+
+      <!-- Semaines -->
+      @for (week of monthGrid(); track $index) {
+        <div class="grid-week" role="row">
+          @for (day of week; track day.toISOString()) {
+            <div
+              class="grid-cell"
+              [class.grid-cell--out]="!isCurrentMonth(day)"
+              role="gridcell"
+              [attr.aria-label]="day | date:'d MMMM yyyy'"
+            >
+              <span class="grid-cell__number" aria-hidden="true">{{ day | date:'d' }}</span>
+
+              <div class="grid-cell__events">
+                @for (event of getEventsForDay(day); track event.id) {
+                  <article
+                    class="event-chip"
+                    [class.event-chip--promo]="!!event.promotion"
+                    [class.event-chip--unit]="!event.promotion"
+                    [attr.aria-label]="event.cours + (event.promotion ? ', ' + event.promotion : '') + ', ' + formatEventTime(event.startDate)"
+                  >
+                    <span class="event-chip__time">{{ formatEventTime(event.startDate) }}</span>
+                    <span class="event-chip__name">{{ event.cours }}</span>
+                  </article>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Vue semaine -->
+  @if (view() === 'week') {
+    <div class="calendrier__grid calendrier__grid--week" role="grid" [attr.aria-label]="'Calendrier semaine ' + navTitle()">
+
+      <!-- En-têtes jours -->
+      <div class="grid-header" role="row">
+        @for (day of weekDays(); track day.toISOString()) {
+          <div class="grid-header__cell" role="columnheader" [attr.aria-label]="day | date:'EEEE d MMMM'">
+            {{ formatDayHeader(day) }}
+          </div>
+        }
+      </div>
+
+      <!-- Corps semaine -->
+      <div class="week-body" role="row">
+        @for (day of weekDays(); track day.toISOString()) {
+          <div
+            class="grid-cell grid-cell--week"
+            role="gridcell"
+            [attr.aria-label]="day | date:'d MMMM yyyy'"
+          >
+            <div class="grid-cell__events">
+              @for (event of getEventsForDay(day); track event.id) {
+                <article
+                  class="event-card"
+                  [class.event-card--promo]="!!event.promotion"
+                  [class.event-card--unit]="!event.promotion"
+                  [attr.aria-label]="event.cours + (event.promotion ? ', ' + event.promotion : '') + ', ' + formatEventTime(event.startDate) + ' – ' + formatEventTime(event.endDate)"
+                >
+                  <div class="event-card__time">
+                    {{ formatEventTime(event.startDate) }} – {{ formatEventTime(event.endDate) }}
+                  </div>
+                  <div class="event-card__name">{{ event.cours }}</div>
+                  @if (event.promotion) {
+                    <div class="event-card__promo">{{ event.promotion }}</div>
+                  }
+                </article>
+              }
+              @if (getEventsForDay(day).length === 0) {
+                <span class="grid-cell__empty" aria-hidden="true"></span>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+</section>

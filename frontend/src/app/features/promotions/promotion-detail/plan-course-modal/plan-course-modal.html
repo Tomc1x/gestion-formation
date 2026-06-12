@@ -1,0 +1,94 @@
+<div class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-plan-course-title" (click)="close()">
+  <div class="card modal anim-in" (click)="$event.stopPropagation()">
+    <div class="modal__header">
+      <h2 id="modal-plan-course-title">{{ editTarget() ? 'Modifier la session' : 'Planifier un cours' }}</h2>
+      <button class="btn btn-ghost btn-icon" type="button" aria-label="Fermer" (click)="close()">
+        <svg lucideX class="lic" aria-hidden="true"></svg>
+      </button>
+    </div>
+
+    <form class="modal__body" [formGroup]="form" (ngSubmit)="submit()">
+      <div class="field">
+        <label for="plan-cours">Cours</label>
+        <select id="plan-cours" class="input" formControlName="coursId">
+          <option [ngValue]="null">Sélectionner un cours</option>
+          @for (c of coursDisponibles(); track c.id) {
+            <option [ngValue]="c.id">{{ c.name }}</option>
+          }
+        </select>
+        @if (form.controls.coursId.invalid && form.controls.coursId.touched) {
+          <span class="field-error">Champ requis</span>
+        }
+      </div>
+
+      @if (selectedCours()) {
+        @if (prerequisRequis().length === 0 || tousSatisfaits()) {
+          <div class="status-banner status-banner--ok">
+            @if (prerequisRequis().length === 0) {
+              Aucun prérequis pour ce cours.
+            } @else {
+              Tous les prérequis sont satisfaits.
+            }
+          </div>
+        } @else {
+          <div class="status-banner status-banner--warn">
+            <p class="p2">Prérequis non respectés :</p>
+            <details>
+              <summary>Voir le détail ({{ prerequisRequis().length }})</summary>
+              <ul class="status-banner__list">
+                @for (p of prerequisRequis(); track p.id) {
+                  <li [class.status-banner__item--ok]="p.satisfait" [class.status-banner__item--ko]="!p.satisfait">
+                    {{ p.name }} — {{ p.satisfait ? 'Planifié' : 'Non planifié' }}
+                  </li>
+                }
+              </ul>
+            </details>
+
+            <label class="checkbox">
+              <input type="checkbox" formControlName="force" />
+              Planifier malgré tout
+            </label>
+          </div>
+        }
+      }
+
+      <div class="field">
+        <label for="plan-date-debut">Début</label>
+        <input id="plan-date-debut" class="input" type="date" formControlName="dateDebut" />
+        @if (form.controls.dateDebut.invalid && form.controls.dateDebut.touched) {
+          <span class="field-error">Champ requis</span>
+        }
+      </div>
+
+      <div class="field">
+        <label for="plan-date-fin">Fin</label>
+        <input id="plan-date-fin" class="input" type="date" formControlName="dateFin" [min]="form.controls.dateDebut.value" />
+        @if (form.controls.dateFin.invalid && form.controls.dateFin.touched) {
+          <span class="field-error">Champ requis</span>
+        }
+      </div>
+
+      <div class="field">
+        <label for="plan-formateur">Formateur</label>
+        <select id="plan-formateur" class="input" formControlName="formateurId">
+          <option [ngValue]="null">Non assigné</option>
+          @for (f of formateurs(); track f.id) {
+            <option [ngValue]="f.id">{{ f.nom }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="plan-salle">Salle</label>
+        <input id="plan-salle" class="input" type="text" formControlName="salle" placeholder="Ex. Salle 12" />
+      </div>
+
+      <div class="modal__footer">
+        <button class="btn btn-outline" type="button" (click)="close()">Annuler</button>
+        <button class="btn btn-primary" type="submit">
+          {{ editTarget() ? 'Enregistrer' : 'Planifier' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

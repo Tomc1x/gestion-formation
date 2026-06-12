@@ -1,0 +1,75 @@
+<div class="entity-selector">
+  <div class="entity-selector__search">
+    <svg lucideSearch class="lic" aria-hidden="true"></svg>
+    <input
+      class="input"
+      type="search"
+      name="entity-selector-search"
+      [placeholder]="placeholder()"
+      [value]="searchTerm()"
+      (input)="onSearchChange($any($event.target).value)"
+    />
+  </div>
+
+  <div class="entity-selector__list" role="list">
+    @if (pagedItems().length === 0) {
+      <p class="entity-selector__empty">Aucun résultat.</p>
+    }
+    @for (item of pagedItems(); track item.id) {
+      <div class="entity-selector__item" role="listitem">
+        <div class="entity-selector__item-info">
+          <span class="entity-selector__item-label">{{ item.label }}</span>
+          @if (item.sublabel) {
+            <span class="entity-selector__item-sublabel">{{ item.sublabel }}</span>
+          }
+        </div>
+
+        @if (mode() === 'add') {
+          <button
+            class="btn btn-ghost btn-sm"
+            type="button"
+            [disabled]="isDisabled(item.id)"
+            [attr.aria-label]="'Ajouter ' + item.label"
+            (click)="onAdd(item.id)"
+          >
+            <svg lucidePlus class="lic" aria-hidden="true"></svg>
+            Ajouter
+          </button>
+        } @else {
+          <label class="checkbox-item">
+            <input
+              type="checkbox"
+              [checked]="isSelected(item.id)"
+              [disabled]="isDisabled(item.id)"
+              (change)="toggleSelection(item.id)"
+            />
+          </label>
+        }
+      </div>
+    }
+  </div>
+
+  @if (totalPages() > 1) {
+    <div class="entity-selector__pagination">
+      <button
+        class="btn btn-ghost btn-sm"
+        type="button"
+        [disabled]="currentPage() === 0"
+        aria-label="Page précédente"
+        (click)="goToPage(currentPage() - 1)"
+      >
+        <svg lucideChevronLeft class="lic" aria-hidden="true"></svg>
+      </button>
+      <span class="entity-selector__page-indicator">Page {{ currentPage() + 1 }} / {{ totalPages() }}</span>
+      <button
+        class="btn btn-ghost btn-sm"
+        type="button"
+        [disabled]="currentPage() >= totalPages() - 1"
+        aria-label="Page suivante"
+        (click)="goToPage(currentPage() + 1)"
+      >
+        <svg lucideChevronRight class="lic" aria-hidden="true"></svg>
+      </button>
+    </div>
+  }
+</div>

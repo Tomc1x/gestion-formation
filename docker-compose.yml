@@ -26,6 +26,45 @@ services:
     networks:
       - formation-network
 
+  # --- BACKEND SPRING BOOT ---
+  backend:
+    build:
+      context: ./backend
+    container_name: formation-backend
+    environment:
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USERNAME: ${SMTP_USERNAME}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_AUTH_REQUIRED: ${SMTP_AUTH_REQUIRED}
+      SMTP_STARTTLS_ENABLE: ${SMTP_STARTTLS_ENABLE}
+      SPRING_PORT: ${SPRING_PORT}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: ${JWT_EXPIRATION}
+      INVITATION_BASE_URL: ${INVITATION_BASE_URL:-http://localhost:4200/register}
+    ports:
+      - "${SPRING_PORT}:${SPRING_PORT}"
+    depends_on:
+      - db
+      - mailhog
+    networks:
+      - formation-network
+
+  # --- FRONTEND ANGULAR (servi par nginx) ---
+  frontend:
+    build:
+      context: ./frontend
+    container_name: formation-frontend
+    ports:
+      - "${ANGULAR_PORT}:80"
+    depends_on:
+      - backend
+    networks:
+      - formation-network
+
 networks:
   formation-network:
     driver: bridge

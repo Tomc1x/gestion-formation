@@ -1,0 +1,196 @@
+<div class="register">
+  <!-- ── Panneau gauche ─────────────────────────────────────────────────────── -->
+  <div class="frame left" aria-hidden="true">
+    <div class="decoration-circle-1"></div>
+    <div class="decoration-circle-2"></div>
+
+    <div class="logoframe">
+      <div class="logo">
+        <svg lucideGraduationCap></svg>
+      </div>
+      <div class="logotext">
+        <p class="logotext-title">GestionFormation</p>
+        <p class="logotext-subtitle">Plateforme pédagogique</p>
+      </div>
+    </div>
+
+    <div class="cta">
+      <h1>Finalisez votre<br />inscription.</h1>
+      <p class="cta-desc">Vous avez été invité(e) à rejoindre la plateforme. Créez votre mot de passe pour accéder à votre espace.</p>
+    </div>
+
+    <p class="left-footer">© 2026 GestionFormation · Centre de Formation Professionnelle</p>
+  </div>
+
+  <!-- ── Panneau droit ──────────────────────────────────────────────────────── -->
+  <div class="frame right">
+    <div class="logoframe">
+      <div class="logo">
+        <svg lucideGraduationCap></svg>
+      </div>
+      <div class="logotext">
+        <p class="logotext-title">GestionFormation</p>
+        <p class="logotext-subtitle">Plateforme pédagogique</p>
+      </div>
+    </div>
+
+    <div class="form-wrapper">
+
+      <!-- État : chargement ─────────────────────────────────────── -->
+      @if (status() === 'loading') {
+        <div class="state-block">
+          <div class="spinner" aria-label="Vérification en cours…"></div>
+          <p>Vérification du lien d'invitation…</p>
+        </div>
+      }
+
+      <!-- État : lien invalide / expiré ────────────────────────── -->
+      @if (status() === 'invalid') {
+        <div class="state-block state-block--error" role="alert">
+          <svg lucideAlertTriangle class="state-block__icon" aria-hidden="true"></svg>
+          <h2>Lien invalide ou expiré</h2>
+          <p>Ce lien d'invitation n'est plus valide. Il est peut-être expiré (24h) ou déjà utilisé.</p>
+          <p>Contactez un administrateur pour recevoir une nouvelle invitation.</p>
+          <a routerLink="/login" class="btn btn-primary">Retour à la connexion</a>
+        </div>
+      }
+
+      <!-- État : succès ─────────────────────────────────────────── -->
+      @if (status() === 'success') {
+        <div class="state-block state-block--success" role="status">
+          <svg lucideCheckCircle class="state-block__icon" aria-hidden="true"></svg>
+          <h2>Compte créé !</h2>
+          <p>Votre compte a été créé avec succès. Vous allez être redirigé vers la page de connexion…</p>
+          <a routerLink="/login" class="btn btn-primary">Se connecter maintenant</a>
+        </div>
+      }
+
+      <!-- État : formulaire ─────────────────────────────────────── -->
+      @if (status() === 'ready' || status() === 'submitting') {
+        <h2>Créer votre compte</h2>
+        <p class="subtitle">Invitation envoyée à <strong>{{ invitedEmail() }}</strong></p>
+
+        @if (apiError()) {
+          <div class="error-alert" role="alert">{{ apiError() }}</div>
+        }
+
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" class="register-form" novalidate>
+          <!-- E-mail (lecture seule) -->
+          <div class="field">
+            <label class="label1">E-mail</label>
+            <div class="input-icon input-readonly">
+              <svg class="icon" lucideUser aria-hidden="true"></svg>
+              <input
+                type="email"
+                class="input"
+                [value]="invitedEmail()"
+                readonly
+                aria-readonly="true"
+                autocomplete="email"
+              />
+            </div>
+          </div>
+
+          <!-- Prénom + Nom -->
+          <div class="field-row">
+            <div class="field">
+              <label for="firstName" class="label1">Prénom</label>
+              <input
+                id="firstName"
+                type="text"
+                class="input"
+                [class.input--error]="form.controls.firstName.invalid && form.controls.firstName.touched"
+                formControlName="firstName"
+                placeholder="Prénom"
+                autocomplete="given-name"
+              />
+              @if (form.controls.firstName.invalid && form.controls.firstName.touched) {
+                <span class="field-error">Champ requis</span>
+              }
+            </div>
+            <div class="field">
+              <label for="lastName" class="label1">Nom</label>
+              <input
+                id="lastName"
+                type="text"
+                class="input"
+                [class.input--error]="form.controls.lastName.invalid && form.controls.lastName.touched"
+                formControlName="lastName"
+                placeholder="Nom"
+                autocomplete="family-name"
+              />
+              @if (form.controls.lastName.invalid && form.controls.lastName.touched) {
+                <span class="field-error">Champ requis</span>
+              }
+            </div>
+          </div>
+
+          <!-- Mot de passe -->
+          <div class="field">
+            <label for="password" class="label1">Mot de passe</label>
+            <div class="input-icon">
+              <svg class="icon" lucideLock aria-hidden="true"></svg>
+              <input
+                id="password"
+                [type]="showPassword() ? 'text' : 'password'"
+                class="input input--with-toggle"
+                [class.input--error]="form.controls.password.invalid && form.controls.password.touched"
+                formControlName="password"
+                placeholder="6 caractères minimum"
+                autocomplete="new-password"
+              />
+              <button class="toggle-visibility" type="button" [attr.aria-label]="showPassword() ? 'Masquer le mot de passe' : 'Afficher le mot de passe'" (click)="toggleShowPassword()">
+                @if (showPassword()) {
+                  <svg lucideEyeOff aria-hidden="true"></svg>
+                } @else {
+                  <svg lucideEye aria-hidden="true"></svg>
+                }
+              </button>
+            </div>
+            @if (form.controls.password.invalid && form.controls.password.touched) {
+              <span class="field-error">6 caractères minimum</span>
+            }
+          </div>
+
+          <!-- Confirmer mot de passe -->
+          <div class="field">
+            <label for="confirmPassword" class="label1">Confirmer le mot de passe</label>
+            <div class="input-icon">
+              <svg class="icon" lucideLock aria-hidden="true"></svg>
+              <input
+                id="confirmPassword"
+                [type]="showConfirm() ? 'text' : 'password'"
+                class="input input--with-toggle"
+                [class.input--error]="form.hasError('mismatch') && form.controls.confirmPassword.touched"
+                formControlName="confirmPassword"
+                placeholder="••••••••"
+                autocomplete="new-password"
+              />
+              <button class="toggle-visibility" type="button" [attr.aria-label]="showConfirm() ? 'Masquer' : 'Afficher'" (click)="toggleShowConfirm()">
+                @if (showConfirm()) {
+                  <svg lucideEyeOff aria-hidden="true"></svg>
+                } @else {
+                  <svg lucideEye aria-hidden="true"></svg>
+                }
+              </button>
+            </div>
+            @if (form.hasError('mismatch') && form.controls.confirmPassword.touched) {
+              <span class="field-error">Les mots de passe ne correspondent pas</span>
+            }
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-submit" [disabled]="status() === 'submitting'">
+            @if (status() === 'submitting') {
+              Création du compte…
+            } @else {
+              Créer mon compte
+              <svg lucideArrowRight aria-hidden="true"></svg>
+            }
+          </button>
+        </form>
+
+        <p class="login-link">Déjà un compte ? <a routerLink="/login">Se connecter</a></p>
+      }
+    </div>
+  </div>
+</div>

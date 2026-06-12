@@ -1,0 +1,76 @@
+<div class="section__header">
+  <h2 class="sr-only">Stagiaires</h2>
+  <button class="btn btn-primary btn-sm" type="button" (click)="openAddEleveModal()">
+    <svg lucideUserPlus class="lic" aria-hidden="true"></svg>
+    Ajouter un élève
+  </button>
+</div>
+
+<div class="table-wrap">
+  <table class="tbl" aria-label="Stagiaires de la promotion">
+    <thead>
+      <tr>
+        <th scope="col">Nom</th>
+        <th scope="col">Prénom</th>
+        <th scope="col">Origine</th>
+        <th scope="col"><span class="sr-only">Actions</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      @if (promotion().eleves.length === 0) {
+        <tr><td colspan="4" class="empty-row">Aucun élève dans cette promotion.</td></tr>
+      }
+      @for (eleve of promotion().eleves; track eleve.id) {
+        <tr>
+          <td>{{ eleve.lastName }}</td>
+          <td>{{ eleve.firstName }}</td>
+          <td><span class="pill">Promotion</span></td>
+          <td class="cell-actions">
+            <button
+              class="btn btn-ghost btn-sm"
+              type="button"
+              [disabled]="removingEleveId() === eleve.id"
+              [attr.aria-label]="'Retirer ' + fullName(eleve)"
+              (click)="removeEleve(eleve.id)"
+            >
+              <svg lucideTrash2 class="lic" aria-hidden="true"></svg>
+            </button>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<!-- Modale : Ajouter un élève                                                   -->
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+@if (showAddEleveModal()) {
+  <div class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-add-eleve-title" (click)="closeAddEleveModal()">
+    <div class="card modal anim-in" (click)="$event.stopPropagation()">
+      <div class="modal__header">
+        <h2 id="modal-add-eleve-title">Ajouter un élève</h2>
+        <button class="btn btn-ghost btn-icon" type="button" aria-label="Fermer" (click)="closeAddEleveModal()">
+          <svg lucideX class="lic" aria-hidden="true"></svg>
+        </button>
+      </div>
+
+      <div class="modal__body">
+        @if (addEleveError()) {
+          <p class="form-api-error" role="alert">{{ addEleveError() }}</p>
+        }
+
+        <app-entity-selector
+          [items]="elevesDisponibles()"
+          mode="add"
+          placeholder="Rechercher un élève..."
+          (add)="onAddEleve($event)"
+        />
+      </div>
+
+      <div class="modal__footer">
+        <button class="btn btn-outline" type="button" (click)="closeAddEleveModal()">Fermer</button>
+      </div>
+    </div>
+  </div>
+}
