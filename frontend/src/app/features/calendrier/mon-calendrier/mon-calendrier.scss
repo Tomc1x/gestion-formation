@@ -300,3 +300,85 @@ $color-toggle-active-text: #fff;
   color: $color-promo;
   font-weight: 500;
 }
+
+.event-card__formateur {
+  font-size: 0.6875rem;
+  color: $color-text-muted;
+}
+
+.event-chip,
+.event-card {
+  cursor: pointer;
+}
+
+// --- Détail de session (overlay) ---
+.event-details-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.event-details {
+  position: relative;
+  background: #fff;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  max-width: 28rem;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+}
+
+.event-details__close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  border: none;
+  background: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  color: $color-text-muted;
+}
+
+.event-details__title {
+  margin: 0 0 0.5rem;
+  font-size: 1.125rem;
+  color: $color-text;
+}
+
+.event-details__dates,
+.event-details__promo,
+.event-details__formateur,
+.event-details__salle {
+  margin: 0.25rem 0;
+  font-size: 0.875rem;
+  color: $color-text-muted;
+}
+
+.event-details__eleves {
+  margin-top: 1rem;
+
+  h4 {
+    margin: 0 0 0.5rem;
+    font-size: 0.9375rem;
+    color: $color-text;
+  }
+
+  ul {
+    margin: 0;
+    padding-left: 1.25rem;
+    font-size: 0.875rem;
+    color: $color-text;
+  }
+}
+
+.event-details__empty {
+  font-size: 0.875rem;
+  color: $color-text-muted;
+}

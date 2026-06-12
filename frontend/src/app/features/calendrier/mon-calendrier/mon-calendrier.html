@@ -94,6 +94,9 @@
                     [class.event-chip--promo]="!!event.promotion"
                     [class.event-chip--unit]="!event.promotion"
                     [attr.aria-label]="event.cours + (event.promotion ? ', ' + event.promotion : '') + ', ' + formatEventTime(event.startDate)"
+                    (click)="selectEvent(event)"
+                    tabindex="0"
+                    (keydown.enter)="selectEvent(event)"
                   >
                     <span class="event-chip__time">{{ formatEventTime(event.startDate) }}</span>
                     <span class="event-chip__name">{{ event.cours }}</span>
@@ -135,6 +138,9 @@
                   [class.event-card--promo]="!!event.promotion"
                   [class.event-card--unit]="!event.promotion"
                   [attr.aria-label]="event.cours + (event.promotion ? ', ' + event.promotion : '') + ', ' + formatEventTime(event.startDate) + ' – ' + formatEventTime(event.endDate)"
+                  (click)="selectEvent(event)"
+                  tabindex="0"
+                  (keydown.enter)="selectEvent(event)"
                 >
                   <div class="event-card__time">
                     {{ formatEventTime(event.startDate) }} – {{ formatEventTime(event.endDate) }}
@@ -143,12 +149,51 @@
                   @if (event.promotion) {
                     <div class="event-card__promo">{{ event.promotion }}</div>
                   }
+                  @if (event.formateurNom) {
+                    <div class="event-card__formateur">Formateur : {{ event.formateurNom }}</div>
+                  }
                 </article>
               }
               @if (getEventsForDay(day).length === 0) {
                 <span class="grid-cell__empty" aria-hidden="true"></span>
               }
             </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Détail de la session sélectionnée -->
+  @if (selectedEvent()) {
+    <div class="event-details-overlay" (click)="closeDetails()">
+      <div class="event-details" role="dialog" aria-label="Détail de la session" (click)="$event.stopPropagation()">
+        <button type="button" class="event-details__close" (click)="closeDetails()" aria-label="Fermer">×</button>
+        <h3 class="event-details__title">{{ selectedEvent()!.cours }}</h3>
+        <p class="event-details__dates">
+          {{ selectedEvent()!.startDate | date:'d MMMM yyyy' }} – {{ selectedEvent()!.endDate | date:'d MMMM yyyy' }}
+        </p>
+        @if (selectedEvent()!.promotion) {
+          <p class="event-details__promo">Promotion : {{ selectedEvent()!.promotion }}</p>
+        }
+        @if (selectedEvent()!.formateurNom) {
+          <p class="event-details__formateur">Formateur : {{ selectedEvent()!.formateurNom }}</p>
+        }
+        @if (selectedEvent()!.salle) {
+          <p class="event-details__salle">Salle : {{ selectedEvent()!.salle }}</p>
+        }
+        @if (selectedEvent()!.eleves) {
+          <div class="event-details__eleves">
+            <h4>Élèves inscrits ({{ selectedEvent()!.eleves!.length }})</h4>
+            @if (selectedEvent()!.eleves!.length === 0) {
+              <p class="event-details__empty">Aucun élève inscrit.</p>
+            } @else {
+              <ul>
+                @for (eleve of selectedEvent()!.eleves!; track eleve.eleveId) {
+                  <li>{{ eleve.firstName }} {{ eleve.lastName }}</li>
+                }
+              </ul>
+            }
           </div>
         }
       </div>

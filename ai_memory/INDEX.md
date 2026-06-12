@@ -1,3 +1,9 @@
+WI-20260611-FULLST-040 | Tableau de bord FORMATEUR (cours dispenses + eleves par cours) - endpoint GET /api/formateurs/{id}/planning + adapter role-aware + panneau detail calendrier | DONE | developer | ai_memory/2026-06-11__ROLE-developer__WI-20260611-FULLST-040.md
+WI-20260611-FULLST-041 | Exposer formateur dans planning ELEVE - PlanningEleveResponse.formateurId/formateurNom | DONE | developer | ai_memory/2026-06-11__ROLE-developer__WI-20260611-FULLST-041.md
+WI-20260611-FULLST-042 | Inscription a l'unite + option forcer hors-ordre cursus | DONE | solution-architect, developer | ai_memory/2026-06-11__ROLE-developer__WI-20260611-FULLST-042.md
+WI-20260611-FULLST-039 | Campagne verification fonctionnelle par role (CRUD + regles inscription) - 2 FAIL identifies (planning formateur, formateur par cours), 1 FAIL/GAP (inscription a l'unite + forcer absente) | DONE | developer | ai_memory/2026-06-11__ROLE-developer__WI-20260611-FULLST-039.md
+WI-20260611-FULLST-037 | Endpoint eleves accessible REF admin + fix liste "Ajouter un eleve" | DONE | developer | ai_memory/2026-06-11__ROLE-developer__WI-20260611-FULLST-037.md
+WI-20260611-FULLST-038 | Fix positionnement CSS modale "Ajouter un eleve" | DONE | developer | ai_memory/2026-06-11__ROLE-developer__WI-20260611-FULLST-038.md
 ANALYSIS | WI-20260611-FULLST-007 | ai_doc/ANALYSIS__WI-20260611-FULLST-007__cours-planifie-inscription.md | Modele CoursPlanifie / InscriptionCours
 WI-20260611-FULLST-026 | Tests unitaires/integration backend manquants (services/controllers) | DONE | developer, rules-curator | ai_memory/2026-06-11__ROLE-developer__WI-20260611-FULLST-026.md
 WI-20260611-FULLST-030 | Dockerisation complete backend+frontend, docker compose up -d | DONE | devops-engineer, rules-curator | ai_memory/2026-06-11__ROLE-devops-engineer__WI-20260611-FULLST-030.md
@@ -11,6 +17,11 @@ WI-20260610-BACKEN-006 | Frontend page Catalogue de cours (CRUD + prerequis) | D
 WI-20260610-BACKEN-007 | Frontend page Cursus (creation cursus/filiere, ordre pedagogique) | DONE | developer, rules-curator | ai_memory/2026-06-10__ROLE-developer__WI-20260610-BACKEN-007.md
 WI-20260610-BACKEN-001 | Adapter pattern gestion utilisateurs (front) | DONE | developer, rules-curator | ai_memory/2026-06-10__ROLE-developer__WI-20260610-BACKEN-001.md
 # INDEX
+
+WI-20260611-FULLST-036 | Scroll confine a la zone de contenu (router-outlet), pas sidebar/header | DONE | developer | ai_memory/2026-06-11__ROLE-developer__WI-20260611-FULLST-036.md
+WI-20260611-FULLST-033 | Endpoint formateurs accessible REF admin + fix select formateur cours planifie | DONE | developer | ai_memory/2026-06-11__ROLE-developer__WI-20260611-FULLST-033.md
+WI-20260611-FULLST-034 | Audit/standardisation CSS modales (overlay/vh-vw) | DONE | developer | ai_memory/2026-06-11__ROLE-developer__WI-20260611-FULLST-034.md
+WI-20260611-FULLST-035 | Refonte flux auth frontend (expiration JWT + guestGuard login) | DONE | developer | ai_memory/2026-06-11__ROLE-developer__WI-20260611-FULLST-035.md
 
 WI-20260608-FRONTE-003 | Écran gestion utilisateurs — table + recherche + toggle actif/inactif | DONE | developer | ai_memory/2026-06-08__ROLE-developer__WI-20260608-FRONTE-003.md
 
@@ -73,3 +84,4 @@ WI-20260611-FULLST-027 | Page detail cursus (route + alertes desordre pedagogiqu
 WI-20260611-FULLST-028 | Simplification cartes cursus (resume + badge + nav detail) | DONE | developer | ai_memory/2026-06-11__ROLE-developer__WI-20260611-FULLST-028.md
 WI-20260611-FULLST-029 | Correction ordre pedagogique cursus DWWM | DONE (aucune action - cause = catalogue) | developer | ai_memory/2026-06-11__ROLE-developer__WI-20260611-FULLST-029.md
 WI-20260611-FULLST-031 | Catalogue - prerequis cours 10 vide (resout alertes DWWM sans casser CDA) | DONE | developer, rules-curator | ai_memory/2026-06-11__ROLE-developer__WI-20260611-FULLST-031.md
+WI-20260611-FULLST-032 | Bug - tous les roles voient le sidebar/menu REF | DONE | developer | ai_memory/WORK_ITEMS.md#WI-20260611-FULLST-032

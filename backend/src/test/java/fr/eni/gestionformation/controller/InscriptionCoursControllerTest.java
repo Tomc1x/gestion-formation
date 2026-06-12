@@ -58,7 +58,8 @@ class InscriptionCoursControllerTest {
         InscriptionCours inscription = InscriptionCours.builder()
                 .id(1L).eleve(eleve).coursPlanifie(coursPlanifie)
                 .dateInscription(LocalDate.now()).build();
-        when(inscriptionCoursService.creerInscription(100L, 5L)).thenReturn(inscription);
+        when(inscriptionCoursService.creerInscription(100L, 5L, false))
+                .thenReturn(new InscriptionCoursService.InscriptionResult(inscription, java.util.List.of()));
 
         mockMvc.perform(post("/api/cours-planifies/100/inscriptions")
                         .with(user(userWithRole(Role.REFERENTE_ADMINISTRATIVE)))
@@ -71,7 +72,7 @@ class InscriptionCoursControllerTest {
 
     @Test
     void creerInscription_coursPlanifieInconnu_Retourne404() throws Exception {
-        when(inscriptionCoursService.creerInscription(99L, 5L))
+        when(inscriptionCoursService.creerInscription(99L, 5L, false))
                 .thenThrow(new CoursPlanifieNotFoundException(99L));
 
         mockMvc.perform(post("/api/cours-planifies/99/inscriptions")

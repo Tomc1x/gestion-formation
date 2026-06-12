@@ -18,7 +18,7 @@ export class AuthService {
   private readonly TOKEN_KEY = 'auth_token';
   private readonly USER_KEY = 'user';
 
-  private readonly _isAuthenticated = signal(!!localStorage.getItem(this.TOKEN_KEY));
+  private readonly _isAuthenticated = signal(this.hasValidToken());
   readonly isAuthenticated = this._isAuthenticated.asReadonly();
 
   private readonly storedUser = this.readStoredUser();
@@ -33,6 +33,25 @@ export class AuthService {
   readonly currentUser = this._currentUser.asReadonly();
   readonly currentUserId = computed(() => this._currentUser()?.uid ?? null);
   private http = inject(HttpClient);
+
+  private hasValidToken(): boolean {
+    const token = localStorage.getItem(this.TOKEN_KEY);
+    return !!token && !this.isTokenExpired(token);
+  }
+
+  private isTokenExpired(token: string): boolean {
+    try {
+      const payloadBase64 = token.split('.')[1];
+      const payloadJson = atob(payloadBase64.replace(/-/g, '+').replace(/_/g, '/'));
+      const payload = JSON.parse(payloadJson);
+      if (typeof payload.exp !== 'number') {
+        return false;
+      }
+      return Date.now() >= payload.exp * 1000;
+    } catch {
+      return true;
+    }
+  }
 
   private readStoredUser(): { uid: number | null; role: string; firstName: string; lastName: string; email: string } | null {
     if (!localStorage.getItem(this.TOKEN_KEY)) {
@@ -64,6 +83,7 @@ export class AuthService {
           email: response.email
         }));
         this._isAuthenticated.set(true);
+        this._currentRole.set(BACKEND_TO_FRONTEND_ROLE[response.role as BackendRole] ?? 'REF');
         this._currentUser.set({
           uid:response.uid ?? null,
           role: response.role ?? '',

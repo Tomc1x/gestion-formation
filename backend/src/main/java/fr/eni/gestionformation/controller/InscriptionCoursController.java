@@ -5,6 +5,7 @@ import fr.eni.gestionformation.dto.InscriptionCoursResponse;
 import fr.eni.gestionformation.dto.InscritResponse;
 import fr.eni.gestionformation.dto.OrigineInscription;
 import fr.eni.gestionformation.dto.PlanningEleveResponse;
+import fr.eni.gestionformation.dto.PlanningFormateurResponse;
 import fr.eni.gestionformation.entity.CoursPlanifie;
 import fr.eni.gestionformation.entity.InscriptionCours;
 import fr.eni.gestionformation.entity.User;
@@ -28,8 +29,8 @@ public class InscriptionCoursController {
     @PostMapping("/api/cours-planifies/{id}/inscriptions")
     public ResponseEntity<InscriptionCoursResponse> creerInscription(@PathVariable Long id,
                                                                         @RequestBody InscriptionCoursRequest request) {
-        InscriptionCours inscription = inscriptionCoursService.creerInscription(id, request.getEleveId());
-        return ResponseEntity.status(HttpStatus.CREATED).body(toInscriptionResponse(inscription));
+        InscriptionCoursService.InscriptionResult result = inscriptionCoursService.creerInscription(id, request.getEleveId(), request.isForcer());
+        return ResponseEntity.status(HttpStatus.CREATED).body(toInscriptionResponse(result));
     }
 
     @DeleteMapping("/api/cours-planifies/{id}/inscriptions/{eleveId}")
@@ -57,15 +58,51 @@ public class InscriptionCoursController {
         List<PlanningEleveResponse> reponse = planning.entrySet().stream()
                 .map(entry -> {
                     CoursPlanifie cp = entry.getKey();
+                    User formateur = cp.getFormateur();
+                    Long formateurId = formateur != null ? formateur.getUid() : null;
+                    String formateurNom = formateur != null
+                            ? (formateur.getFirstName() + " " + formateur.getLastName())
+                            : "Non assigné";
                     return new PlanningEleveResponse(cp.getId(), cp.getCours().getId(), cp.getCours().getName(),
-                            cp.getDateDebut(), cp.getDateFin(), cp.getOrdre(), cp.getStatut(), entry.getValue());
+                            cp.getDateDebut(), cp.getDateFin(), cp.getOrdre(), cp.getStatut(), entry.getValue(),
+                            formateurId, formateurNom);
                 })
                 .toList();
         return ResponseEntity.ok(reponse);
     }
 
-    private InscriptionCoursResponse toInscriptionResponse(InscriptionCours inscription) {
+    @GetMapping("/api/formateurs/{id}/planning")
+    public ResponseEntity<List<PlanningFormateurResponse>> getPlanningFormateur(@PathVariable Long id, Authentication authentication) {
+        if (!(authentication.getPrincipal() instanceof User currentUser)
+                || (!currentUser.getUid().equals(id) && !hasRole(authentication, "ROLE_ADMINISTRATEUR", "ROLE_REFERENTE_ADMINISTRATIVE"))) {
+            throw new AccessDeniedException("Accès non autorisé au planning de ce formateur");
+        }
+        List<CoursPlanifie> planning = inscriptionCoursService.getPlanningFormateur(id);
+        List<PlanningFormateurResponse> reponse = planning.stream()
+                .map(cp -> {
+                    List<InscritResponse> eleves = inscriptionCoursService.getInscritsCombines(cp.getId()).entrySet().stream()
+                            .map(entry -> new InscritResponse(entry.getKey().getUid(), entry.getKey().getFirstName(),
+                                    entry.getKey().getLastName(), entry.getValue()))
+                            .toList();
+                    return new PlanningFormateurResponse(cp.getId(), cp.getCours().getId(), cp.getCours().getName(),
+                            cp.getDateDebut(), cp.getDateFin(), cp.getOrdre(), cp.getStatut(), cp.getSalle(), eleves);
+                })
+                .toList();
+        return ResponseEntity.ok(reponse);
+    }
+
+    private boolean hasRole(Authentication authentication, String... roles) {
+        for (String role : roles) {
+            if (authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(role))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private InscriptionCoursResponse toInscriptionResponse(InscriptionCoursService.InscriptionResult result) {
+        InscriptionCours inscription = result.inscription();
         return new InscriptionCoursResponse(inscription.getId(), inscription.getEleve().getUid(),
-                inscription.getCoursPlanifie().getId(), inscription.getDateInscription());
+                inscription.getCoursPlanifie().getId(), inscription.getDateInscription(), result.warnings());
     }
 }

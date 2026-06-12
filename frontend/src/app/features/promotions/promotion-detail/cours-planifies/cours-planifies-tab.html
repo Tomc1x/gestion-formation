@@ -40,6 +40,14 @@
             <button
               class="btn btn-ghost btn-sm"
               type="button"
+              [attr.aria-label]="'Inscrire un élève à l\'unité au cours ' + pc.coursNom"
+              (click)="openInscriptionModal(pc)"
+            >
+              <svg lucideUserPlus class="lic" aria-hidden="true"></svg>
+            </button>
+            <button
+              class="btn btn-ghost btn-sm"
+              type="button"
               [attr.aria-label]="'Modifier la session ' + pc.coursNom"
               (click)="openSession(pc)"
             >
@@ -149,6 +157,60 @@
           {{ deleting() ? 'Suppression…' : 'Retirer' }}
         </button>
       </div>
+    </div>
+  </div>
+}
+
+@if (inscriptionTarget(); as target) {
+  <div class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-inscription-title" (click)="closeInscriptionModal()">
+    <div class="card modal anim-in" (click)="$event.stopPropagation()">
+      <div class="modal__header">
+        <h2 id="modal-inscription-title">Inscrire à l'unité — {{ target.coursNom }}</h2>
+      </div>
+
+      <form class="modal__body" [formGroup]="inscriptionForm" (ngSubmit)="submitInscription()">
+        <div class="field">
+          <label for="inscription-eleve">Élève</label>
+          <select id="inscription-eleve" class="input" formControlName="eleveId">
+            <option [ngValue]="null">Sélectionner un élève</option>
+            @for (eleve of eleves(); track eleve.id) {
+              <option [ngValue]="eleve.id">{{ eleve.firstName }} {{ eleve.lastName }}</option>
+            }
+          </select>
+          @if (inscriptionForm.controls.eleveId.invalid && inscriptionForm.controls.eleveId.touched) {
+            <span class="field-error">Champ requis</span>
+          }
+        </div>
+
+        <div class="field field--checkbox">
+          <label>
+            <input type="checkbox" formControlName="forcer" />
+            Forcer l'inscription (hors-ordre cursus)
+          </label>
+        </div>
+
+        @if (inscriptionWarnings().length > 0) {
+          <div class="warning-box">
+            <p class="p2">Avertissements (non bloquants) :</p>
+            <ul class="warning-box__list">
+              @for (warning of inscriptionWarnings(); track warning) {
+                <li>{{ warning }}</li>
+              }
+            </ul>
+          </div>
+        }
+
+        @if (inscriptionError()) {
+          <p class="form-api-error" role="alert">{{ inscriptionError() }}</p>
+        }
+
+        <div class="modal__footer">
+          <button class="btn btn-outline" type="button" (click)="closeInscriptionModal()">Fermer</button>
+          <button class="btn btn-primary" type="submit" [disabled]="inscriptionSubmitting()">
+            {{ inscriptionSubmitting() ? 'Inscription…' : 'Inscrire' }}
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 }

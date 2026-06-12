@@ -1,9 +1,12 @@
 import { Component, ChangeDetectionStrategy, inject, input, output, signal, OnInit } from '@angular/core';
 import { DatePipe } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
-import { LucidePencil, LucideTrash2 } from '@lucide/angular';
+import { LucidePencil, LucideTrash2, LucideUserPlus } from '@lucide/angular';
 import { BasePromotionAdapter } from '../../../../core/adapters/promotion.adapter';
-import { BaseUserAdminAdapter } from '../../../../core/adapters/user-admin.adapter';
+import { BaseFormateurAdapter } from '../../../../core/adapters/formateur.adapter';
+import { BaseEleveAdapter, EleveInfo } from '../../../../core/adapters/eleve.adapter';
+import { BaseInscriptionAdapter } from '../../../../core/adapters/inscription.adapter';
 import { Promotion, PromotionCours } from '../../../../core/models/promotion.model';
 
 export interface FormateurOption {
@@ -13,14 +16,16 @@ export interface FormateurOption {
 
 @Component({
   selector: 'app-cours-planifies-tab',
-  imports: [DatePipe, ReactiveFormsModule, LucidePencil, LucideTrash2],
+  imports: [DatePipe, ReactiveFormsModule, LucidePencil, LucideTrash2, LucideUserPlus],
   templateUrl: './cours-planifies-tab.html',
   styleUrl: './cours-planifies-tab.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CoursPlanifiesTabComponent implements OnInit {
   private readonly promotionAdapter = inject(BasePromotionAdapter);
-  private readonly userAdminAdapter = inject(BaseUserAdminAdapter);
+  private readonly formateurAdapter = inject(BaseFormateurAdapter);
+  private readonly eleveAdapter = inject(BaseEleveAdapter);
+  private readonly inscriptionAdapter = inject(BaseInscriptionAdapter);
 
   readonly promotion = input.required<Promotion>();
   readonly promotionUpdated = output<Promotion>();
@@ -35,13 +40,23 @@ export class CoursPlanifiesTabComponent implements OnInit {
   protected readonly deleting = signal(false);
   protected readonly deleteError = signal<string | null>(null);
 
+  // ── Inscription à l'unité ────────────────────────────────────────────────────
+  protected readonly inscriptionTarget = signal<PromotionCours | null>(null);
+  protected readonly eleves = signal<EleveInfo[]>([]);
+  protected readonly inscriptionError = signal<string | null>(null);
+  protected readonly inscriptionWarnings = signal<string[]>([]);
+  protected readonly inscriptionSubmitting = signal(false);
+
+  protected readonly inscriptionForm = new FormGroup({
+    eleveId: new FormControl<number | null>(null, { validators: Validators.required }),
+    forcer: new FormControl(false, { nonNullable: true }),
+  });
+
   ngOnInit(): void {
-    this.userAdminAdapter.getAll().subscribe({
-      next: users => {
+    this.formateurAdapter.getAll().subscribe({
+      next: formateurs => {
         this.formateurs.set(
-          users
-            .filter(u => u.role === 'FORMATEUR')
-            .map(u => ({ id: u.uid, nom: `${u.firstName} ${u.lastName}` }))
+          formateurs.map(f => ({ id: f.id, nom: `${f.firstName} ${f.lastName}` }))
         );
       },
       error: () => {
@@ -150,6 +165,62 @@ export class CoursPlanifiesTabComponent implements OnInit {
       error: () => {
         this.deleting.set(false);
         this.deleteError.set('Impossible de retirer ce cours planifié.');
+      },
+    });
+  }
+
+  // ── Inscription à l'unité ────────────────────────────────────────────────────
+  protected openInscriptionModal(pc: PromotionCours): void {
+    this.inscriptionError.set(null);
+    this.inscriptionWarnings.set([]);
+    this.inscriptionForm.reset({ eleveId: null, forcer: false });
+
+    this.eleveAdapter.getAll().subscribe({
+      next: eleves => this.eleves.set(eleves),
+      error: () => this.inscriptionError.set('Impossible de charger la liste des élèves.'),
+    });
+
+    this.inscriptionTarget.set(pc);
+  }
+
+  protected closeInscriptionModal(): void {
+    this.inscriptionTarget.set(null);
+    this.inscriptionError.set(null);
+    this.inscriptionWarnings.set([]);
+  }
+
+  protected submitInscription(): void {
+    const target = this.inscriptionTarget();
+    if (!target) return;
+
+    if (this.inscriptionForm.invalid) {
+      this.inscriptionForm.markAllAsTouched();
+      return;
+    }
+
+    const { eleveId, forcer } = this.inscriptionForm.getRawValue();
+    if (eleveId == null) return;
+
+    this.inscriptionSubmitting.set(true);
+    this.inscriptionError.set(null);
+    this.inscriptionWarnings.set([]);
+
+    this.inscriptionAdapter.creerInscription(target.id, { eleveId, forcer }).subscribe({
+      next: result => {
+        this.inscriptionSubmitting.set(false);
+        if (result.warnings.length === 0) {
+          this.closeInscriptionModal();
+        } else {
+          this.inscriptionWarnings.set(result.warnings);
+        }
+      },
+      error: (err: HttpErrorResponse) => {
+        this.inscriptionSubmitting.set(false);
+        if (err.status === 409) {
+          this.inscriptionError.set(typeof err.error === 'string' ? err.error : "Cette inscription n'est pas possible.");
+        } else {
+          this.inscriptionError.set("Impossible d'inscrire cet élève.");
+        }
       },
     });
   }
