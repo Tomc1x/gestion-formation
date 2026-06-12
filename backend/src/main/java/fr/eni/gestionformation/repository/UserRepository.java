@@ -1,6 +1,7 @@
 package fr.eni.gestionformation.repository;
 
 import fr.eni.gestionformation.entity.User;
+import fr.eni.gestionformation.entity.enums.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -10,5 +11,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
 
     List<User> findByPromotionId(Long promotionId);
+
+    List<User> findByRole(Role role);
 
 }

@@ -5,4 +5,5 @@ import lombok.Data;
 @Data
 public class InscriptionCoursRequest {
     private Long eleveId;
+    private boolean forcer;
 }

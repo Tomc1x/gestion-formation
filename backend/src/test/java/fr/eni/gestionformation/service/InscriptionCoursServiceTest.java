@@ -4,11 +4,15 @@ import fr.eni.gestionformation.dto.OrigineInscription;
 import fr.eni.gestionformation.entity.Cours;
 import fr.eni.gestionformation.entity.CoursPlanifie;
 import fr.eni.gestionformation.entity.CoursPlanifieStatut;
+import fr.eni.gestionformation.entity.Cursus;
+import fr.eni.gestionformation.entity.CursusCours;
 import fr.eni.gestionformation.entity.InscriptionCours;
 import fr.eni.gestionformation.entity.Promotion;
 import fr.eni.gestionformation.entity.User;
 import fr.eni.gestionformation.exception.InscriptionAlreadyExistsException;
+import fr.eni.gestionformation.exception.InscriptionHorsOrdreException;
 import fr.eni.gestionformation.repository.CoursPlanifieRepository;
+import fr.eni.gestionformation.repository.CursusCoursRepository;
 import fr.eni.gestionformation.repository.InscriptionCoursRepository;
 import fr.eni.gestionformation.repository.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -39,6 +43,9 @@ class InscriptionCoursServiceTest {
     @Mock
     UserRepository userRepository;
 
+    @Mock
+    CursusCoursRepository cursusCoursRepository;
+
     @InjectMocks
     InscriptionCoursService inscriptionCoursService;
 
@@ -56,10 +63,11 @@ class InscriptionCoursServiceTest {
         when(inscriptionCoursRepository.existsByEleveUidAndCoursPlanifieId(5L, 100L)).thenReturn(false);
         when(inscriptionCoursRepository.save(any(InscriptionCours.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        InscriptionCours result = inscriptionCoursService.creerInscription(100L, 5L);
+        InscriptionCoursService.InscriptionResult result = inscriptionCoursService.creerInscription(100L, 5L, false);
 
-        assertThat(result.getEleve()).isEqualTo(eleve);
-        assertThat(result.getCoursPlanifie()).isEqualTo(coursPlanifie);
+        assertThat(result.inscription().getEleve()).isEqualTo(eleve);
+        assertThat(result.inscription().getCoursPlanifie()).isEqualTo(coursPlanifie);
+        assertThat(result.warnings()).isEmpty();
     }
 
     @Test
@@ -76,7 +84,7 @@ class InscriptionCoursServiceTest {
         when(userRepository.findById(5L)).thenReturn(Optional.of(eleve));
 
         assertThrows(InscriptionAlreadyExistsException.class,
-                () -> inscriptionCoursService.creerInscription(100L, 5L));
+                () -> inscriptionCoursService.creerInscription(100L, 5L, false));
     }
 
     @Test
@@ -93,7 +101,7 @@ class InscriptionCoursServiceTest {
         when(inscriptionCoursRepository.existsByEleveUidAndCoursPlanifieId(5L, 100L)).thenReturn(true);
 
         assertThrows(InscriptionAlreadyExistsException.class,
-                () -> inscriptionCoursService.creerInscription(100L, 5L));
+                () -> inscriptionCoursService.creerInscription(100L, 5L, false));
     }
 
     @Test
@@ -191,5 +199,101 @@ class InscriptionCoursServiceTest {
 
         assertThat(result).hasSize(1);
         assertThat(result.get(coursPromo)).isEqualTo(OrigineInscription.PROMOTION);
+    }
+
+    @Test
+    void creerInscription_horsOrdreSansForcer_lanceException() {
+        Cursus cursus = Cursus.builder().id(1L).name("Cursus A").build();
+        Promotion promotion = Promotion.builder().id(10L).name("Promo A").cursus(cursus).build();
+        User eleve = User.builder().uid(5L).firstName("Jean").lastName("Dupont").promotion(promotion).build();
+
+        Cours coursPrerequis = Cours.builder().id(1L).name("Cours Prerequis").build();
+        Cours coursCible = Cours.builder().id(2L).name("Cours Cible").build();
+
+        CursusCours ccPrerequis = CursusCours.builder().id(1L).cursus(cursus).cours(coursPrerequis).ordre(0).build();
+        CursusCours ccCible = CursusCours.builder().id(2L).cursus(cursus).cours(coursCible).ordre(1).build();
+
+        CoursPlanifie coursPlanifieCible = CoursPlanifie.builder()
+                .id(200L).cours(coursCible).promotion(null)
+                .dateDebut(LocalDate.of(2026, 6, 15)).dateFin(LocalDate.of(2026, 6, 17))
+                .ordre(0).statut(CoursPlanifieStatut.PLANIFIE).build();
+
+        when(coursPlanifieRepository.findById(200L)).thenReturn(Optional.of(coursPlanifieCible));
+        when(userRepository.findById(5L)).thenReturn(Optional.of(eleve));
+        when(inscriptionCoursRepository.existsByEleveUidAndCoursPlanifieId(5L, 200L)).thenReturn(false);
+        when(cursusCoursRepository.findByCursusIdOrderByOrdre(1L)).thenReturn(List.of(ccPrerequis, ccCible));
+        when(coursPlanifieRepository.findByPromotionIdOrderByOrdre(10L)).thenReturn(List.of());
+        when(inscriptionCoursRepository.findByEleveUid(5L)).thenReturn(List.of());
+
+        assertThrows(InscriptionHorsOrdreException.class,
+                () -> inscriptionCoursService.creerInscription(200L, 5L, false));
+    }
+
+    @Test
+    void creerInscription_horsOrdreAvecForcer_succesAvecWarnings() {
+        Cursus cursus = Cursus.builder().id(1L).name("Cursus A").build();
+        Promotion promotion = Promotion.builder().id(10L).name("Promo A").cursus(cursus).build();
+        User eleve = User.builder().uid(5L).firstName("Jean").lastName("Dupont").promotion(promotion).build();
+
+        Cours coursPrerequis = Cours.builder().id(1L).name("Cours Prerequis").build();
+        Cours coursCible = Cours.builder().id(2L).name("Cours Cible").build();
+
+        CursusCours ccPrerequis = CursusCours.builder().id(1L).cursus(cursus).cours(coursPrerequis).ordre(0).build();
+        CursusCours ccCible = CursusCours.builder().id(2L).cursus(cursus).cours(coursCible).ordre(1).build();
+
+        CoursPlanifie coursPlanifieCible = CoursPlanifie.builder()
+                .id(200L).cours(coursCible).promotion(null)
+                .dateDebut(LocalDate.of(2026, 6, 15)).dateFin(LocalDate.of(2026, 6, 17))
+                .ordre(0).statut(CoursPlanifieStatut.PLANIFIE).build();
+
+        when(coursPlanifieRepository.findById(200L)).thenReturn(Optional.of(coursPlanifieCible));
+        when(userRepository.findById(5L)).thenReturn(Optional.of(eleve));
+        when(inscriptionCoursRepository.existsByEleveUidAndCoursPlanifieId(5L, 200L)).thenReturn(false);
+        when(cursusCoursRepository.findByCursusIdOrderByOrdre(1L)).thenReturn(List.of(ccPrerequis, ccCible));
+        when(coursPlanifieRepository.findByPromotionIdOrderByOrdre(10L)).thenReturn(List.of());
+        when(inscriptionCoursRepository.findByEleveUid(5L)).thenReturn(List.of());
+        when(inscriptionCoursRepository.save(any(InscriptionCours.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        InscriptionCoursService.InscriptionResult result = inscriptionCoursService.creerInscription(200L, 5L, true);
+
+        assertThat(result.inscription().getEleve()).isEqualTo(eleve);
+        assertThat(result.warnings()).hasSize(1);
+        assertThat(result.warnings().get(0)).contains("hors-ordre");
+        assertThat(result.warnings().get(0)).contains("Cours Prerequis");
+    }
+
+    @Test
+    void creerInscription_enOrdre_succesSansWarnings() {
+        Cursus cursus = Cursus.builder().id(1L).name("Cursus A").build();
+        Promotion promotion = Promotion.builder().id(10L).name("Promo A").cursus(cursus).build();
+        User eleve = User.builder().uid(5L).firstName("Jean").lastName("Dupont").promotion(promotion).build();
+
+        Cours coursPrerequis = Cours.builder().id(1L).name("Cours Prerequis").build();
+        Cours coursCible = Cours.builder().id(2L).name("Cours Cible").build();
+
+        CursusCours ccPrerequis = CursusCours.builder().id(1L).cursus(cursus).cours(coursPrerequis).ordre(0).build();
+        CursusCours ccCible = CursusCours.builder().id(2L).cursus(cursus).cours(coursCible).ordre(1).build();
+
+        CoursPlanifie coursPlanifiePrerequis = CoursPlanifie.builder()
+                .id(199L).cours(coursPrerequis).promotion(promotion)
+                .dateDebut(LocalDate.of(2026, 5, 1)).dateFin(LocalDate.of(2026, 5, 3))
+                .ordre(0).statut(CoursPlanifieStatut.TERMINE).build();
+        CoursPlanifie coursPlanifieCible = CoursPlanifie.builder()
+                .id(200L).cours(coursCible).promotion(null)
+                .dateDebut(LocalDate.of(2026, 6, 15)).dateFin(LocalDate.of(2026, 6, 17))
+                .ordre(0).statut(CoursPlanifieStatut.PLANIFIE).build();
+
+        when(coursPlanifieRepository.findById(200L)).thenReturn(Optional.of(coursPlanifieCible));
+        when(userRepository.findById(5L)).thenReturn(Optional.of(eleve));
+        when(inscriptionCoursRepository.existsByEleveUidAndCoursPlanifieId(5L, 200L)).thenReturn(false);
+        when(cursusCoursRepository.findByCursusIdOrderByOrdre(1L)).thenReturn(List.of(ccPrerequis, ccCible));
+        when(coursPlanifieRepository.findByPromotionIdOrderByOrdre(10L)).thenReturn(List.of(coursPlanifiePrerequis));
+        when(inscriptionCoursRepository.findByEleveUid(5L)).thenReturn(List.of());
+        when(inscriptionCoursRepository.save(any(InscriptionCours.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        InscriptionCoursService.InscriptionResult result = inscriptionCoursService.creerInscription(200L, 5L, false);
+
+        assertThat(result.inscription().getEleve()).isEqualTo(eleve);
+        assertThat(result.warnings()).isEmpty();
     }
 }

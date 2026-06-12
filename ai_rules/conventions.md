@@ -178,3 +178,20 @@ Verified: 2026-06-11
 **How to apply:** When adding or editing `.env` values that contain `$`, write `$$` for each literal `$`. Verify the final resolved value with `docker compose config` before running `docker compose up`.
 
 **Counter-indications:** Does not apply to values consumed directly by the app outside docker-compose (e.g. `application-local.properties`, `application.properties`) — only `.env` files read by docker-compose's interpolation engine are affected.
+
+---
+
+### CONV-011 — "Non-blocking warning" pattern for soft business rules (forcer flag + warnings list)
+
+Scope: backend/src/main/java/fr/eni/gestionformation (DTOs `*Response`, `GlobalExceptionHandler`, services InscriptionCours/Promotion)
+Origin: WI-20260611-FULLST-042, ai_memory/2026-06-11__ROLE-solution-architect__WI-20260611-FULLST-042.md
+Added: 2026-06-11
+Verified: 2026-06-11
+
+**Rule / Decision / Pitfall:** A "soft" business rule (one that can be deliberately bypassed via an explicit flag, e.g. `forcer: boolean`) must follow this pattern: a dedicated exception mapped to `409 CONFLICT` via `GlobalExceptionHandler` when the flag is absent/false; when the flag is `true`, do not block — instead append a message to a `warnings: List<String>` field on the response DTO.
+
+**Why:** This pattern was already used for planning warnings (`CoursPlanifieResponse.warnings`, chronological-order and formateur-conflict checks in `PromotionService.updatePlanning`/`detecterConflitsFormateur`) and was reused for the cursus-order ("hors-ordre") check in WI-042 (`InscriptionHorsOrdreException` + `InscriptionCoursResponse.warnings`). Keeping one format avoids divergent error/warning shapes across modules.
+
+**How to apply:** Before adding a new "soft" business validation, check whether the relevant response DTO already exposes a `warnings: List<String>` field. If yes, reuse it (throw a dedicated exception mapped to 409 when the override flag is false/absent; append to `warnings` when the flag is true and proceed). If no such field exists yet, add it rather than inventing a new error/warning format.
+
+**Counter-indications:** Does not apply to "hard" business rules that must always block regardless of any flag (e.g. duplicate-enrollment checks, `InscriptionAlreadyExistsException` — see PIT-009) — those remain unconditional 409s with no `forcer` override.

@@ -72,4 +72,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleInscriptionNotFound(InscriptionNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
     }
+
+    @ExceptionHandler(InscriptionHorsOrdreException.class)
+    public ResponseEntity<String> handleInscriptionHorsOrdre(InscriptionHorsOrdreException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
+    }
 }

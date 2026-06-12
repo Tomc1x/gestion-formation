@@ -1,5 +1,225 @@
 # WORK ITEMS
 
+## WI-20260611-FULLST-040
+- Date: 2026-06-11
+- Title: Tableau de bord FORMATEUR (cours dispenses + eleves inscrits par cours)
+- Status: DONE
+- TOA: manager
+- Executor: developer
+- attempt_count: 1
+- Notes: |
+    - Issu de FULLST-039 scenario 7 (FAIL). app.config.ts lie BaseCalendarAdapter
+      globalement a HttpElevePlanningAdapter (GET /api/eleves/{uid}/planning), peu
+      importe le role -> formateur voit un planning vide.
+    - Fix attendu: nouvel endpoint backend (ex GET /api/formateurs/{id}/planning ou
+      GET /api/cours-planifies?formateurId=) retournant les CoursPlanifie ou ce
+      formateur est assigne, avec la liste des eleves inscrits par cours (reutiliser
+      InscriptionCoursService.getInscritsCombines). Cote front: adapter dedie/role-aware
+      pour /app/calendrier (et/ou nouvelle vue) quand l'utilisateur est FORMATEUR.
+    - Comptes test: formateur1@eni.fr / Formateur123.
+    - Verification: ./gradlew test ; ng build ; chrome-devtools login formateur1,
+      verifier que ses cours planifies + listes d'eleves s'affichent.
+
+## WI-20260611-FULLST-041
+- Date: 2026-06-11
+- Title: Exposer le formateur dans le planning ELEVE (PlanningEleveResponse)
+- Status: DONE
+- TOA: manager
+- Executor: developer
+- attempt_count: 1
+- Notes: |
+    - Issu de FULLST-039 scenario 8 (FAIL). backend/src/main/java/fr/eni/gestionformation/dto/PlanningEleveResponse.java
+      et frontend/src/app/core/models/inscription.model.ts (PlanningEleve) n'exposent pas
+      le formateur, alors que CoursPlanifie.formateur existe (entity ligne ~38-40).
+    - Fix attendu: ajouter formateurId/formateurName (ou objet imbrique) dans
+      PlanningEleveResponse en mappant CoursPlanifie.getFormateur(), repercuter dans le
+      modele frontend PlanningEleve et l'affichage calendrier/CalendarEvent.
+    - Comptes test: eleve1@eni.fr / Eleve123. Note: aucune promotion/inscription pour
+      eleve1 dans la DB actuelle -> prevoir une inscription de test pour valider visuellement
+      (cf promotion id=12 "TEST CDA 2" disponible, 0 stagiaires).
+    - Verification: ./gradlew test ; ng build ; chrome-devtools login eleve1, verifier
+      affichage du formateur sur un cours planifie.
+
+## WI-20260611-FULLST-042
+- Date: 2026-06-11
+- Title: Inscription a l'unite (cours individuel) + option "forcer" hors-ordre cursus
+- Status: DONE
+- TOA: manager
+- Executor: solution-architect, developer
+- attempt_count: 0
+- Notes: |
+    - CONCEPTION TERMINEE (solution-architect). Voir
+      ai_memory/2026-06-11__ROLE-solution-architect__WI-20260611-FULLST-042.md pour le
+      plan d'implementation complet (contrat API, flux UI, plan de test).
+    - IMPLEMENTATION TERMINEE (developer). Voir
+      ai_memory/2026-06-11__ROLE-developer__WI-20260611-FULLST-042.md.
+      Backend + frontend complets, gradle test BUILD SUCCESSFUL (3 nouveaux tests
+      hors-ordre/forcer/en-ordre), ng build production OK, scenario 9 non-regression
+      confirme via chrome-devtools (409 message inchange), happy-path 201 confirme.
+      Cas hors-ordre 409 / hors-ordre+forcer non rejoues en live (donnees seed
+      insuffisantes) mais couverts par tests unitaires mockes.
+    - Issu de FULLST-039 scenario 10 (FAIL/GAP) + scenario 9 (BLOCKED, code OK mais pas d'UI).
+      Feature absente cote front ET back. Cahier des charges : la REF inscrit des eleves a
+      une promotion complete OU a un cours a l'unite ; un stagiaire ne peut pas etre inscrit
+      2x au meme cours ; un stagiaire ne peut pas etre inscrit a un cours hors-ordre du
+      cursus sauf en "forcant" l'inscription.
+    - Etat actuel backend: InscriptionCoursRequest n'a qu'un champ eleveId (pas de "forcer").
+      InscriptionCoursService.creerInscription() leve InscriptionAlreadyExistsException sur
+      doublon (deja OK) mais n'a aucune validation d'ordre cursus.
+      InscriptionCoursController : POST /api/cours-planifies/{id}/inscriptions existe mais
+      aucune UI ne l'appelle.
+    - Etape 1 (solution-architect): definir le flux UI (page/modal "inscription a l'unite" -
+      recherche cours-planifie + eleve, checkbox "forcer"), le contrat API (champ forcer sur
+      InscriptionCoursRequest, nouvelle exception InscriptionHorsOrdreException ou warning),
+      et la logique de comparaison ordre cursus vs cours déjà suivis/planifies par l'eleve.
+    - Etape 2 (developer): implementer back (validation ordre + forcer) puis front (UI),
+      puis retester scenario 9 (doublon bloque) via la nouvelle UI/API.
+    - Verification: ./gradlew test ; ng build ; chrome-devtools - inscription normale,
+      inscription hors-ordre refusee sans forcer, acceptee avec forcer, doublon refuse.
+
+## WI-20260611-FULLST-039
+- Date: 2026-06-11
+- Title: Campagne de verification fonctionnelle par role (CRUD + regles metier inscription)
+- Status: DONE
+- TOA: manager
+- Executor: developer
+- attempt_count: 1
+- Result: Scenarios 1-6 PASS (CRUD cours/filiere/cursus/promotion/eleve/utilisateur, REF+ADMIN).
+    Scenario 7 (FORMATEUR planning) FAIL : calendrier reutilise l'endpoint eleve, aucun
+    endpoint/adapter formateur. Scenario 8 (ETUDIANT -> formateur par cours) FAIL :
+    PlanningEleveResponse n'expose pas le formateur. Scenario 9 (doublon inscription)
+    BLOCKED, code backend correct mais aucune UI ne declenche l'endpoint. Scenario 10
+    (inscription a l'unite + "forcer") FAIL/GAP : fonctionnalite absente front ET back.
+    Side-effect : mots de passe reinitialises pour formateur1@eni.fr (Formateur123) et
+    eleve1@eni.fr (Eleve123). Detail complet :
+    ai_memory/2026-06-11__ROLE-developer__WI-20260611-FULLST-039.md
+- Notes: |
+    - Verification (pas de dev sauf si bug trouve) via chrome-devtools, sur app deja
+      lancee (ng serve + backend local). Comptes de test: voir seed/Postman pour
+      ref@..., admin@..., formateur@..., eleve@... (un par role).
+    - Tests REF: CRUD cours (catalogue), CRUD filiere, CRUD cursus, CRUD promotion,
+      CRUD eleve dans une promotion (ajout/retrait, cf FULLST-037/038).
+    - Tests ADMIN: CRUD utilisateur (admin/utilisateurs).
+    - Tests FORMATEUR: visualiser ses cours planifies + liste des eleves par cours.
+    - Tests ELEVE: visualiser ses cours + quel formateur sur quel cours.
+    - Regles metier specifiques (cahier des charges) - REF inscrit eleves a une
+      promotion complete OU a un cours a l'unite:
+        * un stagiaire ne peut pas etre inscrit 2x au meme cours,
+        * un stagiaire ne peut pas etre inscrit a un cours hors-ordre du cursus
+          sauf "forcer l'inscription".
+    - Livrable: rapport PASS/FAIL/BLOCKED par scenario avec preuve (screenshot/
+      reponse API), pas de modification de code sauf bug bloquant trivial signale
+      au manager avant correction.
+    - Verification: note memoire avec tableau recapitulatif des scenarios.
+
+## WI-20260611-FULLST-037
+- Date: 2026-06-11
+- Title: Endpoint eleves accessible REF admin + fix liste "Ajouter un eleve" promotion
+- Status: DONE
+- TOA: manager
+- Executor: developer
+- attempt_count: 0
+- Notes: |
+    - Meme cause racine que FULLST-033 : stagiaires-tab.ts.openAddEleveModal() appelle
+      userAdminAdapter.getAll() -> GET /api/admin/users (hasRole ADMINISTRATEUR seul).
+      Pour REFERENTE_ADMINISTRATIVE -> 403 -> addEleveError "Impossible de charger la
+      liste des eleves." -> elevesDisponibles() reste vide.
+    - Fix attendu: meme pattern que FULLST-033 (FormateurController/formateur.adapter) :
+      nouvel endpoint (ex GET /api/eleves) retournant les User avec role ETUDIANT, securise
+      hasAnyRole("ADMINISTRATEUR","REFERENTE_ADMINISTRATIVE"), nouvel adapter frontend,
+      stagiaires-tab.ts bascule dessus pour openAddEleveModal().
+    - Verification: ./gradlew test ; ng build ; test chrome-devtools connecte en tant que
+      REFERENTE_ADMINISTRATIVE -> ouvrir "Ajouter un eleve" sur une promotion -> liste peuplee.
+
+## WI-20260611-FULLST-038
+- Date: 2026-06-11
+- Title: Fix positionnement CSS modale "Ajouter un eleve"
+- Status: DONE (aucun fix necessaire, positionnement deja correct apres FULLST-034)
+- TOA: manager
+- Executor: developer
+- attempt_count: 0
+- Notes: |
+    - frontend/src/app/features/promotions/promotion-detail/stagiaires/stagiaires-tab.html (l.48-76)
+      + stagiaires-tab.scss (.modal-overlay/.modal, identiques au pattern deja harmonise en
+      FULLST-034 : position fixed, inset 0, flex center, max-height 90vh).
+    - Le CSS en isolation semble correct (meme pattern que les autres modales deja fixees).
+      Le probleme de positionnement signale est peut-etre visible seulement avec le contenu
+      reel (app-entity-selector) ou apres le changement de layout WI-036 (main scrollable).
+    - Fix attendu: investiguer visuellement via chrome-devtools (se connecter en
+      REFERENTE_ADMINISTRATIVE, ouvrir promotion -> onglet Stagiaires -> "Ajouter un
+      eleve") et corriger le positionnement (overlay/modal/entity-selector dropdown).
+      Combiner avec FULLST-037 (sans liste peuplee, le rendu de la modale peut differer).
+    - Verification: ng build ; screenshot chrome-devtools avant/apres montrant la modale
+      correctement centree/positionnee.
+
+## WI-20260611-FULLST-036
+- Date: 2026-06-11
+- Title: Scroll confine a la zone de contenu (router-outlet), pas sidebar/header
+- Status: DONE
+- TOA: manager
+- Executor: developer
+- attempt_count: 1
+- Notes: |
+    - frontend/src/app/layouts/main-layout/main-layout.scss : .main-layout (height:100vh,
+      flex), .main-content (flex column, max-height:100vh), main (flex:1, pas d'overflow defini).
+    - Resultat actuel: le scroll se produit probablement sur la page entiere (body/.page)
+      au lieu d'etre confine a <main>, donc sidebar (app-sidebar) et header (app-header)
+      scrollent aussi.
+    - Fix attendu: donner a <main> overflow-y: auto + min-height: 0 (necessaire pour que
+      flex-basis 1 1 0% permette le shrink et active le scroll interne), verifier que
+      app-sidebar et app-header restent fixes/visibles pendant le scroll du contenu.
+      Ne pas regresser le fix WI-20260611-FULLST-034 (transform: none sur fadeUp).
+    - Verification: ng build ; test visuel chrome-devtools sur une page longue
+      (ex. admin/cursus/:id ou utilisateurs) -> sidebar/header restent fixes,
+      seul le contenu scrolle.
+
+## WI-20260611-FULLST-033
+- Date: 2026-06-11
+- Title: Endpoint formateurs accessible REF admin + fix select formateur sur cours planifie
+- Status: DONE
+- TOA: manager
+- Executor: developer
+- attempt_count: 0
+- Notes: |
+    - Cause: cours-planifies-tab.ts charge la liste formateurs via GET /api/admin/users
+      (hasRole ADMINISTRATEUR seul). REFERENTE_ADMINISTRATIVE recoit 403 (avale silencieusement),
+      formateurs() reste vide -> select formateur ne propose que "Non assigné".
+    - Fix attendu: nouvel endpoint (ex GET /api/formateurs, reutilise FormateurInfo) ouvert a
+      ADMINISTRATEUR + REFERENTE_ADMINISTRATIVE; basculer cours-planifies-tab.ts dessus.
+    - Verification: ./gradlew test ; ng build ; test manuel assignation formateur en tant que REF.
+
+## WI-20260611-FULLST-034
+- Date: 2026-06-11
+- Title: Audit/standardisation CSS modales (overlay/vh-vw deborde de l'ecran)
+- Status: DONE
+- TOA: manager
+- Executor: developer
+- attempt_count: 0
+- Notes: |
+    - La plupart des modales ne sont pas correctement bornees a vh/vw quand leur composant
+      parent depasse l'ecran (9 fichiers scss avec pattern .modal/.modal-overlay identifie).
+    - Fix attendu: harmoniser/centraliser la regle .modal-overlay (position fixed, inset 0)
+      + .modal (max-height: 90vh, overflow-y: auto, width borne) - idealement extraire dans
+      un style partage (ex. styles/_modal.scss) pour eviter la duplication/divergence.
+    - Verification: ng build ; verifier visuellement (chrome-devtools) sur 2-3 modales depuis
+      une page avec contenu long (ex. cursus-detail, promotion-detail).
+
+## WI-20260611-FULLST-035
+- Date: 2026-06-11
+- Title: Refonte flux auth frontend (expiration JWT + guestGuard login)
+- Status: DONE
+- TOA: manager
+- Executor: developer
+- attempt_count: 0
+- Notes: |
+    - isAuthenticated signal ne reflete que la presence du token (pas son expiration JWT).
+    - Aucun guard sur /login pour rediriger un utilisateur deja authentifie vers /app.
+    - Fix attendu: decoder exp du JWT dans AuthService (isAuthenticated derive de exp > now),
+      ajouter guestGuard sur la route login (redirige vers /app si authentifie), garder
+      l'intercepteur 401 comme filet de securite.
+    - Verification: ng build ; test manuel login/logout, token expire -> redirection login,
+      utilisateur authentifie -> /login redirige vers /app.
+
 ## WI-20260611-FULLST-030
 - Date: 2026-06-11
 - Title: Dockerisation complete backend + frontend, docker compose up -d
@@ -1998,3 +2218,45 @@ promotion). Repro :
       /app/admin/cursus et observer les badges d'alerte globaux avant/apres).
 - Verification requise : capture avant/apres des alertes sur DWWM (id 5) et sur la page
   liste /app/admin/cursus (badges), confirmation persistance apres rechargement.
+
+---
+
+- WI: WI-20260611-FULLST-032
+- Date: 2026-06-11
+- Title: Bug - Tous les roles voient le sidebar/menu du role REF
+- Status: DONE
+- TOA: manager
+- Executor: developer
+- attempt_count: 0
+- Contexte: |
+    L'utilisateur rapporte que peu importe le compte utilise pour se connecter (ELEVE,
+    ADMIN, FORMATEUR), le menu/sidebar affiche les liens reserves au role REF (Cursus,
+    Promotions, etc.). WI-20260611-FULLST-023 (DONE) a implemente la restriction des
+    routes/sidebar par role (roleGuard + masquage liens sidebar selon role,
+    WI-20260610-BACKEN-022). Regression probable depuis FULLST-023 ou un changement
+    recent (FULLST-027/028/030/031 ont touche cursus/docker/catalogue).
+- Scope:
+    - Investiguer le composant sidebar (frontend/src/app/layouts/main-layout/ ou
+      equivalent, cf. WI-20260610-BACKEN-022) : verifier comment le role utilisateur est
+      lu (depuis le JWT decode, un service AuthService/UserService, ou un signal global)
+      et comment les liens sont filtres.
+    - Verifier si le probleme vient : (a) du decodage/stockage du role apres login
+      (toujours REF en dur ou mauvais champ JWT), (b) de la logique de filtrage sidebar
+      elle-meme (condition inversee ou role REF par defaut), ou (c) du roleGuard qui
+      autoriserait quand meme la navigation reelle (verifier point 2 : "Acces aux pages
+      REF fonctionne" pas seulement visible - confirmer si c'est juste l'affichage ou
+      aussi un vrai bypass de securite cote frontend ET backend).
+    - Reproduire en se connectant avec un compte ELEVE et un compte FORMATEUR (comptes
+      de test existants, voir notes FULLST-017/019/020/029/031 pour login REF
+      ref@ref.com/toto785971 - chercher des comptes equivalents pour ELEVE/FORMATEUR
+      dans le seed/donnees de test, NE PAS creer de nouveaux comptes de demo - cf.
+      memoire "Pas de demo").
+    - Corriger la cause racine (probablement frontend : lecture du role ou condition de
+      filtrage sidebar).
+    - IMPORTANT (securite) : si le bug va au-dela de l'affichage (un ELEVE peut
+      effectivement appeler les endpoints REF cote backend), documenter cela
+      explicitement comme un probleme de securite backend distinct (verifier
+      @PreAuthorize / SecurityConfig cote Spring) - NE PAS se limiter a masquer le menu
+      cote frontend si le backend autorise reellement l'acces.
+- Verification requise : se connecter avec ELEVE, FORMATEUR, ADMIN, REF et confirmer que
+  chaque sidebar n'affiche que les liens autorises pour ce role (chrome-devtools).
