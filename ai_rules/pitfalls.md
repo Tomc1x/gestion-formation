@@ -421,3 +421,38 @@ Verified: 2026-06-11
 **How to apply:** Always use `PUT /api/cours/{id}/prerequis` with a raw `List<Long>` body for any prerequis mutation. If reviewing/extending `CoursController.update`, consider either rejecting unknown fields like `prerequisIds` or documenting the split explicitly in the API docs/Swagger.
 
 **Counter-indications:** None — applies to any current or future caller of the cours update API.
+
+---
+
+### PIT-025 — AuthService derived signals must be set explicitly in login(), not only at init
+
+Scope: frontend/src/app/core/services/auth.service.ts and any signal derived from storedUser
+Origin: WI-20260611-FULLST-032, ai_memory/2026-06-11__ROLE-developer__WI-20260611-FULLST-032.md
+Added: 2026-06-11
+Verified: 2026-06-11
+
+**Pitfall:** A signal initialized once from `localStorage`/`storedUser` (e.g. `_currentRole`) but never re-set in `login()`'s `tap()` remains frozen on its init-time value after a fresh login without full page reload, causing UI (sidebar, roleGuard) to use the wrong role.
+
+**Why:** `_currentRole` was only set at construction time; `login()` updated `_currentUser` and `localStorage` but never called `_currentRole.set(...)`, so after login the sidebar/role guard kept showing the role from the previous session (often 'REF') for all users.
+
+**How to apply:** Any new signal derived from the user profile in `AuthService` must be updated at all 3 points: init (storedUser), `login()` (response, via `BACKEND_TO_FRONTEND_ROLE` mapping), and `logout()` (default/reset value).
+
+**Counter-indications:** None.
+
+---
+
+### PIT-026 — Seed eleve with promotion+cursus makes hors-ordre validation untestable via UI
+
+Scope: backend/inscription, any future WI touching cursus-order validation or `getPlanningEleve`
+Origin: WI-20260611-FULLST-042, ai_memory/2026-06-11__ROLE-developer__WI-20260611-FULLST-042.md
+Added: 2026-06-11
+Verified: 2026-06-11
+
+**Pitfall:** Do not set `users.promotion_id` on a seed eleve to a promotion whose planning already covers the target cursus's early courses when trying to manually test hors-ordre/prerequisite logic — `getPlanningEleve` will report those courses as covered via PROMOTION origin, masking any gap.
+
+**Why:** Discovered during WI-042 verification — assigning "Eleve Deux" (uid=12) to promotion 12 ("TEST CDA 2") made all 18 of that promotion's `CoursPlanifie` appear "inscrit" for the eleve via PROMOTION origin, so `calculerPrerequisManquants` always returned an empty list regardless of the target course's `ordre`, making the hors-ordre (409) and hors-ordre+forcer (201+warnings) paths impossible to trigger through the UI.
+
+**How to apply:** To manually test hors-ordre scenarios, use an eleve whose `promotion.cursus` is set but whose `promotion.planning` does NOT cover the cursus's early-ordre courses (e.g. a promotion with a partial/short planning), or rely on the mocked unit tests in `InscriptionCoursServiceTest` (`creerInscription_horsOrdreSansForcer_lanceException`, `creerInscription_horsOrdreAvecForcer_succesAvecWarnings`, `creerInscription_enOrdre_succesSansWarnings`) instead.
+
+**Counter-indications:** None — applies whenever a seed/test eleve is given a `promotion` for the purpose of testing cursus-order-dependent logic.
+

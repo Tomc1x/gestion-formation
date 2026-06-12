@@ -5,10 +5,11 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
-public class PlanningEleveResponse {
+public class PlanningFormateurResponse {
     private Long coursPlanifieId;
     private Long coursId;
     private String coursNom;
@@ -16,7 +17,6 @@ public class PlanningEleveResponse {
     private LocalDate dateFin;
     private int ordre;
     private CoursPlanifieStatut statut;
-    private OrigineInscription origine;
-    private Long formateurId;
-    private String formateurNom;
+    private String salle;
+    private List<InscritResponse> eleves;
 }

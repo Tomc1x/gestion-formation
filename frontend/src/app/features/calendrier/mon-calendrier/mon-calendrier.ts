@@ -104,6 +104,16 @@ export class MonCalendrierComponent {
 
   readonly weekDayLabels = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
+  readonly selectedEvent = signal<CalendarEvent | null>(null);
+
+  selectEvent(event: CalendarEvent): void {
+    this.selectedEvent.set(event);
+  }
+
+  closeDetails(): void {
+    this.selectedEvent.set(null);
+  }
+
   isCurrentMonth(date: Date): boolean {
     return isSameMonth(date, this.referenceDate());
   }

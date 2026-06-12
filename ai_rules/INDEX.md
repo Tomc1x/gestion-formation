@@ -42,3 +42,6 @@ Deprecated entries are prefixed with `# DEPRECATED`.
 | CONVENTION | CONV-010 | Escape `$` as `$$` in `.env` values for docker-compose | conventions.md#conv-010 | 2026-06-11 |
 | PITFALL  | PIT-023 | Catalogue cours id 26 is a cross-cursus junction point (DWWM/CDA) | pitfalls.md#pit-023 | 2026-06-11 |
 | PITFALL  | PIT-024 | PUT /api/cours/{id} silently ignores `prerequisIds` | pitfalls.md#pit-024 | 2026-06-11 |
+| PITFALL  | PIT-025 | AuthService derived signals must be set explicitly in login(), not only at init | pitfalls.md#pit-025 | 2026-06-11 |
+| CONVENTION | CONV-011 | "Non-blocking warning" pattern for soft business rules (forcer + warnings) | conventions.md#conv-011 | 2026-06-11 |
+| PITFALL  | PIT-026 | Seed eleve with promotion+cursus makes hors-ordre validation untestable via UI | pitfalls.md#pit-026 | 2026-06-11 |
