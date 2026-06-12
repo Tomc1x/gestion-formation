@@ -41,7 +41,7 @@ class CursusServiceTest {
         Filiere filiere = Filiere.builder().id(1L).name("Developpement").build();
         Cursus cursus = Cursus.builder().id(1L).name("Ancien nom").filiere(null).build();
         when(cursusRepository.findById(1L)).thenReturn(Optional.of(cursus));
-        when(cursusRepository.findByName("Nouveau nom")).thenReturn(Optional.empty());
+        when(cursusRepository.findByNameIgnoreCase("Nouveau nom")).thenReturn(Optional.empty());
         when(cursusRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
         Cursus result = cursusService.update(1L, "Nouveau nom", 1L, filiere);
@@ -55,7 +55,7 @@ class CursusServiceTest {
         Filiere filiere = Filiere.builder().id(1L).name("Developpement").build();
         Cursus cursus = Cursus.builder().id(1L).name("Cursus").filiere(filiere).build();
         when(cursusRepository.findById(1L)).thenReturn(Optional.of(cursus));
-        when(cursusRepository.findByName("Cursus")).thenReturn(Optional.of(cursus));
+        when(cursusRepository.findByNameIgnoreCase("Cursus")).thenReturn(Optional.of(cursus));
         when(cursusRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
         Cursus result = cursusService.update(1L, "Cursus", null, null);
@@ -68,7 +68,7 @@ class CursusServiceTest {
         Cursus cursus = Cursus.builder().id(1L).name("Ancien nom").build();
         Cursus autreCursus = Cursus.builder().id(2L).name("Nom pris").build();
         when(cursusRepository.findById(1L)).thenReturn(Optional.of(cursus));
-        when(cursusRepository.findByName("Nom pris")).thenReturn(Optional.of(autreCursus));
+        when(cursusRepository.findByNameIgnoreCase("Nom pris")).thenReturn(Optional.of(autreCursus));
 
         assertThrows(IllegalArgumentException.class, () -> cursusService.update(1L, "Nom pris", null, null));
     }
@@ -77,7 +77,7 @@ class CursusServiceTest {
     void update_sameNameAsItself_doesNotThrow() {
         Cursus cursus = Cursus.builder().id(1L).name("Meme nom").build();
         when(cursusRepository.findById(1L)).thenReturn(Optional.of(cursus));
-        when(cursusRepository.findByName("Meme nom")).thenReturn(Optional.of(cursus));
+        when(cursusRepository.findByNameIgnoreCase("Meme nom")).thenReturn(Optional.of(cursus));
         when(cursusRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
         Cursus result = cursusService.update(1L, "Meme nom", null, null);

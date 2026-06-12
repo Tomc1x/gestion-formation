@@ -4,6 +4,8 @@ import fr.eni.gestionformation.entity.Filiere;
 import fr.eni.gestionformation.entity.User;
 import fr.eni.gestionformation.entity.enums.Role;
 import fr.eni.gestionformation.exception.FiliereNotFoundException;
+import fr.eni.gestionformation.mapper.FiliereMapper;
+import fr.eni.gestionformation.security.JwtAuthenticationFilter;
 import fr.eni.gestionformation.security.SecurityConfig;
 import fr.eni.gestionformation.service.FiliereService;
 import fr.eni.gestionformation.service.JwtService;
@@ -24,7 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(FiliereController.class)
-@Import(SecurityConfig.class)
+@Import({SecurityConfig.class, FiliereMapper.class, JwtAuthenticationFilter.class})
 class FiliereControllerTest {
 
     @Autowired

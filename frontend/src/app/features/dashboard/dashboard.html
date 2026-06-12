@@ -1,1 +1,394 @@
-<p>dashboard works</p>
+<div class="page anim-up">
+  <div class="page__header">
+    <div>
+      <h1>Tableau de bord</h1>
+      <p class="p1 page__subtitle">{{ subtitle() }}</p>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="card skel page__skel" aria-hidden="true"></div>
+  } @else {
+    @switch (role) {
+      @case ('REF') {
+        <div class="stats-grid">
+          <button class="card stat-card stat-card--blue" type="button" (click)="goTo('/app/admin/promotions')">
+            <span class="stat-card__icon"><svg lucideLayers class="lic" aria-hidden="true"></svg></span>
+            <span class="stat-card__value">{{ promotionsActives() }}</span>
+            <span class="stat-card__label">Promotions actives</span>
+          </button>
+
+          <div class="card stat-card stat-card--green">
+            <span class="stat-card__icon"><svg lucideUsers class="lic" aria-hidden="true"></svg></span>
+            <span class="stat-card__value">{{ elevesCount() }}</span>
+            <span class="stat-card__label">Stagiaires inscrits</span>
+          </div>
+
+          <div class="card stat-card stat-card--amber">
+            <span class="stat-card__icon"><svg lucideCalendarClock class="lic" aria-hidden="true"></svg></span>
+            <span class="stat-card__value">{{ coursCetteSemaine() }}</span>
+            <span class="stat-card__label">Cours cette semaine</span>
+          </div>
+
+          <button class="card stat-card stat-card--purple" type="button" (click)="goTo('/app/admin/cursus')">
+            <span class="stat-card__icon"><svg lucideBookOpenCheck class="lic" aria-hidden="true"></svg></span>
+            <span class="stat-card__value">{{ cursusList().length }}</span>
+            <span class="stat-card__label">Cursus au catalogue</span>
+          </button>
+        </div>
+
+        <div class="dashboard-grid">
+          <div class="card feed">
+            <div class="feed__header">
+              <div class="feed__title">
+                <svg lucideCalendarDays class="lic" aria-hidden="true"></svg>
+                <h3>Prochains cours planifiés</h3>
+              </div>
+              <button class="btn btn-ghost btn-sm" type="button" (click)="goTo('/app/admin/promotions')">
+                Tout voir
+                <svg lucideArrowRight class="lic" aria-hidden="true"></svg>
+              </button>
+            </div>
+
+            @if (prochainsCours().length === 0) {
+              <p class="p2 muted feed__empty">Aucun cours planifié à venir.</p>
+            } @else {
+              <div>
+                @for (item of prochainsCours(); track item.planning.id) {
+                  <div class="feed__row">
+                    <div class="feed__date">
+                      <div class="feed__date-day">{{ fmtDay(item.planning.dateDebut) }}</div>
+                      <div class="feed__date-month">{{ fmtMonth(item.planning.dateDebut) }}</div>
+                    </div>
+                    <div class="feed__sep"></div>
+                    <div class="feed__info">
+                      <div class="feed__cours">{{ item.planning.coursNom }}</div>
+                      <div class="feed__meta">
+                        <span><svg lucideLayers class="lic" aria-hidden="true"></svg>{{ item.promotion.name }}</span>
+                        @if (item.planning.formateurNom) {
+                          <span><svg lucideUser class="lic" aria-hidden="true"></svg>{{ item.planning.formateurNom }}</span>
+                        }
+                      </div>
+                    </div>
+                    <span class="badge badge--blue">
+                      <svg lucideUsers class="lic" aria-hidden="true"></svg>
+                      {{ item.promotion.eleves.length }}
+                    </span>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
+          <div class="card actions">
+            <h3 class="actions__title">Actions rapides</h3>
+            <div class="actions__list">
+              <button class="action-item action-item--blue" type="button" (click)="goTo('/app/admin/promotions')">
+                <span class="action-item__icon"><svg lucideLayers class="lic" aria-hidden="true"></svg></span>
+                <span class="action-item__text">
+                  <span class="action-item__title">Nouvelle promotion</span>
+                  <span class="action-item__desc">Planifier une session de cursus</span>
+                </span>
+                <svg lucideChevronRight class="lic action-item__chevron" aria-hidden="true"></svg>
+              </button>
+
+              <button class="action-item action-item--purple" type="button" (click)="goTo('/app/admin/cursus')">
+                <span class="action-item__icon"><svg lucideBookOpenCheck class="lic" aria-hidden="true"></svg></span>
+                <span class="action-item__text">
+                  <span class="action-item__title">Gérer les cursus</span>
+                  <span class="action-item__desc">Filières & ordre pédagogique</span>
+                </span>
+                <svg lucideChevronRight class="lic action-item__chevron" aria-hidden="true"></svg>
+              </button>
+
+              <button class="action-item action-item--green" type="button" (click)="goTo('/app/admin/cours')">
+                <span class="action-item__icon"><svg lucideCalendarDays class="lic" aria-hidden="true"></svg></span>
+                <span class="action-item__text">
+                  <span class="action-item__title">Catalogue de cours</span>
+                  <span class="action-item__desc">Gérer les cours disponibles</span>
+                </span>
+                <svg lucideChevronRight class="lic action-item__chevron" aria-hidden="true"></svg>
+              </button>
+            </div>
+
+            @if (elevesSansPromotion() > 0) {
+              <div class="info-box">
+                <svg lucideInfo class="lic" aria-hidden="true"></svg>
+                <p class="p2">
+                  <strong>{{ elevesSansPromotion() }} stagiaire{{ elevesSansPromotion() > 1 ? 's' : '' }}</strong>
+                  {{ elevesSansPromotion() > 1 ? 'ne sont actuellement affectés' : "n'est actuellement affecté" }}
+                  à aucune promotion.
+                </p>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      @case ('FORMATEUR') {
+        <div class="stats-grid">
+          <div class="card stat-card stat-card--blue">
+            <span class="stat-card__icon"><svg lucideCalendarCheck class="lic" aria-hidden="true"></svg></span>
+            <span class="stat-card__value">{{ coursAujourdHui() }}</span>
+            <span class="stat-card__label">Cours aujourd'hui</span>
+          </div>
+
+          <div class="card stat-card stat-card--amber">
+            <span class="stat-card__icon"><svg lucideCalendarClock class="lic" aria-hidden="true"></svg></span>
+            <span class="stat-card__value">{{ coursCetteSemaineCal() }}</span>
+            <span class="stat-card__label">Cours cette semaine</span>
+          </div>
+
+          <div class="card stat-card stat-card--green">
+            <span class="stat-card__icon"><svg lucideUsers class="lic" aria-hidden="true"></svg></span>
+            <span class="stat-card__value">{{ elevesAEncadrerSemaine() }}</span>
+            <span class="stat-card__label">Élèves à encadrer cette semaine</span>
+          </div>
+
+          <div class="card stat-card stat-card--purple">
+            <span class="stat-card__icon"><svg lucideLayers class="lic" aria-hidden="true"></svg></span>
+            <span class="stat-card__value">{{ coursCeMois() }}</span>
+            <span class="stat-card__label">Cours ce mois-ci</span>
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <div class="card feed">
+            <div class="feed__header">
+              <div class="feed__title">
+                <svg lucideCalendarDays class="lic" aria-hidden="true"></svg>
+                <h3>Prochains cours</h3>
+              </div>
+              <button class="btn btn-ghost btn-sm" type="button" (click)="goTo('/app/calendrier')">
+                Tout voir
+                <svg lucideArrowRight class="lic" aria-hidden="true"></svg>
+              </button>
+            </div>
+
+            @if (prochainsEvents().length === 0) {
+              <p class="p2 muted feed__empty">Aucun cours planifié à venir.</p>
+            } @else {
+              <div>
+                @for (event of prochainsEvents(); track event.id) {
+                  <div class="feed__row">
+                    <div class="feed__date">
+                      <div class="feed__date-day">{{ fmtDayD(event.startDate) }}</div>
+                      <div class="feed__date-month">{{ fmtMonthD(event.startDate) }}</div>
+                    </div>
+                    <div class="feed__sep"></div>
+                    <div class="feed__info">
+                      <div class="feed__cours">{{ event.cours }}</div>
+                      <div class="feed__meta">
+                        <span><svg lucideClock class="lic" aria-hidden="true"></svg>{{ fmtTime(event.startDate) }}</span>
+                        @if (event.promotion) {
+                          <span><svg lucideLayers class="lic" aria-hidden="true"></svg>{{ event.promotion }}</span>
+                        }
+                        @if (event.salle) {
+                          <span><svg lucideMapPin class="lic" aria-hidden="true"></svg>{{ event.salle }}</span>
+                        }
+                      </div>
+                    </div>
+                    @if (event.eleves) {
+                      <span class="badge badge--blue">
+                        <svg lucideUsers class="lic" aria-hidden="true"></svg>
+                        {{ event.eleves.length }}
+                      </span>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
+          <div class="card actions">
+            <h3 class="actions__title">Actions rapides</h3>
+            <div class="actions__list">
+              <button class="action-item action-item--blue" type="button" (click)="goTo('/app/calendrier')">
+                <span class="action-item__icon"><svg lucideCalendarDays class="lic" aria-hidden="true"></svg></span>
+                <span class="action-item__text">
+                  <span class="action-item__title">Mon calendrier</span>
+                  <span class="action-item__desc">Consulter mon planning de cours</span>
+                </span>
+                <svg lucideChevronRight class="lic action-item__chevron" aria-hidden="true"></svg>
+              </button>
+
+              @if (prochainEventInscritsLink()) {
+                <button class="action-item action-item--green" type="button" (click)="goTo(prochainEventInscritsLink()!)">
+                  <span class="action-item__icon"><svg lucideUsers class="lic" aria-hidden="true"></svg></span>
+                  <span class="action-item__text">
+                    <span class="action-item__title">Gérer les inscrits</span>
+                    <span class="action-item__desc">Élèves du prochain cours</span>
+                  </span>
+                  <svg lucideChevronRight class="lic action-item__chevron" aria-hidden="true"></svg>
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+      }
+
+      @case ('ELEVE') {
+        <div class="stats-grid">
+          <div class="card stat-card stat-card--blue">
+            <span class="stat-card__icon"><svg lucideCalendarCheck class="lic" aria-hidden="true"></svg></span>
+            <span class="stat-card__value">{{ coursAujourdHui() }}</span>
+            <span class="stat-card__label">Cours aujourd'hui</span>
+          </div>
+
+          <div class="card stat-card stat-card--amber">
+            <span class="stat-card__icon"><svg lucideCalendarClock class="lic" aria-hidden="true"></svg></span>
+            <span class="stat-card__value">{{ coursCetteSemaineCal() }}</span>
+            <span class="stat-card__label">Cours cette semaine</span>
+          </div>
+
+          <div class="card stat-card stat-card--purple">
+            <span class="stat-card__icon"><svg lucideLayers class="lic" aria-hidden="true"></svg></span>
+            <span class="stat-card__value">{{ coursCeMois() }}</span>
+            <span class="stat-card__label">Cours ce mois-ci</span>
+          </div>
+
+          <div class="card stat-card stat-card--green">
+            <span class="stat-card__icon"><svg lucideUserCheck class="lic" aria-hidden="true"></svg></span>
+            <span class="stat-card__value">{{ formateursSemaine() }}</span>
+            <span class="stat-card__label">Formateurs cette semaine</span>
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <div class="card feed">
+            <div class="feed__header">
+              <div class="feed__title">
+                <svg lucideCalendarDays class="lic" aria-hidden="true"></svg>
+                <h3>Mes prochains cours</h3>
+              </div>
+              <button class="btn btn-ghost btn-sm" type="button" (click)="goTo('/app/calendrier')">
+                Tout voir
+                <svg lucideArrowRight class="lic" aria-hidden="true"></svg>
+              </button>
+            </div>
+
+            @if (prochainsEvents().length === 0) {
+              <p class="p2 muted feed__empty">Aucun cours planifié à venir.</p>
+            } @else {
+              <div>
+                @for (event of prochainsEvents(); track event.id) {
+                  <div class="feed__row">
+                    <div class="feed__date">
+                      <div class="feed__date-day">{{ fmtDayD(event.startDate) }}</div>
+                      <div class="feed__date-month">{{ fmtMonthD(event.startDate) }}</div>
+                    </div>
+                    <div class="feed__sep"></div>
+                    <div class="feed__info">
+                      <div class="feed__cours">{{ event.cours }}</div>
+                      <div class="feed__meta">
+                        <span><svg lucideClock class="lic" aria-hidden="true"></svg>{{ fmtTime(event.startDate) }}</span>
+                        @if (event.formateurNom) {
+                          <span><svg lucideUser class="lic" aria-hidden="true"></svg>{{ event.formateurNom }}</span>
+                        }
+                        @if (event.salle) {
+                          <span><svg lucideMapPin class="lic" aria-hidden="true"></svg>{{ event.salle }}</span>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
+          <div class="card actions">
+            <h3 class="actions__title">Actions rapides</h3>
+            <div class="actions__list">
+              <button class="action-item action-item--blue" type="button" (click)="goTo('/app/calendrier')">
+                <span class="action-item__icon"><svg lucideCalendarDays class="lic" aria-hidden="true"></svg></span>
+                <span class="action-item__text">
+                  <span class="action-item__title">Mon calendrier</span>
+                  <span class="action-item__desc">Voir mon emploi du temps complet</span>
+                </span>
+                <svg lucideChevronRight class="lic action-item__chevron" aria-hidden="true"></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
+      @case ('ADMIN') {
+        <div class="stats-grid">
+          <button class="card stat-card stat-card--blue" type="button" (click)="goTo('/app/admin/utilisateurs')">
+            <span class="stat-card__icon"><svg lucideUsers class="lic" aria-hidden="true"></svg></span>
+            <span class="stat-card__value">{{ totalUsers() }}</span>
+            <span class="stat-card__label">Utilisateurs au total</span>
+          </button>
+
+          <div class="card stat-card stat-card--purple">
+            <span class="stat-card__icon"><svg lucideUserCog class="lic" aria-hidden="true"></svg></span>
+            <span class="stat-card__value">{{ totalFormateurs() }}</span>
+            <span class="stat-card__label">Formateurs</span>
+          </div>
+
+          <div class="card stat-card stat-card--green">
+            <span class="stat-card__icon"><svg lucideGraduationCap class="lic" aria-hidden="true"></svg></span>
+            <span class="stat-card__value">{{ totalEleves() }}</span>
+            <span class="stat-card__label">Élèves</span>
+          </div>
+
+          <div class="card stat-card stat-card--amber">
+            <span class="stat-card__icon"><svg lucideUserX class="lic" aria-hidden="true"></svg></span>
+            <span class="stat-card__value">{{ comptesDesactives() }}</span>
+            <span class="stat-card__label">Comptes désactivés</span>
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <div class="card feed">
+            <div class="feed__header">
+              <div class="feed__title">
+                <svg lucideUserCheck class="lic" aria-hidden="true"></svg>
+                <h3>Derniers utilisateurs</h3>
+              </div>
+              <button class="btn btn-ghost btn-sm" type="button" (click)="goTo('/app/admin/utilisateurs')">
+                Tout voir
+                <svg lucideArrowRight class="lic" aria-hidden="true"></svg>
+              </button>
+            </div>
+
+            @if (derniersUtilisateurs().length === 0) {
+              <p class="p2 muted feed__empty">Aucun utilisateur enregistré.</p>
+            } @else {
+              <div>
+                @for (user of derniersUtilisateurs(); track user.uid) {
+                  <div class="feed__row">
+                    <div class="feed__info">
+                      <div class="feed__cours">{{ user.firstName }} {{ user.lastName }}</div>
+                      <div class="feed__meta">
+                        <span>{{ user.email }}</span>
+                        <span class="badge badge--blue">{{ roleLabel(user.role) }}</span>
+                      </div>
+                    </div>
+                    @if (!user.enabled) {
+                      <span class="badge badge--amber">Désactivé</span>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
+          <div class="card actions">
+            <h3 class="actions__title">Actions rapides</h3>
+            <div class="actions__list">
+              <button class="action-item action-item--blue" type="button" (click)="goTo('/app/admin/utilisateurs')">
+                <span class="action-item__icon"><svg lucideUserCog class="lic" aria-hidden="true"></svg></span>
+                <span class="action-item__text">
+                  <span class="action-item__title">Gérer les utilisateurs</span>
+                  <span class="action-item__desc">Comptes, rôles & accès</span>
+                </span>
+                <svg lucideChevronRight class="lic action-item__chevron" aria-hidden="true"></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+    }
+  }
+</div>
